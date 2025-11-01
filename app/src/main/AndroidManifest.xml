@@ -2,7 +2,70 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- ==================== Network Permissions ==================== -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+
+    <!-- ==================== Location Permissions ==================== -->
+    <!-- Fine Location: untuk GPS coordinates yang akurat (check-in QR) -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <!-- Coarse Location: untuk lokasi approximate -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
+    <!-- Background Location (Optional - jika butuh tracking background) -->
+    <!-- <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" /> -->
+
+    <!-- ==================== Camera Permissions ==================== -->
+    <!-- Camera: untuk scan QR code dan ambil foto profil -->
+    <uses-permission android:name="android.permission.CAMERA" />
+
+    <!-- Camera Hardware Features -->
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.camera.autofocus"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.camera.front"
+        android:required="false" />
+
+    <!-- ==================== Storage Permissions ==================== -->
+    <!-- Read External Storage: untuk pick image dari galeri (Android 12 ke bawah) -->
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+
+    <!-- Write External Storage: untuk save images (Android 9 ke bawah) -->
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28"
+        tools:ignore="ScopedStorage" />
+
+    <!-- Media Permissions: untuk Android 13+ -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+
+    <!-- ==================== Microphone Permission ==================== -->
+    <!-- Record Audio: untuk voice search di modul video -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+
+    <!-- ==================== Vibration Permission ==================== -->
+    <!-- Vibrate: untuk feedback saat scan QR berhasil -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+
+    <!-- ==================== Wake Lock (Optional) ==================== -->
+    <!-- Wake Lock: untuk keep screen on saat quiz atau scan QR -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+
+    <!-- ==================== Foreground Service (Optional) ==================== -->
+    <!-- Jika butuh foreground service untuk location tracking -->
+    <!-- <uses-permission android:name="android.permission.FOREGROUND_SERVICE" /> -->
+    <!-- <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" /> -->
+
     <application
+        android:name=".SakoApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -10,18 +73,91 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Sako">
+        android:theme="@style/Theme.Sako"
+        android:usesCleartextTraffic="true"
+        android:hardwareAccelerated="true"
+        android:largeHeap="true"
+        android:networkSecurityConfig="@xml/network_security_config"
+        tools:targetApi="31">
+
+        <!-- ==================== Google Maps API Key ==================== -->
+        <!-- PENTING: Tambahkan Maps API Key Anda -->
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="YOUR_GOOGLE_MAPS_API_KEY_HERE" />
+
+        <!-- Optional: Google Maps versi yang digunakan -->
+        <meta-data
+            android:name="com.google.android.gms.version"
+            android:value="@integer/google_play_services_version" />
+
+        <!-- ==================== ML Kit Metadata ==================== -->
+        <!-- Barcode Scanning: agar model di-download otomatis -->
+        <meta-data
+            android:name="com.google.mlkit.vision.DEPENDENCIES"
+            android:value="barcode" />
+
+        <!-- ==================== Main Activity ==================== -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name"
-            android:theme="@style/Theme.Sako">
+            android:theme="@style/Theme.Sako"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
+            android:windowSoftInputMode="adjustResize"
+            android:screenOrientation="portrait">
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
+            <!-- Deep Link Support (Optional - untuk share content) -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <!-- Example deep link: sako://video/{id} -->
+                <data
+                    android:scheme="sako"
+                    android:host="video" />
+                <data
+                    android:scheme="sako"
+                    android:host="location" />
+                <data
+                    android:scheme="sako"
+                    android:host="quiz" />
+            </intent-filter>
         </activity>
+
+        <!-- ==================== File Provider ==================== -->
+        <!-- Untuk sharing files secara aman (camera, gallery picker) -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+
+        <!-- ==================== WorkManager (Optional) ==================== -->
+        <!-- Uncomment jika pakai WorkManager untuk background sync -->
+        <!--
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            android:exported="false"
+            tools:node="merge">
+            <meta-data
+                android:name="androidx.work.WorkManagerInitializer"
+                android:value="androidx.startup"
+                tools:node="remove" />
+        </provider>
+        -->
+
     </application>
 
 </manifest>
