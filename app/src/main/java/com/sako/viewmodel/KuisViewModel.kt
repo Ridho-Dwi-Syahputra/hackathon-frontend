@@ -2,6 +2,7 @@ package com.sako.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.sako.data.remote.DummyData
 import com.sako.data.remote.response.CategoryItem
 import com.sako.data.remote.response.CategoryListResponse
 import com.sako.data.remote.response.LevelItem
@@ -34,27 +35,41 @@ class KuisViewModel(
 
     /**
      * Fetch all quiz categories with progress
+     * Fallback ke dummy data jika API gagal
      */
     fun getCategories() {
         viewModelScope.launch {
             repository.getCategories().collect { resource ->
-                _categoriesState.value = resource
+                // Jika error (termasuk connection timeout), gunakan dummy data
+                if (resource is Resource.Error) {
+                    _categoriesState.value = Resource.Success(DummyData.getDummyCategories())
+                } else {
+                    _categoriesState.value = resource
+                }
             }
         }
     }
 
     /**
      * Fetch levels for a specific category
+     * Fallback ke dummy data jika API gagal
      */
     fun getLevelsByCategory(categoryId: String) {
         viewModelScope.launch {
             _levelsState.value = Resource.Loading
             repository.getLevelsByCategory(categoryId).collect { resource ->
-                _levelsState.value = resource
-                
-                // Update selected category if success
-                if (resource is Resource.Success) {
-                    _selectedCategory.value = resource.data.data.category
+                // Jika error (termasuk connection timeout), gunakan dummy data
+                if (resource is Resource.Error) {
+                    val dummyData = DummyData.getDummyLevels(categoryId)
+                    _levelsState.value = Resource.Success(dummyData)
+                    _selectedCategory.value = dummyData.data.category
+                } else {
+                    _levelsState.value = resource
+                    
+                    // Update selected category if success
+                    if (resource is Resource.Success) {
+                        _selectedCategory.value = resource.data.data.category
+                    }
                 }
             }
         }

@@ -16,15 +16,6 @@ import com.sako.viewmodel.KuisViewModel
 import com.sako.viewmodel.QuizAttemptViewModel
 import com.sako.viewmodel.ViewModelFactory
 
-/**
- * SAKO Navigation Graph - Quiz Module
- * Mendefinisikan semua navigasi untuk fitur Quiz
- *
- * @param navController NavHostController untuk handle navigasi
- * @param viewModelFactory Factory untuk create ViewModel instances
- * @param modifier Modifier untuk styling tambahan
- * @param startDestination Route awal aplikasi (default: QuizCategoryChooseScreen untuk testing)
- */
 @Composable
 fun SakoNavGraphQuiz(
     navController: NavHostController,
@@ -43,7 +34,7 @@ fun SakoNavGraphQuiz(
         // ============================================
         composable(route = Screen.KuisList.route) {
             val kuisViewModel: KuisViewModel = viewModel(factory = viewModelFactory)
-            
+
             QuizCategoryChooseScreen(
                 onNavigateBack = {
                     navController.popBackStack()
@@ -66,7 +57,7 @@ fun SakoNavGraphQuiz(
         ) { backStackEntry ->
             val categoryId = backStackEntry.arguments?.getString(NavArgs.CATEGORY_ID) ?: ""
             val kuisViewModel: KuisViewModel = viewModel(factory = viewModelFactory)
-            
+
             QuizLevelChooseScreen(
                 categoryId = categoryId,
                 onNavigateBack = {
@@ -90,7 +81,7 @@ fun SakoNavGraphQuiz(
         ) { backStackEntry ->
             val levelId = backStackEntry.arguments?.getString(NavArgs.LEVEL_ID) ?: ""
             val quizAttemptViewModel: QuizAttemptViewModel = viewModel(factory = viewModelFactory)
-            
+
             QuizAttemptScreen(
                 levelId = levelId,
                 onNavigateToResult = { attemptId ->
@@ -116,7 +107,7 @@ fun SakoNavGraphQuiz(
         ) { backStackEntry ->
             val attemptId = backStackEntry.arguments?.getString(NavArgs.ATTEMPT_ID) ?: ""
             val quizAttemptViewModel: QuizAttemptViewModel = viewModel(factory = viewModelFactory)
-            
+
             QuizResultScreen(
                 attemptId = attemptId,
                 onNavigateToHome = {
@@ -136,7 +127,7 @@ fun SakoNavGraphQuiz(
         // ============================================
         // Placeholder for other screens (uncomment when ready)
         // ============================================
-        
+
         // TODO: Uncomment when implementing other modules
         /*
         composable(route = Screen.Home.route) {

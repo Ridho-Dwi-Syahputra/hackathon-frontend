@@ -2,6 +2,7 @@ package com.sako.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.sako.data.remote.DummyData
 import com.sako.data.remote.request.QuizAnswerRequest
 import com.sako.data.remote.response.OptionItem
 import com.sako.data.remote.response.QuestionItem
@@ -48,16 +49,25 @@ class QuizAttemptViewModel(
 
     /**
      * Start a new quiz attempt
+     * Fallback ke dummy data jika API gagal
      */
     fun startQuiz(levelId: String) {
         viewModelScope.launch {
             _quizState.value = Resource.Loading
             repository.startQuiz(levelId).collect { resource ->
-                _quizState.value = resource
-                
-                if (resource is Resource.Success) {
-                    _quizAttemptData.value = resource.data.data
+                // Jika error (termasuk connection timeout), gunakan dummy data
+                if (resource is Resource.Error) {
+                    val dummyQuiz = DummyData.getDummyQuiz(levelId)
+                    _quizState.value = Resource.Success(dummyQuiz)
+                    _quizAttemptData.value = dummyQuiz.data
                     resetQuizState()
+                } else {
+                    _quizState.value = resource
+                    
+                    if (resource is Resource.Success) {
+                        _quizAttemptData.value = resource.data.data
+                        resetQuizState()
+                    }
                 }
             }
         }
