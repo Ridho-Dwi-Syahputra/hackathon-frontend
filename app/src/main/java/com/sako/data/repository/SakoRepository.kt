@@ -20,9 +20,37 @@ class SakoRepository private constructor(
     private val userPreference: UserPreference
 ) {
 
-    // ... (kode sebelumnya tetap sama)
+    // ========== Quiz Category & Level ==========
 
-    // ========== Quiz Attempt ========== (UPDATED)
+    fun getCategories(): Flow<Resource<CategoryListResponse>> = flow {
+        emit(Resource.Loading)
+        try {
+            val response = apiService.getCategories()
+            emit(Resource.Success(response))
+        } catch (e: HttpException) {
+            val errorBody = e.response()?.errorBody()?.string()
+            val errorResponse = Gson().fromJson(errorBody, ErrorResponse::class.java)
+            emit(Resource.Error(errorResponse.message))
+        } catch (e: Exception) {
+            emit(Resource.Error(e.message ?: "Terjadi kesalahan"))
+        }
+    }
+
+    fun getLevelsByCategory(categoryId: String): Flow<Resource<LevelListResponse>> = flow {
+        emit(Resource.Loading)
+        try {
+            val response = apiService.getLevelsByCategory(categoryId)
+            emit(Resource.Success(response))
+        } catch (e: HttpException) {
+            val errorBody = e.response()?.errorBody()?.string()
+            val errorResponse = Gson().fromJson(errorBody, ErrorResponse::class.java)
+            emit(Resource.Error(errorResponse.message))
+        } catch (e: Exception) {
+            emit(Resource.Error(e.message ?: "Terjadi kesalahan"))
+        }
+    }
+
+    // ========== Quiz Attempt ==========
 
     fun startQuiz(levelId: String): Flow<Resource<QuizStartResponse>> = flow {
         emit(Resource.Loading)
@@ -60,7 +88,19 @@ class SakoRepository private constructor(
         }
     }
 
-    // ... (kode lainnya tetap sama)
+    fun getQuizAttempt(attemptId: String): Flow<Resource<QuizStartResponse>> = flow {
+        emit(Resource.Loading)
+        try {
+            val response = apiService.getQuizAttempt(attemptId)
+            emit(Resource.Success(response))
+        } catch (e: HttpException) {
+            val errorBody = e.response()?.errorBody()?.string()
+            val errorResponse = Gson().fromJson(errorBody, ErrorResponse::class.java)
+            emit(Resource.Error(errorResponse.message))
+        } catch (e: Exception) {
+            emit(Resource.Error(e.message ?: "Terjadi kesalahan"))
+        }
+    }
 
     companion object {
         @Volatile
