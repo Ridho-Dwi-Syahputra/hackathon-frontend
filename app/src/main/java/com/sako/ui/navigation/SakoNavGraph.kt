@@ -26,7 +26,7 @@ import com.sako.ui.screen.profile.BadgeListScreen
 import com.sako.ui.screen.profile.ChangePasswordScreen
 import com.sako.ui.screen.profile.EditProfileScreen
 import com.sako.ui.screen.profile.ProfileScreen
-import com.sako.ui.screen.profile.SetttingScreen
+import com.sako.ui.screen.profile.SettingScreen
 import com.sako.ui.screen.video.VideoDetailScreen
 import com.sako.ui.screen.video.VideoFavoriteScreen
 import com.sako.ui.screen.video.VideoListScreen
@@ -134,7 +134,7 @@ fun SakoNavGraph(
                 onNavigateToFavorite = {
                     navController.navigate(Screen.VideoFavorite.route)
                 }
-            )
+//            )
         }
 
         composable(route = Screen.KuisList.route) {
@@ -161,12 +161,12 @@ fun SakoNavGraph(
                 onNavigateToSetting = {
                     navController.navigate(Screen.Setting.route)
                 },
-                onNavigateToBadgeList = {
-                    navController.navigate(Screen.BadgeList.route)
-                },
-                onNavigateToBadgeDetail = { badgeId ->
-                    navController.navigate(Screen.BadgeDetail.createRoute(badgeId))
-                }
+//                onNavigateToBadgeList = {
+//                    navController.navigate(Screen.BadgeList.route)
+//                },
+//                onNavigateToBadgeDetail = { badgeId ->
+//                    navController.navigate(Screen.BadgeDetail.createRoute(badgeId))
+//                }
             )
         }
 
@@ -349,7 +349,7 @@ fun SakoNavGraph(
 //        // ============================================
 //
 //        composable(route = Screen.Setting.route) {
-//            SettitngScreen(
+//            SettingScreen(
 //                onNavigateBack = {
 //                    navController.popBackStack()
 //                },
