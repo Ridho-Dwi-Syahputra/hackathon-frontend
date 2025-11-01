@@ -21,6 +21,9 @@ import com.sako.viewmodel.QuizAttemptViewModel
 import com.sako.viewmodel.VideoViewModel
 import com.sako.viewmodel.ViewModelFactory
 import com.sako.ui.screen.video.VideoListScreen
+import com.sako.ui.screen.video.VideoDetailScreen
+import com.sako.ui.screen.video.VideoFavoriteScreen
+import androidx.compose.runtime.collectAsState
 
 @Composable
 fun SakoNavGraph(
@@ -29,6 +32,10 @@ fun SakoNavGraph(
     modifier: Modifier = Modifier,
     startDestination: String = Screen.Splash.route // Start dari Splash Screen
 ) {
+    // Create a single shared VideoViewModel for all video-related screens so favorites
+    // are consistent across navigation destinations.
+    val sharedVideoViewModel: VideoViewModel = viewModel(factory = viewModelFactory)
+
     NavHost(
         navController = navController,
         startDestination = startDestination,
@@ -196,8 +203,10 @@ fun SakoNavGraph(
 
         // Video Module Screens
         composable(route = Screen.VideoList.route) {
-            val videoViewModel: VideoViewModel = viewModel(factory = viewModelFactory)
+            // Pass the shared ViewModel's list into the list screen so it shows
+            // the same data (and favorites) as other screens.
             VideoListScreen(
+                videos = sharedVideoViewModel.videos.collectAsState().value,
                 onNavigateToFavorite = {
                     navController.navigate(Screen.VideoFavorite.route)
                 },
@@ -208,14 +217,40 @@ fun SakoNavGraph(
         }
 
         composable(route = Screen.VideoFavorite.route) {
-            // TODO: Implement VideoFavoriteScreen
+            VideoFavoriteScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onNavigateToDetail = { videoId ->
+                    navController.navigate(Screen.VideoDetail.createRoute(videoId))
+                },
+                viewModel = sharedVideoViewModel
+            )
         }
 
         composable(
             route = Screen.VideoDetail.route,
             arguments = listOf(navArgument(NavArgs.VIDEO_ID) { type = NavType.StringType })
-        ) {
-            // TODO: Implement VideoDetailScreen
+        ) { backStackEntry ->
+            val videoId = backStackEntry.arguments?.getString(NavArgs.VIDEO_ID) ?: ""
+
+            // Set selected video when entering detail screen using the shared VM
+            sharedVideoViewModel.setSelectedVideo(videoId)
+
+            VideoDetailScreen(
+                videoId = videoId,
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onToggleFavorite = { id ->
+                    sharedVideoViewModel.toggleVideoFavorite(id)
+                },
+                onNavigateToVideo = { newVideoId ->
+                    navController.navigate(Screen.VideoDetail.createRoute(newVideoId))
+                },
+                video = sharedVideoViewModel.selectedVideo.collectAsState().value,
+                videos = sharedVideoViewModel.videos.collectAsState()
+            )
         }
     }
 }
