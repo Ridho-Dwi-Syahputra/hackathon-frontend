@@ -20,6 +20,21 @@ class SakoRepository private constructor(
     private val userPreference: UserPreference
 ) {
 
+    // ========== Helper Functions ==========
+    
+    /**
+     * Helper function untuk parse error response dengan aman
+     * Menghindari NullPointerException saat parsing gagal
+     */
+    private fun parseErrorMessage(errorBody: String?): String {
+        return try {
+            val errorResponse = Gson().fromJson(errorBody, ErrorResponse::class.java)
+            errorResponse?.message ?: "Terjadi kesalahan pada server"
+        } catch (e: Exception) {
+            "Terjadi kesalahan pada server"
+        }
+    }
+
     // ========== Session Management ==========
 
     fun getSession(): Flow<UserModel> {
@@ -49,8 +64,7 @@ class SakoRepository private constructor(
             emit(Resource.Success(response))
         } catch (e: HttpException) {
             val errorBody = e.response()?.errorBody()?.string()
-            val errorResponse = Gson().fromJson(errorBody, ErrorResponse::class.java)
-            emit(Resource.Error(errorResponse.message))
+            emit(Resource.Error(parseErrorMessage(errorBody)))
         } catch (e: Exception) {
             emit(Resource.Error(e.message ?: "Terjadi kesalahan"))
         }
@@ -79,8 +93,7 @@ class SakoRepository private constructor(
             emit(Resource.Success(response))
         } catch (e: HttpException) {
             val errorBody = e.response()?.errorBody()?.string()
-            val errorResponse = Gson().fromJson(errorBody, ErrorResponse::class.java)
-            emit(Resource.Error(errorResponse.message))
+            emit(Resource.Error(parseErrorMessage(errorBody)))
         } catch (e: Exception) {
             emit(Resource.Error(e.message ?: "Terjadi kesalahan"))
         }
@@ -187,8 +200,12 @@ class SakoRepository private constructor(
             emit(Resource.Success(response))
         } catch (e: HttpException) {
             val errorBody = e.response()?.errorBody()?.string()
-            val errorResponse = Gson().fromJson(errorBody, ErrorResponse::class.java)
-            emit(Resource.Error(errorResponse.message))
+            val errorResponse = try {
+                Gson().fromJson(errorBody, ErrorResponse::class.java)
+            } catch (ex: Exception) {
+                null
+            }
+            emit(Resource.Error(errorResponse?.message ?: "Terjadi kesalahan pada server"))
         } catch (e: Exception) {
             emit(Resource.Error(e.message ?: "Terjadi kesalahan"))
         }
@@ -201,8 +218,12 @@ class SakoRepository private constructor(
             emit(Resource.Success(response))
         } catch (e: HttpException) {
             val errorBody = e.response()?.errorBody()?.string()
-            val errorResponse = Gson().fromJson(errorBody, ErrorResponse::class.java)
-            emit(Resource.Error(errorResponse.message))
+            val errorResponse = try {
+                Gson().fromJson(errorBody, ErrorResponse::class.java)
+            } catch (ex: Exception) {
+                null
+            }
+            emit(Resource.Error(errorResponse?.message ?: "Terjadi kesalahan pada server"))
         } catch (e: Exception) {
             emit(Resource.Error(e.message ?: "Terjadi kesalahan"))
         }
@@ -218,8 +239,12 @@ class SakoRepository private constructor(
             emit(Resource.Success(response))
         } catch (e: HttpException) {
             val errorBody = e.response()?.errorBody()?.string()
-            val errorResponse = Gson().fromJson(errorBody, ErrorResponse::class.java)
-            emit(Resource.Error(errorResponse.message))
+            val errorResponse = try {
+                Gson().fromJson(errorBody, ErrorResponse::class.java)
+            } catch (ex: Exception) {
+                null
+            }
+            emit(Resource.Error(errorResponse?.message ?: "Terjadi kesalahan pada server"))
         } catch (e: Exception) {
             emit(Resource.Error(e.message ?: "Terjadi kesalahan"))
         }
@@ -239,8 +264,12 @@ class SakoRepository private constructor(
             emit(Resource.Success(response))
         } catch (e: HttpException) {
             val errorBody = e.response()?.errorBody()?.string()
-            val errorResponse = Gson().fromJson(errorBody, ErrorResponse::class.java)
-            emit(Resource.Error(errorResponse.message))
+            val errorResponse = try {
+                Gson().fromJson(errorBody, ErrorResponse::class.java)
+            } catch (ex: Exception) {
+                null
+            }
+            emit(Resource.Error(errorResponse?.message ?: "Terjadi kesalahan pada server"))
         } catch (e: Exception) {
             emit(Resource.Error(e.message ?: "Terjadi kesalahan"))
         }

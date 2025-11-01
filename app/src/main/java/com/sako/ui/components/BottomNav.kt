@@ -63,7 +63,7 @@ fun getNavigationItems(): List<BottomNavItem> {
  * @param modifier Modifier untuk styling tambahan
  */
 @Composable
-fun ButtomNav(
+fun BottomNav(
     navController: NavHostController,
     modifier: Modifier = Modifier
 ) {
@@ -126,7 +126,7 @@ fun ButtomNav(
 private fun ButtomNavPreview() {
     SakoTheme {
         val navController = rememberNavController()
-        ButtomNav(navController = navController)
+        BottomNav(navController = navController)
     }
 }
 
@@ -135,6 +135,6 @@ private fun ButtomNavPreview() {
 private fun ButtomNavDarkPreview() {
     SakoTheme(darkTheme = true) {
         val navController = rememberNavController()
-        ButtomNav(navController = navController)
+        BottomNav(navController = navController)
     }
 }
