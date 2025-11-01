@@ -19,7 +19,7 @@ import com.sako.data.pref.UserPreference
 import com.sako.data.remote.retrofit.ApiConfig
 import com.sako.data.repository.SakoRepository
 import com.sako.ui.components.ButtomNav
-import com.sako.ui.navigation.SakoNavGraphQuiz
+import com.sako.ui.navigation.SakoNavGraph
 import com.sako.ui.navigation.Screen
 import com.sako.ui.navigation.bottomNavRoutes
 import com.sako.ui.theme.SakoTheme
@@ -67,13 +67,11 @@ fun SakoApp() {
             }
         }
     ) { innerPadding ->
-        // SAKO Navigation Graph - Quiz Module
-        // TODO: Ganti dengan SakoNavGraph full saat semua module ready
-        SakoNavGraphQuiz(
+        // SAKO Navigation Graph
+        SakoNavGraph(
             navController = navController,
             viewModelFactory = viewModelFactory,
-            modifier = Modifier.padding(innerPadding),
-            startDestination = Screen.KuisList.route // Start dari Quiz Category untuk testing
+            modifier = Modifier.padding(innerPadding)
         )
     }
 }

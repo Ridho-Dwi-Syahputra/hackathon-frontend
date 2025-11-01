@@ -14,10 +14,12 @@ import com.sako.ui.screen.kuis.QuizAttemptScreen
 import com.sako.ui.screen.kuis.QuizResultScreen
 import com.sako.viewmodel.KuisViewModel
 import com.sako.viewmodel.QuizAttemptViewModel
+import com.sako.viewmodel.VideoViewModel
 import com.sako.viewmodel.ViewModelFactory
+import com.sako.ui.screen.video.VideoListScreen
 
 @Composable
-fun SakoNavGraphQuiz(
+fun SakoNavGraph(
     navController: NavHostController,
     viewModelFactory: ViewModelFactory,
     modifier: Modifier = Modifier,
@@ -128,27 +130,28 @@ fun SakoNavGraphQuiz(
         // Placeholder for other screens (uncomment when ready)
         // ============================================
 
-        // TODO: Uncomment when implementing other modules
-        /*
-        composable(route = Screen.Home.route) {
-            HomeScreen(
-                onNavigateToQuiz = {
-                    navController.navigate(Screen.KuisList.route)
+        // Video Module Screens
+        composable(route = Screen.VideoList.route) {
+            val videoViewModel: VideoViewModel = viewModel(factory = viewModelFactory)
+            VideoListScreen(
+                onNavigateToFavorite = {
+                    navController.navigate(Screen.VideoFavorite.route)
+                },
+                onNavigateToDetail = { videoId ->
+                    navController.navigate(Screen.VideoDetail.createRoute(videoId))
                 }
             )
         }
-        
-        composable(route = Screen.VideoList.route) {
-            VideoListScreen(...)
+
+        composable(route = Screen.VideoFavorite.route) {
+            // TODO: Implement VideoFavoriteScreen
         }
-        
-        composable(route = Screen.Map.route) {
-            MapScreen(...)
+
+        composable(
+            route = Screen.VideoDetail.route,
+            arguments = listOf(navArgument(NavArgs.VIDEO_ID) { type = NavType.StringType })
+        ) {
+            // TODO: Implement VideoDetailScreen
         }
-        
-        composable(route = Screen.Profile.route) {
-            ProfileScreen(...)
-        }
-        */
     }
 }
