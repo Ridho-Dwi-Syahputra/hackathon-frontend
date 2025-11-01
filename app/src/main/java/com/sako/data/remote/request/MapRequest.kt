@@ -26,7 +26,7 @@ data class AddReviewRequest(
     val reviewText: String?
 )
 
-// Update Review Request (sama seperti Add, tapi untuk update)
+// Update Review Request
 data class UpdateReviewRequest(
     @SerializedName("tourist_place_id")
     val touristPlaceId: String,

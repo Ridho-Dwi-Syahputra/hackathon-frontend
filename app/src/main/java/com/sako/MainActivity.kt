@@ -7,10 +7,15 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+import com.sako.ui.components.ButtomNav
+import com.sako.ui.navigation.SakoNavGraph
+import com.sako.ui.navigation.Screen
+import com.sako.ui.navigation.bottomNavRoutes
 import com.sako.ui.theme.SakoTheme
 
 class MainActivity : ComponentActivity() {
@@ -19,29 +24,37 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             SakoTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
+                SakoApp()
             }
         }
     }
 }
 
+/**
+ * SAKO App - Main composable dengan Navigation dan Bottom Nav
+ */
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
+fun SakoApp() {
+    val navController = rememberNavController()
 
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    SakoTheme {
-        Greeting("Android")
+    // Check apakah current route harus menampilkan bottom nav
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+    val shouldShowBottomNav = currentRoute in bottomNavRoutes
+
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        bottomBar = {
+            if (shouldShowBottomNav) {
+                ButtomNav(navController = navController)
+            }
+        }
+    ) { innerPadding ->
+        // SAKO Navigation Graph
+        SakoNavGraph(
+            navController = navController,
+            modifier = Modifier.padding(innerPadding),
+            startDestination = Screen.Splash.route // Mulai dari splash screen
+        )
     }
 }
