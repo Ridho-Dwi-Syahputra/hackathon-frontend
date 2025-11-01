@@ -1,25 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
-    <!-- Allow cleartext traffic for development -->
-    <base-config cleartextTrafficPermitted="true">
-        <trust-anchors>
-            <certificates src="system" />
-        </trust-anchors>
-    </base-config>
 
-    <!-- Production: Hanya allow HTTPS -->
-    <!--
+    <!-- ⚙️ Default: allow HTTPS only (secure) -->
     <base-config cleartextTrafficPermitted="false">
         <trust-anchors>
             <certificates src="system" />
         </trust-anchors>
     </base-config>
-    -->
 
-    <!-- Allow specific domains untuk cleartext (lebih aman) -->
+    <!-- ✅ Allow local development traffic -->
     <domain-config cleartextTrafficPermitted="true">
-        <domain includeSubdomains="true">10.0.2.2</domain> <!-- Emulator localhost -->
+        <!-- Android Emulator host -->
+        <domain includeSubdomains="true">10.0.2.2</domain>
+        <!-- Local PC IP LAN (ubah sesuai jaringan kamu jika perlu) -->
+        <domain includeSubdomains="true">192.168.0.0</domain>
+        <domain includeSubdomains="true">192.168.1.0</domain>
         <domain includeSubdomains="true">localhost</domain>
-        <domain includeSubdomains="true">192.168.1.1</domain> <!-- Ganti dengan IP lokal Anda -->
     </domain-config>
+
+    <!-- ✅ Allow HTTPS DevTunnel (self-signed cert) -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">asse.devtunnels.ms</domain>
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </domain-config>
+
 </network-security-config>
