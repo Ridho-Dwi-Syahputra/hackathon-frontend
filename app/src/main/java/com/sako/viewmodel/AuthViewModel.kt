@@ -1,4 +1,6 @@
 package com.sako.viewmodel
 
-class AuthViewModel {
+import com.sako.data.repository.SakoRepository
+
+class AuthViewModel(repository: SakoRepository) {
 }

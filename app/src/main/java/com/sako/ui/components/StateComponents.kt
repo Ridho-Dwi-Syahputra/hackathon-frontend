@@ -255,3 +255,14 @@ private fun SakoErrorStatePreview() {
         )
     }
 }
+
+// Convenience aliases for quiz screens
+@Composable
+fun LoadingScreen(message: String = "Memuat...") {
+    SakoLoadingScreen(message = message)
+}
+
+@Composable
+fun ErrorScreen(message: String, onRetry: () -> Unit) {
+    SakoErrorState(message = message, onRetry = onRetry)
+}

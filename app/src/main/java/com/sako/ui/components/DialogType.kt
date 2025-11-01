@@ -53,12 +53,12 @@ data class DialogState(
     /**
      * Helper untuk mendapatkan title, dengan fallback ke default
      */
-    fun getTitle(): String = title ?: type.defaultTitle
+    fun getTitleOrDefault(): String = title ?: type.defaultTitle
 
     /**
      * Helper untuk mendapatkan button text, dengan fallback ke default
      */
-    fun getButtonText(): String = buttonText ?: type.defaultButtonText
+    fun getButtonTextOrDefault(): String = buttonText ?: type.defaultButtonText
 }
 
 /**

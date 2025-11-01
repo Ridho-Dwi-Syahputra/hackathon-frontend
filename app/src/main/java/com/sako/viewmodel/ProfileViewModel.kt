@@ -1,4 +1,6 @@
 package com.sako.viewmodel
 
-class ProfileViewModel {
+import com.sako.data.repository.SakoRepository
+
+class ProfileViewModel(repository: SakoRepository) {
 }

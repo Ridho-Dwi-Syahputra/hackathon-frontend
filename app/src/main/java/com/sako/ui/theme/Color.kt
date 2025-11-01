@@ -99,6 +99,8 @@ val md_theme_dark_outlineVariant = LightGray
 val md_theme_dark_scrim = Black
 
 // Additional Semantic Colors for SAKO App
+val SakoPrimary = PrimaryRed // Main brand color #9C302C
+val SakoAccent = AccentYellow // Accent color #F7CE80
 val QuizCorrectAnswer = SuccessGreen
 val QuizWrongAnswer = ErrorRed
 val QuizUnanswered = MediumGray

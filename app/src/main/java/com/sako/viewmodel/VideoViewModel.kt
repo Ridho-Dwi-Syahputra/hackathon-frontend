@@ -1,4 +1,6 @@
 package com.sako.viewmodel
 
-class VideoViewModel {
+import com.sako.data.repository.SakoRepository
+
+class VideoViewModel(repository: SakoRepository) {
 }

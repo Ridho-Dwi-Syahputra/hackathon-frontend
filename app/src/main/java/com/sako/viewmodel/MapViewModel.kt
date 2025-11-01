@@ -1,4 +1,6 @@
 package com.sako.viewmodel
 
-class MapViewModel {
+import com.sako.data.repository.SakoRepository
+
+class MapViewModel(repository: SakoRepository) {
 }

@@ -1,4 +1,6 @@
 package com.sako.viewmodel
 
-class HomeViewModel {
+import com.sako.data.repository.SakoRepository
+
+class HomeViewModel(repository: SakoRepository) {
 }
