@@ -26,6 +26,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sako.R
+import com.sako.ui.components.BackgroundImage
 import com.sako.ui.theme.SakoPrimary
 import com.sako.ui.theme.SakoAccent
 
@@ -43,11 +44,12 @@ fun RegisterScreen(
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(SakoPrimary)
-    ) {
+    BackgroundImage(alpha = 0.08f) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(SakoPrimary.copy(alpha = 0.95f))
+        ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -252,6 +254,7 @@ fun RegisterScreen(
             }
 
             Spacer(modifier = Modifier.height(24.dp))
+        }
         }
     }
 }

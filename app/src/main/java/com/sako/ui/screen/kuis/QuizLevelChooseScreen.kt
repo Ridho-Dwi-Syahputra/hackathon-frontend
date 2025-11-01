@@ -15,6 +15,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.sako.ui.components.QuizLevelCard
 import com.sako.ui.components.LevelStatus
 import com.sako.ui.components.LoadingScreen
@@ -51,21 +52,19 @@ fun QuizLevelChooseScreen(
             topBar = {
                 TopAppBar(
                 title = {
-                    Column {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .offset(y = (-2).dp),
+                        contentAlignment = Alignment.CenterStart
+                    ) {
                         Text(
                             text = selectedCategory?.name ?: "Level Quiz",
                             fontWeight = FontWeight.Bold,
                             color = SakoPrimary,
-                            style = MaterialTheme.typography.titleMedium
+                            fontSize = 20.sp,
+                            maxLines = 1
                         )
-                        selectedCategory?.description?.let { desc ->
-                            Text(
-                                text = desc,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = Color.Gray,
-                                maxLines = 1
-                            )
-                        }
                     }
                 },
                 navigationIcon = {
@@ -79,7 +78,8 @@ fun QuizLevelChooseScreen(
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color.White
-                )
+                ),
+                modifier = Modifier.height(56.dp)
             )
         },
         containerColor = Color.Transparent
@@ -117,6 +117,7 @@ fun QuizLevelChooseScreen(
                                 text = "Pilih level untuk memulai quiz",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = Color.Gray,
+                                fontSize = 18.sp,
                                 modifier = Modifier.padding(vertical = 8.dp)
                             )
                         }
