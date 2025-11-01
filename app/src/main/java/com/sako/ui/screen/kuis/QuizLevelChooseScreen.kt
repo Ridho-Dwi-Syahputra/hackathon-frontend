@@ -23,6 +23,7 @@ import com.sako.ui.theme.SakoPrimary
 import com.sako.ui.theme.SakoAccent
 import com.sako.utils.Resource
 import com.sako.viewmodel.KuisViewModel
+import com.sako.ui.components.BackgroundImage
 
 /**
  * Quiz Level Choose Screen
@@ -45,9 +46,10 @@ fun QuizLevelChooseScreen(
         viewModel.getLevelsByCategory(categoryId)
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
+    BackgroundImage {
+        Scaffold(
+            topBar = {
+                TopAppBar(
                 title = {
                     Column {
                         Text(
@@ -80,7 +82,7 @@ fun QuizLevelChooseScreen(
                 )
             )
         },
-        containerColor = Color(0xFFF4F4F4)
+        containerColor = Color.Transparent
     ) { paddingValues ->
         when (levelsState) {
             is Resource.Loading -> {
@@ -159,11 +161,12 @@ fun QuizLevelChooseScreen(
                 )
             }
         }
-    }
+    } // Scaffold
+    } // BackgroundImage
 }
 
 @Composable
-private fun CategoryProgressCard(
+fun CategoryProgressCard(
     categoryName: String,
     completedLevels: Int,
     totalLevels: Int,
@@ -240,7 +243,7 @@ private fun CategoryProgressCard(
 }
 
 @Composable
-private fun EmptyLevelsScreen() {
+fun EmptyLevelsScreen() {
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center

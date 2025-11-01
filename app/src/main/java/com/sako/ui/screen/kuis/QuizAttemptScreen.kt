@@ -1,5 +1,6 @@
 package com.sako.ui.screen.kuis
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -44,6 +45,11 @@ fun QuizAttemptScreen(
     var showSubmitDialog by remember { mutableStateOf(false) }
     var showExitDialog by remember { mutableStateOf(false) }
 
+    // Handle back press -> show exit dialog
+    BackHandler(enabled = true) {
+        showExitDialog = true
+    }
+
     // Start quiz saat pertama kali
     LaunchedEffect(levelId) {
         viewModel.startQuiz(levelId)
@@ -58,9 +64,10 @@ fun QuizAttemptScreen(
         }
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
+    BackgroundImage {
+        Scaffold(
+            topBar = {
+                TopAppBar(
                 title = {
                     quizAttemptData?.let { data ->
                         Text(
@@ -85,7 +92,7 @@ fun QuizAttemptScreen(
                 )
             )
         },
-        containerColor = Color(0xFFF4F4F4)
+        containerColor = Color.Transparent
     ) { paddingValues ->
         when (quizState) {
             is Resource.Loading -> {
@@ -118,7 +125,8 @@ fun QuizAttemptScreen(
                                 .verticalScroll(rememberScrollState())
                                 .padding(horizontal = 16.dp),
                             verticalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
+                        )
+                        {
                             // Progress Indicator
                             QuizProgressIndicator(
                                 currentIndex = currentQuestionIndex,
@@ -176,9 +184,9 @@ fun QuizAttemptScreen(
             }
         }
     }
-
-    // Submit Confirmation Dialog
-    if (showSubmitDialog) {
+    
+        // Submit Confirmation Dialog
+        if (showSubmitDialog) {
         AlertDialog(
             onDismissRequest = { showSubmitDialog = false },
             icon = {
@@ -258,11 +266,12 @@ fun QuizAttemptScreen(
                 }
             }
         )
+        }
     }
 }
 
 @Composable
-private fun QuizProgressIndicator(
+fun QuizProgressIndicator(
     currentIndex: Int,
     totalQuestions: Int,
     answeredCount: Int,
@@ -309,7 +318,7 @@ private fun QuizProgressIndicator(
 }
 
 @Composable
-private fun QuizBottomNav(
+fun QuizBottomNav(
     currentIndex: Int,
     totalQuestions: Int,
     canGoBack: Boolean,

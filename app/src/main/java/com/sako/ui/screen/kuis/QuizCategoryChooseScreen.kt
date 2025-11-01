@@ -21,6 +21,7 @@ import com.sako.utils.Resource
 import com.sako.viewmodel.KuisViewModel
 import com.sako.viewmodel.ViewModelFactory
 import com.sako.data.repository.SakoRepository
+import com.sako.ui.components.BackgroundImage
 
 /**
  * Quiz Category Choose Screen
@@ -40,33 +41,33 @@ fun QuizCategoryChooseScreen(
     LaunchedEffect(Unit) {
         viewModel.getCategories()
     }
-
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "Pilih Kategori Quiz",
-                        fontWeight = FontWeight.Bold,
-                        color = SakoPrimary
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Kembali",
-                            tint = SakoPrimary
+    BackgroundImage {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = {
+                        Text(
+                            text = "Pilih Kategori Quiz",
+                            fontWeight = FontWeight.Bold,
+                            color = SakoPrimary
                         )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.White
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = onNavigateBack) {
+                            Icon(
+                                imageVector = Icons.Default.ArrowBack,
+                                contentDescription = "Kembali",
+                                tint = SakoPrimary
+                            )
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color.White
+                    )
                 )
-            )
-        },
-        containerColor = Color(0xFFF4F4F4)
-    ) { paddingValues ->
+            },
+            containerColor = Color.Transparent
+        ) { paddingValues ->
         when (categoriesState) {
             is Resource.Loading -> {
                 LoadingScreen()
@@ -123,10 +124,10 @@ fun QuizCategoryChooseScreen(
             }
         }
     }
-}
+    }
 
 @Composable
-private fun EmptyStateScreen() {
+fun EmptyStateScreen() {
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
@@ -151,5 +152,11 @@ private fun EmptyStateScreen() {
                 color = Color.Gray
             )
         }
+        }
     }
+}
+
+@Composable
+fun EmptyStateScreen() {
+    TODO("Not yet implemented")
 }

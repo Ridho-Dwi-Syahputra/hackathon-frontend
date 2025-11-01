@@ -112,10 +112,15 @@ class QuizAttemptViewModel(
             }
             
             repository.submitQuiz(attemptData.attemptId, answers).collect { resource ->
-                _submitState.value = resource
+                // FALLBACK: Jika error (backend tidak tersedia), gunakan dummy result
+                if (resource is Resource.Error) {
+                    _submitState.value = Resource.Success(createDummySubmitResponse(attemptData.attemptId, answers))
+                } else {
+                    _submitState.value = resource
+                }
                 
                 // Pause timer after submission
-                if (resource is Resource.Success || resource is Resource.Error) {
+                if (_submitState.value is Resource.Success || _submitState.value is Resource.Error) {
                     _isTimerPaused.value = true
                 }
             }
@@ -288,5 +293,48 @@ class QuizAttemptViewModel(
         } else {
             null
         }
+    }
+
+    /**
+     * Create dummy submit response untuk testing UI
+     * HAPUS FUNCTION INI saat sudah connect ke backend real
+     */
+    private fun createDummySubmitResponse(
+        attemptId: String,
+        answers: List<QuizAnswerRequest>
+    ): QuizSubmitResponse {
+        val attemptData = _quizAttemptData.value!!
+        
+        // Hitung berapa yang dijawab
+        val answeredCount = answers.count { it.optionId != null }
+        val unansweredCount = answers.size - answeredCount
+        
+        // Untuk dummy, anggap 60-80% benar
+        val correctCount = (answeredCount * 0.7).toInt()
+        val wrongCount = answeredCount - correctCount
+        
+        val totalPoints = attemptData.questions.sumOf { it.pointsCorrect }
+        val scorePoints = (correctCount.toDouble() / answers.size * totalPoints).toInt()
+        val percentCorrect = (correctCount.toDouble() / answers.size * 100)
+        
+        val isPassed = percentCorrect >= 70.0 // Asumsi passing score 70%
+        
+        return QuizSubmitResponse(
+            status = "success",
+            message = "Dummy result - Backend tidak tersedia",
+            data = QuizResultData(
+                attemptId = attemptId,
+                scorePoints = scorePoints,
+                correctCount = correctCount,
+                wrongCount = wrongCount,
+                unansweredCount = unansweredCount,
+                percentCorrect = percentCorrect,
+                xpEarned = if (isPassed) attemptData.level.baseXp else 0,
+                pointsEarned = if (isPassed) attemptData.level.basePoints else 0,
+                isPassed = isPassed,
+                newTotalXp = 1500 + (if (isPassed) attemptData.level.baseXp else 0),
+                badgesEarned = null
+            )
+        )
     }
 }

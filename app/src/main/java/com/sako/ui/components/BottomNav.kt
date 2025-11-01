@@ -17,7 +17,6 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.sako.R
-import com.sako.ui.theme.SakoCustomShapes
 import com.sako.ui.theme.SakoTheme
 
 /**
@@ -27,29 +26,29 @@ import com.sako.ui.theme.SakoTheme
  * @return List dari ButtomNavItem
  */
 @Composable
-fun getNavigationItems(): List<ButtomNavItem> {
+fun getNavigationItems(): List<BottomNavItem> {
     return listOf(
-        ButtomNavItem(
+        BottomNavItem(
             label = "Home",
             icon = painterResource(id = R.drawable.home), // Sesuaikan dengan nama file drawable
             route = "home" // Sesuaikan dengan Screen.Home.route
         ),
-        ButtomNavItem(
+        BottomNavItem(
             label = "Video",
             icon = painterResource(id = R.drawable.video), // Sesuaikan dengan nama file drawable
             route = "video_list" // Sesuaikan dengan Screen.VideoList.route
         ),
-        ButtomNavItem(
+        BottomNavItem(
             label = "Kuis",
             icon = painterResource(id = R.drawable.sako), // Logo SAKO untuk menu kuis
             route = "kuis_list" // Sesuaikan dengan Screen.KuisList.route
         ),
-        ButtomNavItem(
+        BottomNavItem(
             label = "Map",
             icon = painterResource(id = R.drawable.map), // Sesuaikan dengan nama file drawable
             route = "map" // Sesuaikan dengan Screen.Map.route
         ),
-        ButtomNavItem(
+        BottomNavItem(
             label = "Profile",
             icon = painterResource(id = R.drawable.profile), // Sesuaikan dengan nama file drawable
             route = "profile" // Sesuaikan dengan Screen.Profile.route

@@ -46,10 +46,11 @@ fun QuizResultScreen(
         }
     }
 
-    Surface(
-        modifier = modifier.fillMaxSize(),
-        color = Color(0xFFF4F4F4)
-    ) {
+    BackgroundImage {
+        Surface(
+            modifier = modifier.fillMaxSize(),
+            color = Color.Transparent
+        ) {
         when {
             submitState is Resource.Loading -> {
                 LoadingScreen()
@@ -162,6 +163,7 @@ fun QuizResultScreen(
                     onRetry = { /* No retry available */ }
                 )
             }
+        }
         }
     }
 
