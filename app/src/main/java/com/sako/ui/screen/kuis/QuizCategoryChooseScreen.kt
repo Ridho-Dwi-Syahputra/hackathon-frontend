@@ -98,7 +98,7 @@ fun QuizCategoryChooseScreen(
                             QuizCategoryCard(
                                 categoryName = category.name,
                                 categoryDescription = category.description ?: "Tidak ada deskripsi",
-                                imageUrl = null, // TODO: Add image URL dari backend
+                                imageUrl = null,
                                 progressPercentage = (category.progress?.percentCompleted?.toFloat() ?: 0f) / 100f,
                                 completedLevels = category.progress?.completedLevelsCount ?: 0,
                                 totalLevels = category.progress?.totalLevelsCount ?: 0,
