@@ -8,10 +8,14 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.sako.ui.screen.auth.LoginScreen
+import com.sako.ui.screen.auth.RegisterScreen
+import com.sako.ui.screen.home.HomeScreen
 import com.sako.ui.screen.kuis.QuizCategoryChooseScreen
 import com.sako.ui.screen.kuis.QuizLevelChooseScreen
 import com.sako.ui.screen.kuis.QuizAttemptScreen
 import com.sako.ui.screen.kuis.QuizResultScreen
+import com.sako.ui.screen.welcome.SplashScreen
 import com.sako.viewmodel.KuisViewModel
 import com.sako.viewmodel.QuizAttemptViewModel
 import com.sako.viewmodel.VideoViewModel
@@ -23,13 +27,73 @@ fun SakoNavGraph(
     navController: NavHostController,
     viewModelFactory: ViewModelFactory,
     modifier: Modifier = Modifier,
-    startDestination: String = Screen.KuisList.route // Sementara untuk testing quiz
+    startDestination: String = Screen.Splash.route // Start dari Splash Screen
 ) {
     NavHost(
         navController = navController,
         startDestination = startDestination,
         modifier = modifier
     ) {
+
+        // ============================================
+        // Welcome & Authentication Screens
+        // ============================================
+        
+        // Splash Screen
+        composable(route = Screen.Splash.route) {
+            SplashScreen(
+                onNavigateToRegister = {
+                    navController.navigate(Screen.Register.route) {
+                        popUpTo(Screen.Splash.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        // Register Screen
+        composable(route = Screen.Register.route) {
+            RegisterScreen(
+                onNavigateToLogin = {
+                    navController.navigate(Screen.Login.route)
+                },
+                onRegisterSuccess = {
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(Screen.Register.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        // Login Screen
+        composable(route = Screen.Login.route) {
+            LoginScreen(
+                onNavigateToRegister = {
+                    navController.navigate(Screen.Register.route)
+                },
+                onLoginSuccess = {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Login.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        // ============================================
+        // Home Screen
+        // ============================================
+        composable(route = Screen.Home.route) {
+            HomeScreen(
+                onNavigateToQuiz = {
+                    navController.navigate(Screen.KuisList.route)
+                },
+                onNavigateToVideo = {
+                    navController.navigate(Screen.VideoList.route)
+                },
+                onNavigateToMap = {
+                    navController.navigate(Screen.Map.route)
+                }
+            )
+        }
 
         // ============================================
         // Quiz Module - Category List

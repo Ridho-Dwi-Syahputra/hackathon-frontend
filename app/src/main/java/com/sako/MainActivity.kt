@@ -18,7 +18,7 @@ import androidx.navigation.compose.rememberNavController
 import com.sako.data.pref.UserPreference
 import com.sako.data.remote.retrofit.ApiConfig
 import com.sako.data.repository.SakoRepository
-import com.sako.ui.components.ButtomNav
+import com.sako.ui.components.BottomNav
 import com.sako.ui.navigation.SakoNavGraph
 import com.sako.ui.navigation.Screen
 import com.sako.ui.navigation.bottomNavRoutes
@@ -63,7 +63,7 @@ fun SakoApp() {
         modifier = Modifier.fillMaxSize(),
         bottomBar = {
             if (shouldShowBottomNav) {
-                ButtomNav(navController = navController)
+                BottomNav(navController = navController)
             }
         }
     ) { innerPadding ->

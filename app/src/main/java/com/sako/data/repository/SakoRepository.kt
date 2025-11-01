@@ -21,7 +21,7 @@ class SakoRepository private constructor(
 ) {
 
     // ========== Helper Functions ==========
-    
+
     /**
      * Helper function untuk parse error response dengan aman
      * Menghindari NullPointerException saat parsing gagal
