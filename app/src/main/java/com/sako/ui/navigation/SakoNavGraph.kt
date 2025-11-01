@@ -17,6 +17,13 @@ import com.sako.viewmodel.QuizAttemptViewModel
 import com.sako.viewmodel.VideoViewModel
 import com.sako.viewmodel.ViewModelFactory
 import com.sako.ui.screen.video.VideoListScreen
+import com.sako.ui.screen.map.DetailMapScreen
+import com.sako.ui.screen.map.EditUlasanScreen
+import com.sako.ui.screen.map.MapScreen
+import com.sako.ui.screen.map.ScanMapScreen
+import com.sako.ui.screen.map.TambahUlasanScreen
+import com.sako.ui.viewmodel.MapViewModel
+
 
 @Composable
 fun SakoNavGraph(
@@ -129,6 +136,10 @@ fun SakoNavGraph(
         // ============================================
         // Placeholder for other screens (uncomment when ready)
         // ============================================
+
+
+
+
 
         // Video Module Screens
         composable(route = Screen.VideoList.route) {
