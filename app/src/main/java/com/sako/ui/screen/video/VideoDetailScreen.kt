@@ -2,6 +2,8 @@ package com.sako.ui.screen.video
 
 import android.view.ViewGroup
 import android.widget.FrameLayout
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,7 +18,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -25,15 +29,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.State
-import androidx.compose.foundation.lazy.items
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -44,7 +44,6 @@ import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.views.YouTube
 import com.sako.data.remote.response.VideoItem
 import com.sako.ui.components.BackgroundImage
 import com.sako.ui.components.VideoListItem
-import com.sako.ui.theme.SakoCustomTypography
 import com.sako.ui.theme.VideoFavoriteActive
 import com.sako.ui.theme.VideoFavoriteInactive
 
@@ -103,7 +102,7 @@ fun VideoDetailScreen(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
-                        androidx.compose.material3.CircularProgressIndicator()
+                        CircularProgressIndicator()
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             text = "Memuat video...",
@@ -111,13 +110,12 @@ fun VideoDetailScreen(
                         )
                     }
                 } else {
-                    androidx.compose.foundation.lazy.LazyColumn(
+                    LazyColumn(
                         modifier = Modifier.fillMaxSize()
                     ) {
                         item {
                             // YouTube Player Section
                             val lifecycleOwner = LocalLifecycleOwner.current
-                            val context = LocalContext.current
                             
                             AndroidView(
                                 modifier = Modifier
@@ -189,7 +187,7 @@ fun VideoDetailScreen(
 
                             // Divider dengan padding vertical
                             Spacer(modifier = Modifier.height(8.dp))
-                            androidx.compose.material3.Divider(
+                            HorizontalDivider(
                                 modifier = Modifier.padding(horizontal = 16.dp),
                                 color = MaterialTheme.colorScheme.surfaceVariant
                             )
