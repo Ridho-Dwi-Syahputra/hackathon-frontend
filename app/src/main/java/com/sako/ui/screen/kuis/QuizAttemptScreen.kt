@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.sako.ui.components.*
 import com.sako.ui.theme.SakoPrimary
 import com.sako.ui.theme.SakoAccent
@@ -70,12 +71,20 @@ fun QuizAttemptScreen(
                 TopAppBar(
                 title = {
                     quizAttemptData?.let { data ->
-                        Text(
-                            text = data.level.name,
-                            fontWeight = FontWeight.Bold,
-                            color = SakoPrimary,
-                            style = MaterialTheme.typography.titleMedium
-                        )
+                        Box(
+                            modifier = Modifier
+                                .fillMaxHeight()
+                                .offset(y = (-2).dp),
+                            contentAlignment = Alignment.CenterStart
+                        ) {
+                            Text(
+                                text = data.level.name,
+                                fontWeight = FontWeight.Bold,
+                                color = SakoPrimary,
+                                fontSize = 20.sp,
+                                maxLines = 1
+                            )
+                        }
                     }
                 },
                 navigationIcon = {
@@ -89,7 +98,8 @@ fun QuizAttemptScreen(
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color.White
-                )
+                ),
+                modifier = Modifier.height(56.dp)
             )
         },
         containerColor = Color.Transparent
@@ -108,13 +118,16 @@ fun QuizAttemptScreen(
                             .fillMaxSize()
                             .padding(paddingValues)
                     ) {
-                        // Timer
-                        QuizTimer(
+                        // Enhanced Timer Card
+                        EnhancedTimerCard(
                             totalSeconds = attemptData.durationSeconds,
                             onTimeUp = {
                                 viewModel.onTimeUp()
                             },
                             isPaused = isTimerPaused,
+                            currentQuestion = currentQuestionIndex + 1,
+                            totalQuestions = totalQuestions,
+                            answeredCount = viewModel.getAnsweredCount(),
                             modifier = Modifier.padding(16.dp)
                         )
 
@@ -127,12 +140,6 @@ fun QuizAttemptScreen(
                             verticalArrangement = Arrangement.spacedBy(16.dp)
                         )
                         {
-                            // Progress Indicator
-                            QuizProgressIndicator(
-                                currentIndex = currentQuestionIndex,
-                                totalQuestions = totalQuestions,
-                                answeredCount = viewModel.getAnsweredCount()
-                            )
 
                             // Question Card
                             currentQuestion?.let { question ->
@@ -271,48 +278,145 @@ fun QuizAttemptScreen(
 }
 
 @Composable
-fun QuizProgressIndicator(
-    currentIndex: Int,
+fun EnhancedTimerCard(
+    totalSeconds: Int,
+    onTimeUp: () -> Unit,
+    isPaused: Boolean,
+    currentQuestion: Int,
     totalQuestions: Int,
     answeredCount: Int,
     modifier: Modifier = Modifier
 ) {
+    var remainingSeconds by remember { mutableStateOf(totalSeconds) }
+    val progress = remainingSeconds.toFloat() / totalSeconds.toFloat()
+    val minutes = remainingSeconds / 60
+    val seconds = remainingSeconds % 60
+    
+    // Color based on time remaining
+    val timerColor = when {
+        progress > 0.5f -> Color(0xFF4CAF50) // Green
+        progress > 0.25f -> Color(0xFFFFA726) // Orange
+        else -> Color(0xFFEF5350) // Red
+    }
+
+    LaunchedEffect(key1 = isPaused) {
+        if (!isPaused && remainingSeconds > 0) {
+            while (remainingSeconds > 0) {
+                kotlinx.coroutines.delay(1000)
+                if (!isPaused) {
+                    remainingSeconds--
+                }
+            }
+            if (remainingSeconds == 0) {
+                onTimeUp()
+            }
+        }
+    }
+
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
             containerColor = Color.White
-        )
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+                .padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Column {
-                Text(
-                    text = "Pertanyaan ${currentIndex + 1}/$totalQuestions",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = SakoPrimary
-                )
-                Text(
-                    text = "$answeredCount dijawab",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.Gray
-                )
+            // Timer and Progress Row
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Timer Display
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .background(
+                                color = timerColor.copy(alpha = 0.1f),
+                                shape = RoundedCornerShape(12.dp)
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "⏱️",
+                            style = MaterialTheme.typography.titleLarge
+                        )
+                    }
+                    
+                    Column {
+                        Text(
+                            text = String.format("%02d:%02d", minutes, seconds),
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = timerColor
+                        )
+                        Text(
+                            text = "Waktu Tersisa",
+                            fontSize = 12.sp,
+                            color = Color.Gray
+                        )
+                    }
+                }
+
+                // Question Progress
+                Column(
+                    horizontalAlignment = Alignment.End
+                ) {
+                    Text(
+                        text = "$currentQuestion/$totalQuestions",
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = SakoPrimary
+                    )
+                    Text(
+                        text = "Pertanyaan",
+                        fontSize = 12.sp,
+                        color = Color.Gray
+                    )
+                }
             }
 
-            LinearProgressIndicator(
-                progress = (currentIndex + 1).toFloat() / totalQuestions.toFloat(),
-                modifier = Modifier
-                    .width(100.dp)
-                    .height(8.dp),
-                color = SakoPrimary,
-                trackColor = Color.Gray.copy(alpha = 0.2f)
-            )
+            // Linear Progress Bar
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                LinearProgressIndicator(
+                    progress = progress,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(8.dp),
+                    color = timerColor,
+                    trackColor = timerColor.copy(alpha = 0.2f)
+                )
+                
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "$answeredCount Terjawab",
+                        fontSize = 11.sp,
+                        color = Color(0xFF4CAF50),
+                        fontWeight = FontWeight.Medium
+                    )
+                    Text(
+                        text = "${totalQuestions - answeredCount} Tersisa",
+                        fontSize = 11.sp,
+                        color = Color.Gray
+                    )
+                }
+            }
         }
     }
 }
@@ -329,57 +433,131 @@ fun QuizBottomNav(
     isSubmitting: Boolean,
     modifier: Modifier = Modifier
 ) {
-    Surface(
+    Card(
         modifier = modifier.fillMaxWidth(),
-        color = Color.White,
-        shadowElevation = 8.dp
+        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.White
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 12.dp)
     ) {
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                .padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Previous Button
-            OutlinedButton(
-                onClick = onPrevious,
-                enabled = canGoBack,
-                modifier = Modifier.weight(1f),
-                colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = SakoPrimary
-                )
+            // Progress dots indicator
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("← Sebelumnya")
+                repeat(totalQuestions) { index ->
+                    Box(
+                        modifier = Modifier
+                            .padding(horizontal = 2.dp)
+                            .size(
+                                width = if (index == currentIndex) 24.dp else 8.dp,
+                                height = 8.dp
+                            )
+                            .background(
+                                color = when {
+                                    index == currentIndex -> SakoPrimary
+                                    index < currentIndex -> SakoPrimary.copy(alpha = 0.5f)
+                                    else -> Color.LightGray
+                                },
+                                shape = RoundedCornerShape(4.dp)
+                            )
+                    )
+                }
             }
 
-            // Next or Submit Button
-            if (canGoNext) {
-                Button(
-                    onClick = onNext,
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = SakoPrimary
-                    )
-                ) {
-                    Text("Selanjutnya →")
+            // Navigation Buttons
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // Previous Button
+                if (canGoBack) {
+                    OutlinedButton(
+                        onClick = onPrevious,
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = SakoPrimary
+                        ),
+                        border = ButtonDefaults.outlinedButtonBorder.copy(
+                            width = 2.dp
+                        )
+                    ) {
+                        Row(
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(vertical = 4.dp)
+                        ) {
+                            Text(
+                                text = "←",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "Sebelumnya",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                    }
                 }
-            } else {
+
+                // Next or Submit Button
                 Button(
-                    onClick = onSubmit,
+                    onClick = if (canGoNext) onNext else onSubmit,
                     enabled = !isSubmitting,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(if (canGoBack) 1f else 1f),
+                    shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = SakoAccent,
-                        contentColor = SakoPrimary
+                        containerColor = if (canGoNext) SakoPrimary else SakoAccent,
+                        contentColor = if (canGoNext) Color.White else SakoPrimary
+                    ),
+                    elevation = ButtonDefaults.buttonElevation(
+                        defaultElevation = 4.dp,
+                        pressedElevation = 8.dp
                     )
                 ) {
                     if (isSubmitting) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(20.dp),
-                            color = SakoPrimary
-                        )
+                        Row(
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(vertical = 4.dp)
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                color = SakoPrimary,
+                                strokeWidth = 2.dp
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Mengirim...")
+                        }
                     } else {
-                        Text("✓ Selesai", fontWeight = FontWeight.Bold)
+                        Row(
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(vertical = 4.dp)
+                        ) {
+                            Text(
+                                text = if (canGoNext) "Selanjutnya" else "Selesaikan Kuis",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = if (canGoNext) "→" else "✓",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
                 }
             }

@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.sako.ui.components.BackgroundImage
 import com.sako.ui.theme.SakoPrimary
 import com.sako.ui.theme.SakoAccent
 
@@ -28,30 +29,33 @@ fun HomeScreen(
     onNavigateToVideo: () -> Unit = {},
     onNavigateToMap: () -> Unit = {}
 ) {
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Column {
-                        Text(
-                            text = "SAKO",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 20.sp
-                        )
-                        Text(
-                            text = "Sistem Aplikasi Kebudayaan Ogan",
-                            fontSize = 12.sp,
-                            color = Color.Gray
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = SakoPrimary,
-                    titleContentColor = Color.White
+    BackgroundImage(alpha = 1f) {
+        Scaffold(
+            containerColor = Color.Transparent,
+            topBar = {
+                TopAppBar(
+                    title = {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxHeight()
+                                .offset(y = (-2).dp),
+                            contentAlignment = Alignment.CenterStart
+                        ) {
+                            Text(
+                                text = "SAKO",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 20.sp
+                            )
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = SakoPrimary,
+                        titleContentColor = Color.White
+                    ),
+                    modifier = Modifier.height(56.dp)
                 )
-            )
-        }
-    ) { paddingValues ->
+            }
+        ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -147,6 +151,7 @@ fun HomeScreen(
                     }
                 }
             }
+        }
         }
     }
 }

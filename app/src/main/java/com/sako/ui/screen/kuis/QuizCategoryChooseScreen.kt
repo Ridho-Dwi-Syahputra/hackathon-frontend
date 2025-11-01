@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sako.ui.components.QuizCategoryCard
 import com.sako.ui.components.LoadingScreen
@@ -46,11 +47,20 @@ fun QuizCategoryChooseScreen(
             topBar = {
                 TopAppBar(
                     title = {
-                        Text(
-                            text = "Pilih Kategori Quiz",
-                            fontWeight = FontWeight.Bold,
-                            color = SakoPrimary
-                        )
+                        Box(
+                            modifier = Modifier
+                                .fillMaxHeight()
+                                .offset(y = (-2).dp),
+                            contentAlignment = Alignment.CenterStart
+                        ) {
+                            Text(
+                                text = "Pilih Kategori Kuis",
+                                fontWeight = FontWeight.Bold,
+                                color = SakoPrimary,
+                                fontSize = 20.sp,
+                                maxLines = 1
+                            )
+                        }
                     },
                     navigationIcon = {
                         IconButton(onClick = onNavigateBack) {
@@ -63,7 +73,8 @@ fun QuizCategoryChooseScreen(
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = Color.White
-                    )
+                    ),
+                    modifier = Modifier.height(56.dp)
                 )
             },
             containerColor = Color.Transparent
