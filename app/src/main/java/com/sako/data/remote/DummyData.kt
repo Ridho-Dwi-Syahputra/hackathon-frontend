@@ -20,8 +20,8 @@ object DummyData {
             data = listOf(
                 CategoryItem(
                     id = "cat-1",
-                    name = "Pengenalan Sako",
-                    description = "Pelajari dasar-dasar tentang Sako, sejarah, dan pentingnya pelestarian.",
+                    name = "Sejarah Minangkabau",
+                    description = "Pelajari sejarah Minangkabau di Sumatera Barat dan pentingnya pelestarian.",
                     isActive = true,
                     displayOrder = 1,
                     progress = CategoryProgress(
@@ -32,8 +32,8 @@ object DummyData {
                 ),
                 CategoryItem(
                     id = "cat-2",
-                    name = "Flora & Fauna",
-                    description = "Kenali keanekaragaman hayati yang ada di ekosistem Sako.",
+                    name = "Kesenian",
+                    description = "Mengenali kesenian yang indah dari Sumatera Barat",
                     isActive = true,
                     displayOrder = 2,
                     progress = CategoryProgress(
@@ -44,8 +44,8 @@ object DummyData {
                 ),
                 CategoryItem(
                     id = "cat-3",
-                    name = "Geografi Sako",
-                    description = "Jelajahi lokasi geografis dan karakteristik wilayah Sako.",
+                    name = "Geografi dan Wisata Budaya",
+                    description = "Seperti apa ya geografis dan karakteristik wilayah Sumatera Barat?",
                     isActive = true,
                     displayOrder = 3,
                     progress = CategoryProgress(
@@ -56,8 +56,8 @@ object DummyData {
                 ),
                 CategoryItem(
                     id = "cat-4",
-                    name = "Konservasi",
-                    description = "Pelajari upaya konservasi dan perlindungan lingkungan Sako.",
+                    name = "Adat dan Filosofi Hidup",
+                    description = "Pelajari adat istiadat Minangkabau di Sumatera Barat.",
                     isActive = true,
                     displayOrder = 4,
                     progress = CategoryProgress(
@@ -176,67 +176,67 @@ object DummyData {
                 questions = listOf(
                     QuestionItem(
                         id = "q1",
-                        text = "Apa kepanjangan dari SAKO?",
+                        text = "Siapa itu Angku dalam Budaya Minang?",
                         pointsCorrect = 10,
                         displayOrder = 1,
                         pointsWrong = 0,
                         options = listOf(
-                            OptionItem(id = "opt1", label = "A", text = "Suaka Alam Kota", displayOrder = 1),
-                            OptionItem(id = "opt2", label = "B", text = "Suaka Alam Konservasi Orangutan", displayOrder = 2),
-                            OptionItem(id = "opt3", label = "C", text = "Sistem Aplikasi Konservasi", displayOrder = 3),
-                            OptionItem(id = "opt4", label = "D", text = "Sentra Alam Konservasi", displayOrder = 4)
+                            OptionItem(id = "opt1", label = "A", text = "Pemimpin Pasukuan", displayOrder = 1),
+                            OptionItem(id = "opt2", label = "B", text = "Anak dari Mamak", displayOrder = 2),
+                            OptionItem(id = "opt3", label = "C", text = "Kemenakan Ibu", displayOrder = 3),
+                            OptionItem(id = "opt4", label = "D", text = "Saudara Ayah", displayOrder = 4)
                         )
                     ),
                     QuestionItem(
                         id = "q2",
-                        text = "Di mana lokasi SAKO berada?",
+                        text = "Yang bukan Sumbang Duo Baleh",
                         pointsCorrect = 10,
                         displayOrder = 2,
                         pointsWrong = 0,
                         options = listOf(
-                            OptionItem(id = "opt5", label = "A", text = "Sumatera Utara", displayOrder = 1),
-                            OptionItem(id = "opt6", label = "B", text = "Kalimantan Barat", displayOrder = 2),
-                            OptionItem(id = "opt7", label = "C", text = "Sumatera Selatan", displayOrder = 3),
-                            OptionItem(id = "opt8", label = "D", text = "Kalimantan Timur", displayOrder = 4)
+                            OptionItem(id = "opt5", label = "A", text = "Duduk di depan pintu saat makan", displayOrder = 1),
+                            OptionItem(id = "opt6", label = "B", text = "Berbicara dengan kasar", displayOrder = 2),
+                            OptionItem(id = "opt7", label = "C", text = "Menggunakan pakaian sopan", displayOrder = 3),
+                            OptionItem(id = "opt8", label = "D", text = "Berteriak-teriak ketika memanggil orang tua", displayOrder = 4)
                         )
                     ),
                     QuestionItem(
                         id = "q3",
-                        text = "Fauna apa yang menjadi fokus konservasi di SAKO?",
+                        text = "Sistem kekerabatan yang dianut oleh masyarakat Minangkabau adalah?",
                         pointsCorrect = 10,
                         displayOrder = 3,
                         pointsWrong = 0,
                         options = listOf(
-                            OptionItem(id = "opt9", label = "A", text = "Harimau Sumatera", displayOrder = 1),
-                            OptionItem(id = "opt10", label = "B", text = "Orangutan", displayOrder = 2),
-                            OptionItem(id = "opt11", label = "C", text = "Gajah Sumatera", displayOrder = 3),
-                            OptionItem(id = "opt12", label = "D", text = "Badak Jawa", displayOrder = 4)
+                            OptionItem(id = "opt9", label = "A", text = "Matrilieneal", displayOrder = 1),
+                            OptionItem(id = "opt10", label = "B", text = "Bilaterat", displayOrder = 2),
+                            OptionItem(id = "opt11", label = "C", text = "Patrilineal", displayOrder = 3),
+                            OptionItem(id = "opt12", label = "D", text = "Unilateral", displayOrder = 4)
                         )
                     ),
                     QuestionItem(
                         id = "q4",
-                        text = "Berapa luas wilayah SAKO?",
+                        text = "Upacara pengangkatan seorang pemimpin adat di Minangkabau disebut?",
                         pointsCorrect = 10,
                         displayOrder = 4,
                         pointsWrong = 0,
                         options = listOf(
-                            OptionItem(id = "opt13", label = "A", text = "500 hektar", displayOrder = 1),
-                            OptionItem(id = "opt14", label = "B", text = "1.000 hektar", displayOrder = 2),
-                            OptionItem(id = "opt15", label = "C", text = "2.400 hektar", displayOrder = 3),
-                            OptionItem(id = "opt16", label = "D", text = "5.000 hektar", displayOrder = 4)
+                            OptionItem(id = "opt13", label = "A", text = "Baralek Gadang", displayOrder = 1),
+                            OptionItem(id = "opt14", label = "B", text = "Batagak Gala", displayOrder = 2),
+                            OptionItem(id = "opt15", label = "C", text = "Makan Bajamba", displayOrder = 3),
+                            OptionItem(id = "opt16", label = "D", text = "Malewakan Gadang", displayOrder = 4)
                         )
                     ),
                     QuestionItem(
                         id = "q5",
-                        text = "Apa tujuan utama dari SAKO?",
+                        text = "Dalam makan bajamba, apa yang harus dilakukan bagi anak yang lebih muda?",
                         pointsCorrect = 10,
                         displayOrder = 5,
                         pointsWrong = 0,
                         options = listOf(
-                            OptionItem(id = "opt17", label = "A", text = "Pariwisata", displayOrder = 1),
-                            OptionItem(id = "opt18", label = "B", text = "Konservasi dan Penelitian", displayOrder = 2),
-                            OptionItem(id = "opt19", label = "C", text = "Perkebunan", displayOrder = 3),
-                            OptionItem(id = "opt20", label = "D", text = "Pemukiman", displayOrder = 4)
+                            OptionItem(id = "opt17", label = "A", text = "Mengambil makan terlebih dahulu", displayOrder = 1),
+                            OptionItem(id = "opt18", label = "B", text = "Menyelesaikan makan lebih dahulu", displayOrder = 2),
+                            OptionItem(id = "opt19", label = "C", text = "Mendahulukan yang tua", displayOrder = 3),
+                            OptionItem(id = "opt20", label = "D", text = "Berdiri", displayOrder = 4)
                         )
                     )
                 ),

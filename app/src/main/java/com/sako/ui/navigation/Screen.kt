@@ -42,11 +42,12 @@ sealed class Screen(val route: String) {
         fun createRoute(locationId: String) = "map_detail/$locationId"
     }
     object ScanMap : Screen("scan_map")
-    object TambahUlasan : Screen("tambah_ulasan/{locationId}") {
-        fun createRoute(locationId: String) = "tambah_ulasan/$locationId"
+    object TambahUlasan : Screen("tambah_ulasan/{locationId}/{placeName}") {
+        fun createRoute(locationId: String, placeName: String) = "tambah_ulasan/$locationId/$placeName"
     }
-    object EditUlasan : Screen("edit_ulasan/{reviewId}") {
-        fun createRoute(reviewId: String) = "edit_ulasan/$reviewId"
+    object EditUlasan : Screen("edit_ulasan/{reviewId}/{placeId}/{rating}/{reviewText}") {
+        fun createRoute(reviewId: String, placeId: String, rating: Int, reviewText: String?) = 
+            "edit_ulasan/$reviewId/$placeId/$rating/${reviewText ?: "null"}"
     }
 
     // Profile Module Screens
@@ -68,7 +69,11 @@ object NavArgs {
     const val ATTEMPT_ID = "attemptId"
     const val VIDEO_ID = "videoId"
     const val LOCATION_ID = "locationId"
+    const val PLACE_NAME = "placeName"
     const val REVIEW_ID = "reviewId"
+    const val PLACE_ID = "placeId"
+    const val RATING = "rating"
+    const val REVIEW_TEXT = "reviewText"
     const val BADGE_ID = "badgeId"
 }
 

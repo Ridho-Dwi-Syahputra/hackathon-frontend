@@ -198,14 +198,123 @@ fun SakoNavGraph(
         }
 
         // ============================================
-        // Placeholder for other screens (uncomment when ready)
+        // Map Module Screens
         // ============================================
+        composable(route = Screen.Map.route) {
+            val mapViewModel: com.sako.viewmodel.MapViewModel = viewModel(factory = viewModelFactory)
 
+            com.sako.ui.screen.map.MapScreen(
+                viewModel = mapViewModel,
+                onNavigateToDetail = { placeId ->
+                    navController.navigate(Screen.MapDetail.createRoute(placeId))
+                },
+                onNavigateToScan = {
+                    navController.navigate(Screen.ScanMap.route)
+                }
+            )
+        }
 
+        composable(
+            route = Screen.MapDetail.route,
+            arguments = listOf(
+                navArgument(NavArgs.LOCATION_ID) { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val placeId = backStackEntry.arguments?.getString(NavArgs.LOCATION_ID) ?: ""
+            val mapViewModel: com.sako.viewmodel.MapViewModel = viewModel(factory = viewModelFactory)
+            val profileViewModel: com.sako.viewmodel.ProfileViewModel = viewModel(factory = viewModelFactory)
+            val userProfile = profileViewModel.userProfile.collectAsState().value
 
+            com.sako.ui.screen.map.DetailMapScreen(
+                placeId = placeId,
+                viewModel = mapViewModel,
+                currentUserId = (userProfile as? com.sako.utils.Resource.Success)?.data?.user?.id,
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onNavigateToAddReview = { locationId ->
+                    // Get place name from detail
+                    val placeDetail = mapViewModel.touristPlaceDetail.value
+                    val placeName = (placeDetail as? com.sako.utils.Resource.Success)?.data?.place?.name ?: "Tempat Wisata"
+                    navController.navigate(Screen.TambahUlasan.createRoute(locationId, placeName))
+                },
+                onNavigateToEditReview = { reviewId, locationId, rating, reviewText ->
+                    navController.navigate(Screen.EditUlasan.createRoute(reviewId, locationId, rating, reviewText))
+                }
+            )
+        }
 
+        composable(route = Screen.ScanMap.route) {
+            val mapViewModel: com.sako.viewmodel.MapViewModel = viewModel(factory = viewModelFactory)
 
+            com.sako.ui.screen.map.ScanMapScreen(
+                viewModel = mapViewModel,
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onNavigateToDetail = { placeId ->
+                    navController.navigate(Screen.MapDetail.createRoute(placeId)) {
+                        popUpTo(Screen.Map.route)
+                    }
+                }
+            )
+        }
+
+        composable(
+            route = Screen.TambahUlasan.route,
+            arguments = listOf(
+                navArgument(NavArgs.LOCATION_ID) { type = NavType.StringType },
+                navArgument(NavArgs.PLACE_NAME) { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val placeId = backStackEntry.arguments?.getString(NavArgs.LOCATION_ID) ?: ""
+            val placeName = backStackEntry.arguments?.getString(NavArgs.PLACE_NAME) ?: ""
+            val mapViewModel: com.sako.viewmodel.MapViewModel = viewModel(factory = viewModelFactory)
+
+            com.sako.ui.screen.map.TambahUlasanScreen(
+                placeId = placeId,
+                placeName = placeName,
+                viewModel = mapViewModel,
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable(
+            route = Screen.EditUlasan.route,
+            arguments = listOf(
+                navArgument(NavArgs.REVIEW_ID) { type = NavType.StringType },
+                navArgument(NavArgs.PLACE_ID) { type = NavType.StringType },
+                navArgument(NavArgs.RATING) { type = NavType.IntType },
+                navArgument(NavArgs.REVIEW_TEXT) { 
+                    type = NavType.StringType
+                    nullable = true
+                }
+            )
+        ) { backStackEntry ->
+            val reviewId = backStackEntry.arguments?.getString(NavArgs.REVIEW_ID) ?: ""
+            val placeId = backStackEntry.arguments?.getString(NavArgs.PLACE_ID) ?: ""
+            val rating = backStackEntry.arguments?.getInt(NavArgs.RATING) ?: 0
+            val reviewText = backStackEntry.arguments?.getString(NavArgs.REVIEW_TEXT)
+                ?.let { if (it == "null") null else it }
+            val mapViewModel: com.sako.viewmodel.MapViewModel = viewModel(factory = viewModelFactory)
+
+            com.sako.ui.screen.map.EditUlasanScreen(
+                reviewId = reviewId,
+                placeId = placeId,
+                initialRating = rating,
+                initialReviewText = reviewText,
+                viewModel = mapViewModel,
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        // ============================================
         // Video Module Screens
+        // ============================================
         composable(route = Screen.VideoList.route) {
             // Pass the shared ViewModel's list into the list screen so it shows
             // the same data (and favorites) as other screens.
