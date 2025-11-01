@@ -89,7 +89,13 @@ data class LevelItem(
     val displayOrder: Int,
 
     @SerializedName("progress")
-    val progress: LevelProgress?
+    val progress: LevelProgress?,
+
+    @SerializedName("pass_condition_type")
+    val passConditionType: String,
+
+    @SerializedName("pass_threshold")
+    val passThreshold: Double
 )
 
 data class LevelProgress(
@@ -148,7 +154,10 @@ data class QuestionItem(
     val displayOrder: Int,
 
     @SerializedName("options")
-    val options: List<OptionItem>
+    val options: List<OptionItem>,
+
+    @SerializedName("points_wrong")
+    val pointsWrong: Int
 )
 
 data class OptionItem(
