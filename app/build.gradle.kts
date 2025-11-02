@@ -151,6 +151,10 @@ dependencies {
     implementation("com.google.android.exoplayer:exoplayer-ui:$exoplayerVersion")
     implementation("com.google.android.exoplayer:exoplayer-core:$exoplayerVersion")
 
+    // ==================== YouTube Player ====================
+    // Android YouTube Player for playing YouTube videos
+    implementation("com.pierfrancescosoffritti.androidyoutubeplayer:core:12.1.0")
+
     // ==================== Speech Recognition ====================
     // Android built-in speech recognition (tidak perlu dependency tambahan)
     // Sudah include di Android SDK
