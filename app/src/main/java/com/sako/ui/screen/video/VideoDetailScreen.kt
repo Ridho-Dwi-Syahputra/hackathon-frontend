@@ -226,14 +226,15 @@ fun VideoDetailScreen(
 
 private fun sampleVideo() = VideoItem(
     id = "v1",
-    judul = "Pengenalan SAKO: Sejarah dan Tujuan",
-    kategori = "Pengenalan Sako",
+    judul = "App SAKO: Mengenal Budaya Minang",
+    kategori = "Kesenian",
     youtubeUrl = "https://youtu.be/dummy1",
     thumbnailUrl = null,
     deskripsi = """
-        SAKO (Suaka Alam Konservasi) merupakan area konservasi yang memiliki peran penting dalam pelestarian keanekaragaman hayati Indonesia. 
-        
-        Video ini memberikan pengenalan mendasar tentang sejarah pembentukan SAKO, tujuan konservasi, dan perannya dalam menjaga keseimbangan ekosistem lokal.
+        App SAKO bertujuan untuk mengenalkan kebudayaan Minangkabau: adat, tradisi, kesenian,
+        serta nilai-nilai lokal yang menjadi bagian dari identitas masyarakat Minang.
+
+        Konten ini adalah contoh (sample) yang ditampilkan saat data real belum tersedia dari backend.
     """.trimIndent(),
     isActive = true,
     isFavorited = false,
