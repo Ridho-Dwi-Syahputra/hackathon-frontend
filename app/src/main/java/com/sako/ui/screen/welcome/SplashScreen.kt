@@ -62,7 +62,7 @@ fun SplashScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "Sistem Aplikasi Kebudayaan Ogan",
+                text = "Gamifikasi Pelestarian Budaya untuk Mendorong Pariwisata Berkelanjutan.",
                 fontSize = 14.sp,
                 color = Color.White.copy(alpha = 0.9f)
             )

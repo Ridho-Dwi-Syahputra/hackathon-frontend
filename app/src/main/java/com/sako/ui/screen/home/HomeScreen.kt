@@ -83,7 +83,7 @@ fun HomeScreen(
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Jelajahi kebudayaan Ogan melalui kuis, video, dan peta interaktif",
+                        text = "Jelajahi kebudayaan minangkabau melalui kuis, video, dan peta budaya.",
                         fontSize = 14.sp,
                         color = Color.White.copy(alpha = 0.9f)
                     )
