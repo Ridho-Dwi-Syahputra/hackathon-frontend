@@ -73,10 +73,8 @@ fun VideoListScreen(
 					placeholder = "Cari berdasarkan judul atau kategori"
 				)
 
-				// Categories
-				val categories = remember(videos) {
-					listOf("All") + videos.map { it.kategori }.distinct()
-				}
+				// Categories - limit to only these options
+				val categories = remember { listOf("All", "Wisata", "Kesenian", "Kuliner") }
 				var selectedCategory by remember { mutableStateOf("All") }
 
 				androidx.compose.foundation.lazy.LazyRow(
@@ -204,33 +202,33 @@ fun VideoListScreen(
 private fun sampleVideos(): List<VideoItem> = listOf(
 	VideoItem(
 		id = "v1",
-		judul = "Pengenalan SAKO: Sejarah dan Tujuan",
-		kategori = "Pengenalan Sako",
+		judul = "Jelajah Alam Danau Maninjau",
+		kategori = "Wisata",
 		youtubeUrl = "https://youtu.be/dummy1",
 		thumbnailUrl = null,
-		deskripsi = "Video pengantar tentang SAKO",
+		deskripsi = "Video jelajah lokasi wisata Danau Maninjau",
 		isActive = true,
 		isFavorited = false,
 		createdAt = "2025-01-01"
 	),
 	VideoItem(
 		id = "v2",
-		judul = "Flora & Fauna: Keanekaragaman Hayati",
-		kategori = "Flora & Fauna",
+		judul = "Mengenal Tari Piring Sumatera Barat",
+		kategori = "Kesenian",
 		youtubeUrl = "https://youtu.be/dummy2",
 		thumbnailUrl = null,
-		deskripsi = "Mengenal flora dan fauna",
+		deskripsi = "Mengenal tarian tradisional dari Sumatera Barat",
 		isActive = true,
 		isFavorited = false,
 		createdAt = "2025-02-01"
 	),
 	VideoItem(
 		id = "v3",
-		judul = "Konservasi di SAKO",
-		kategori = "Konservasi",
+		judul = "Talempong",
+		kategori = "Kesenian",
 		youtubeUrl = "https://youtu.be/dummy3",
 		thumbnailUrl = null,
-		deskripsi = "Upaya konservasi lokal",
+		deskripsi = "Kesenian Musik Talempong",
 		isActive = true,
 		isFavorited = true,
 		createdAt = "2025-03-01"

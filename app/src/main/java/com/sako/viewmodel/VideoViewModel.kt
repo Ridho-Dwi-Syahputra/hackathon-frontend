@@ -35,22 +35,33 @@ class VideoViewModel(private val repository: SakoRepository) : ViewModel() {
                 _videos.value = listOf(
                     VideoItem(
                         id = "1",
-                        judul = "Pengenalan SAKO: Sejarah dan Tujuan",
-                        kategori = "Pengenalan",
+                        judul = "App SAKO: Mengenal Budaya Minang",
+                        kategori = "Kesenian",
                         youtubeUrl = "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
                         thumbnailUrl = null,
-                        deskripsi = "Video pengenalan tentang SAKO",
+                        deskripsi = "Perkenalan aplikasi SAKO yang bertujuan mengenalkan budaya Minangkabau, adat, dan tradisi lokal.",
                         isActive = true,
                         isFavorited = false,
                         createdAt = "2025-01-01"
                     ),
                     VideoItem(
                         id = "2",
-                        judul = "Flora dan Fauna SAKO",
-                        kategori = "Edukasi",
+                        judul = "Kebudayaan Minang: Tari, Musik, dan Tradisi",
+                        kategori = "Kesenian",
                         youtubeUrl = "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
                         thumbnailUrl = null,
-                        deskripsi = "Mengenal flora dan fauna di SAKO",
+                        deskripsi = "Mengenal berbagai aspek kebudayaan Minangkabau: tarian tradisional, musik, dan nilai-nilai masyarakat.",
+                        isActive = true,
+                        isFavorited = false,
+                        createdAt = "2025-01-02"
+                    ),
+                    VideoItem(
+                        id = "3",
+                        judul = "Wisata Alam Danau Maninjau",
+                        kategori = "Wisata",
+                        youtubeUrl = "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+                        thumbnailUrl = null,
+                        deskripsi = "Mengenal lokasi wisata di Danau Maninjau, Sumatera Barat.",
                         isActive = true,
                         isFavorited = false,
                         createdAt = "2025-01-02"
@@ -97,15 +108,15 @@ class VideoViewModel(private val repository: SakoRepository) : ViewModel() {
                     // For now, create a sample video if not found
                     _selectedVideo.value = VideoItem(
                         id = videoId,
-                        judul = "Pengenalan SAKO: Sejarah dan Tujuan",
-                        kategori = "Pengenalan",
+                        judul = "App SAKO: Mengenal Budaya Minang",
+                        kategori = "Kesenian",
                         youtubeUrl = "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
                         thumbnailUrl = null,
                         deskripsi = """
-                            SAKO (Suaka Alam Konservasi) merupakan area konservasi yang memiliki peran 
-                            penting dalam pelestarian keanekaragaman hayati Indonesia. Video ini memberikan 
-                            pengenalan mendasar tentang sejarah pembentukan SAKO, tujuan konservasi, dan 
-                            perannya dalam menjaga keseimbangan ekosistem lokal.
+                            App SAKO ini bertujuan untuk mengenalkan kebudayaan Minangkabau, termasuk adat,
+                            tradisi, kesenian, dan nilai-nilai yang diwariskan secara turun-temurun.
+
+                            Konten ini adalah data sample sementara sampai integrasi API backend siap.
                         """.trimIndent(),
                         isActive = true,
                         isFavorited = false,
