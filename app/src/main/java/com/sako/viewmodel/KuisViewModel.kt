@@ -44,7 +44,9 @@ class KuisViewModel(
                 if (resource is Resource.Error) {
                     _categoriesState.value = Resource.Success(DummyData.getDummyCategories())
                 } else {
-                    _categoriesState.value = resource
+                    //_categoriesState.value = resource
+                    //sementara, selama koneksi backend belum berhasil
+                    _categoriesState.value = Resource.Success(DummyData.getDummyCategories())
                 }
             }
         }
@@ -64,7 +66,11 @@ class KuisViewModel(
                     _levelsState.value = Resource.Success(dummyData)
                     _selectedCategory.value = dummyData.data.category
                 } else {
-                    _levelsState.value = resource
+                    //_levelsState.value = resource
+                    //sementara, selama koneksi backend belum berhasil
+                    val dummyData = DummyData.getDummyLevels(categoryId)
+                    _levelsState.value = Resource.Success(dummyData)
+                    _selectedCategory.value = dummyData.data.category
                     
                     // Update selected category if success
                     if (resource is Resource.Success) {
@@ -112,7 +118,8 @@ class KuisViewModel(
     fun getCategoryById(categoryId: String): CategoryItem? {
         val state = _categoriesState.value
         return if (state is Resource.Success) {
-            state.data.data.find { it.id == categoryId }
+            null
+           // state.data.data.find { it.id == categoryId }
         } else {
             null
         }
@@ -124,7 +131,8 @@ class KuisViewModel(
     fun getLevelById(levelId: String): LevelItem? {
         val state = _levelsState.value
         return if (state is Resource.Success) {
-            state.data.data.levels.find { it.id == levelId }
+            null
+            //state.data.data.levels.find { it.id == levelId }
         } else {
             null
         }
