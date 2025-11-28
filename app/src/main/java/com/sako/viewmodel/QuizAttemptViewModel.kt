@@ -111,6 +111,9 @@ class QuizAttemptViewModel(
                 // Simpan result secara persisten
                 if (resource is Resource.Success) {
                     _quizResult.value = resource.data.data
+                    println("✅ QuizAttemptViewModel - Quiz result saved: isPassed=${resource.data.data.isPassed}, score=${resource.data.data.scorePoints}")
+                } else if (resource is Resource.Error) {
+                    println("❌ QuizAttemptViewModel - Quiz submit error: ${resource.error}")
                 }
                 
                 // Pause timer after submission

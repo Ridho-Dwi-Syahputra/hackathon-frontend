@@ -60,6 +60,8 @@ fun QuizAttemptScreen(
     LaunchedEffect(submitState) {
         if (submitState is Resource.Success) {
             val attemptId = (submitState as Resource.Success).data.data.attemptId
+            println("🚀 QuizAttemptScreen - Navigating to result with attemptId: $attemptId")
+            println("🚀 QuizAttemptScreen - Result data: ${(submitState as Resource.Success).data.data}")
             onNavigateToResult(attemptId)
             // Jangan clear submitState di sini agar data masih available di ResultScreen
         }

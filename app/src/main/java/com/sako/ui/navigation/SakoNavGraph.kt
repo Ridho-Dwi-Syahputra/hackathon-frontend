@@ -25,6 +25,7 @@ import com.sako.ui.screen.video.VideoListScreen
 import com.sako.ui.screen.video.VideoDetailScreen
 import com.sako.ui.screen.video.VideoFavoriteScreen
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.remember
 import com.sako.data.pref.UserPreference
 
 @Composable
@@ -168,7 +169,14 @@ fun SakoNavGraph(
             )
         ) { backStackEntry ->
             val levelId = backStackEntry.arguments?.getString(NavArgs.LEVEL_ID) ?: ""
-            val quizAttemptViewModel: QuizAttemptViewModel = viewModel(factory = viewModelFactory)
+            // Get parent entry to share ViewModel across quiz screens
+            val parentEntry = remember(backStackEntry) {
+                navController.getBackStackEntry(Screen.KuisList.route)
+            }
+            val quizAttemptViewModel: QuizAttemptViewModel = viewModel(
+                viewModelStoreOwner = parentEntry,
+                factory = viewModelFactory
+            )
 
             QuizAttemptScreen(
                 levelId = levelId,
@@ -194,7 +202,14 @@ fun SakoNavGraph(
             )
         ) { backStackEntry ->
             val attemptId = backStackEntry.arguments?.getString(NavArgs.ATTEMPT_ID) ?: ""
-            val quizAttemptViewModel: QuizAttemptViewModel = viewModel(factory = viewModelFactory)
+            // Get parent entry to share ViewModel with QuizAttemptScreen
+            val parentEntry = remember(backStackEntry) {
+                navController.getBackStackEntry(Screen.KuisList.route)
+            }
+            val quizAttemptViewModel: QuizAttemptViewModel = viewModel(
+                viewModelStoreOwner = parentEntry,
+                factory = viewModelFactory
+            )
 
             QuizResultScreen(
                 attemptId = attemptId,

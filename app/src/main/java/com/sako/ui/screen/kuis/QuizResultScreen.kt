@@ -37,6 +37,16 @@ fun QuizResultScreen(
     val quizResult by viewModel.quizResult.collectAsState()
     var showBadgeDialog by remember { mutableStateOf<Pair<String, String>?>(null) }
 
+    // Debug logging
+    LaunchedEffect(attemptId, quizResult, submitState) {
+        println("🔍 QuizResultScreen - attemptId: $attemptId")
+        println("🔍 QuizResultScreen - quizResult: ${quizResult != null}")
+        println("🔍 QuizResultScreen - submitState: ${submitState?.javaClass?.simpleName}")
+        quizResult?.let {
+            println("🔍 QuizResultScreen - Result data: isPassed=${it.isPassed}, score=${it.scorePoints}, xp=${it.xpEarned}")
+        }
+    }
+
     // Show badges earned dialog
     LaunchedEffect(quizResult) {
         quizResult?.badgesEarned?.firstOrNull()?.let { badge ->
@@ -53,9 +63,6 @@ fun QuizResultScreen(
         val currentQuizResult = quizResult
         
         when {
-            submitState is Resource.Loading -> {
-                LoadingScreen()
-            }
             currentQuizResult != null -> {
                 Column(
                     modifier = Modifier
