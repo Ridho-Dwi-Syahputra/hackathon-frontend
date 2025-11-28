@@ -29,11 +29,14 @@ import com.sako.R
 import com.sako.ui.components.BackgroundImage
 import com.sako.ui.theme.SakoPrimary
 import com.sako.ui.theme.SakoAccent
+import com.sako.viewmodel.AuthViewModel
+import com.sako.utils.Resource
 
 @Composable
 fun RegisterScreen(
     onNavigateToLogin: () -> Unit,
-    onRegisterSuccess: () -> Unit
+    onRegisterSuccess: () -> Unit,
+    viewModel: AuthViewModel
 ) {
     var fullName by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
@@ -43,6 +46,28 @@ fun RegisterScreen(
     var confirmPasswordVisible by remember { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+
+    val registerState by viewModel.registerState.collectAsState()
+
+    LaunchedEffect(registerState) {
+        when (val state = registerState) {
+            is Resource.Success -> {
+                viewModel.clearRegisterState()
+                onRegisterSuccess()
+            }
+            is Resource.Error -> {
+                errorMessage = state.error
+                isLoading = false
+            }
+            is Resource.Loading -> {
+                isLoading = true
+                errorMessage = null
+            }
+            null -> {
+                isLoading = false
+            }
+        }
+    }
 
     BackgroundImage(alpha = 0.08f) {
         Box(
@@ -201,9 +226,7 @@ fun RegisterScreen(
                                 password != confirmPassword -> errorMessage = "Password tidak cocok"
                                 else -> {
                                     errorMessage = null
-                                    // TODO: Implement register API call
-                                    // Sementara langsung navigasi ke login
-                                    onNavigateToLogin()
+                                    viewModel.register(fullName, email, password)
                                 }
                             }
                         },

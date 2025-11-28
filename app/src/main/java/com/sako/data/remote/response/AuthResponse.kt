@@ -22,7 +22,7 @@ data class AuthData(
 )
 
 data class UserData(
-    @SerializedName("id")
+    @SerializedName("users_id")
     val id: String,
 
     @SerializedName("full_name")

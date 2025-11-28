@@ -2,7 +2,6 @@ package com.sako.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.sako.data.remote.DummyData
 import com.sako.data.remote.request.QuizAnswerRequest
 import com.sako.data.remote.response.OptionItem
 import com.sako.data.remote.response.QuestionItem
@@ -45,29 +44,24 @@ class QuizAttemptViewModel(
     private val _quizAttemptData = MutableStateFlow<QuizAttemptData?>(null)
     val quizAttemptData: StateFlow<QuizAttemptData?> = _quizAttemptData.asStateFlow()
 
+    // Store quiz result persistently (tidak hilang setelah clear submitState)
+    private val _quizResult = MutableStateFlow<QuizResultData?>(null)
+    val quizResult: StateFlow<QuizResultData?> = _quizResult.asStateFlow()
+
     // ========== Functions ==========
 
     /**
      * Start a new quiz attempt
-     * Fallback ke dummy data jika API gagal
      */
     fun startQuiz(levelId: String) {
         viewModelScope.launch {
             _quizState.value = Resource.Loading
             repository.startQuiz(levelId).collect { resource ->
-                // Jika error (termasuk connection timeout), gunakan dummy data
-                if (resource is Resource.Error) {
-                    val dummyQuiz = DummyData.getDummyQuiz(levelId)
-                    _quizState.value = Resource.Success(dummyQuiz)
-                    _quizAttemptData.value = dummyQuiz.data
+                _quizState.value = resource
+                
+                if (resource is Resource.Success) {
+                    _quizAttemptData.value = resource.data.data
                     resetQuizState()
-                } else {
-                    _quizState.value = resource
-                    
-                    if (resource is Resource.Success) {
-                        _quizAttemptData.value = resource.data.data
-                        resetQuizState()
-                    }
                 }
             }
         }
@@ -112,15 +106,15 @@ class QuizAttemptViewModel(
             }
             
             repository.submitQuiz(attemptData.attemptId, answers).collect { resource ->
-                // FALLBACK: Jika error (backend tidak tersedia), gunakan dummy result
-                if (resource is Resource.Error) {
-                    _submitState.value = Resource.Success(createDummySubmitResponse(attemptData.attemptId, answers))
-                } else {
-                    _submitState.value = resource
+                _submitState.value = resource
+                
+                // Simpan result secara persisten
+                if (resource is Resource.Success) {
+                    _quizResult.value = resource.data.data
                 }
                 
                 // Pause timer after submission
-                if (_submitState.value is Resource.Success || _submitState.value is Resource.Error) {
+                if (resource is Resource.Success || resource is Resource.Error) {
                     _isTimerPaused.value = true
                 }
             }
@@ -284,57 +278,16 @@ class QuizAttemptViewModel(
     }
 
     /**
-     * Get quiz result from submit state
+     * Get quiz result from persisted state
      */
     fun getQuizResult(): QuizResultData? {
-        val submitState = _submitState.value
-        return if (submitState is Resource.Success) {
-            submitState.data.data
-        } else {
-            null
-        }
+        return _quizResult.value
     }
 
     /**
-     * Create dummy submit response untuk testing UI
-     * HAPUS FUNCTION INI saat sudah connect ke backend real
+     * Clear quiz result (untuk reset state saat mulai quiz baru)
      */
-    private fun createDummySubmitResponse(
-        attemptId: String,
-        answers: List<QuizAnswerRequest>
-    ): QuizSubmitResponse {
-        val attemptData = _quizAttemptData.value!!
-        
-        // Hitung berapa yang dijawab
-        val answeredCount = answers.count { it.optionId != null }
-        val unansweredCount = answers.size - answeredCount
-        
-        // Untuk dummy, anggap 60-80% benar
-        val correctCount = (answeredCount * 0.7).toInt()
-        val wrongCount = answeredCount - correctCount
-        
-        val totalPoints = attemptData.questions.sumOf { it.pointsCorrect }
-        val scorePoints = (correctCount.toDouble() / answers.size * totalPoints).toInt()
-        val percentCorrect = (correctCount.toDouble() / answers.size * 100)
-        
-        val isPassed = percentCorrect >= 70.0 // Asumsi passing score 70%
-        
-        return QuizSubmitResponse(
-            status = "success",
-            message = "Dummy result - Backend tidak tersedia",
-            data = QuizResultData(
-                attemptId = attemptId,
-                scorePoints = scorePoints,
-                correctCount = correctCount,
-                wrongCount = wrongCount,
-                unansweredCount = unansweredCount,
-                percentCorrect = percentCorrect,
-                xpEarned = if (isPassed) attemptData.level.baseXp else 0,
-                pointsEarned = if (isPassed) attemptData.level.basePoints else 0,
-                isPassed = isPassed,
-                newTotalXp = 1500 + (if (isPassed) attemptData.level.baseXp else 0),
-                badgesEarned = null
-            )
-        )
+    fun clearQuizResult() {
+        _quizResult.value = null
     }
 }

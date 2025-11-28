@@ -12,8 +12,8 @@
     <domain-config cleartextTrafficPermitted="true">
         <!-- Android Emulator host -->
         <domain includeSubdomains="true">10.0.2.2</domain>
-        <!-- Local PC IP LAN (ubah sesuai jaringan kamu jika perlu) -->
-        <domain includeSubdomains="true">192.168.0.0</domain>
+        <!-- Local PC IP LAN - Real Device -->
+        <domain includeSubdomains="true">192.168.1.7</domain>
         <domain includeSubdomains="true">192.168.1.0</domain>
         <domain includeSubdomains="true">localhost</domain>
     </domain-config>

@@ -2,7 +2,6 @@ package com.sako.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.sako.data.remote.DummyData
 import com.sako.data.remote.response.CategoryItem
 import com.sako.data.remote.response.CategoryListResponse
 import com.sako.data.remote.response.LevelItem
@@ -35,47 +34,27 @@ class KuisViewModel(
 
     /**
      * Fetch all quiz categories with progress
-     * Fallback ke dummy data jika API gagal
      */
     fun getCategories() {
         viewModelScope.launch {
             repository.getCategories().collect { resource ->
-                // Jika error (termasuk connection timeout), gunakan dummy data
-                if (resource is Resource.Error) {
-                    _categoriesState.value = Resource.Success(DummyData.getDummyCategories())
-                } else {
-                    //_categoriesState.value = resource
-                    //sementara, selama koneksi backend belum berhasil
-                    _categoriesState.value = Resource.Success(DummyData.getDummyCategories())
-                }
+                _categoriesState.value = resource
             }
         }
     }
 
     /**
      * Fetch levels for a specific category
-     * Fallback ke dummy data jika API gagal
      */
     fun getLevelsByCategory(categoryId: String) {
         viewModelScope.launch {
             _levelsState.value = Resource.Loading
             repository.getLevelsByCategory(categoryId).collect { resource ->
-                // Jika error (termasuk connection timeout), gunakan dummy data
-                if (resource is Resource.Error) {
-                    val dummyData = DummyData.getDummyLevels(categoryId)
-                    _levelsState.value = Resource.Success(dummyData)
-                    _selectedCategory.value = dummyData.data.category
-                } else {
-                    //_levelsState.value = resource
-                    //sementara, selama koneksi backend belum berhasil
-                    val dummyData = DummyData.getDummyLevels(categoryId)
-                    _levelsState.value = Resource.Success(dummyData)
-                    _selectedCategory.value = dummyData.data.category
-                    
-                    // Update selected category if success
-                    if (resource is Resource.Success) {
-                        _selectedCategory.value = resource.data.data.category
-                    }
+                _levelsState.value = resource
+                
+                // Update selected category if success
+                if (resource is Resource.Success) {
+                    _selectedCategory.value = resource.data.data.category
                 }
             }
         }
@@ -118,8 +97,7 @@ class KuisViewModel(
     fun getCategoryById(categoryId: String): CategoryItem? {
         val state = _categoriesState.value
         return if (state is Resource.Success) {
-            null
-           // state.data.data.find { it.id == categoryId }
+            state.data.data.find { it.id == categoryId }
         } else {
             null
         }
@@ -131,8 +109,7 @@ class KuisViewModel(
     fun getLevelById(levelId: String): LevelItem? {
         val state = _levelsState.value
         return if (state is Resource.Success) {
-            null
-            //state.data.data.levels.find { it.id == levelId }
+            state.data.data.levels.find { it.id == levelId }
         } else {
             null
         }

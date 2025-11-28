@@ -16,6 +16,7 @@ import com.sako.ui.screen.kuis.QuizLevelChooseScreen
 import com.sako.ui.screen.kuis.QuizAttemptScreen
 import com.sako.ui.screen.kuis.QuizResultScreen
 import com.sako.ui.screen.welcome.SplashScreen
+import com.sako.viewmodel.AuthViewModel
 import com.sako.viewmodel.KuisViewModel
 import com.sako.viewmodel.QuizAttemptViewModel
 import com.sako.viewmodel.VideoViewModel
@@ -24,17 +25,22 @@ import com.sako.ui.screen.video.VideoListScreen
 import com.sako.ui.screen.video.VideoDetailScreen
 import com.sako.ui.screen.video.VideoFavoriteScreen
 import androidx.compose.runtime.collectAsState
+import com.sako.data.pref.UserPreference
 
 @Composable
 fun SakoNavGraph(
     navController: NavHostController,
     viewModelFactory: ViewModelFactory,
+    userPreference: UserPreference,
     modifier: Modifier = Modifier,
     startDestination: String = Screen.Splash.route // Start dari Splash Screen
 ) {
     // Create a single shared VideoViewModel for all video-related screens so favorites
     // are consistent across navigation destinations.
     val sharedVideoViewModel: VideoViewModel = viewModel(factory = viewModelFactory)
+    
+    // Create AuthViewModel for login and register screens
+    val authViewModel: AuthViewModel = viewModel(factory = viewModelFactory)
 
     NavHost(
         navController = navController,
@@ -53,7 +59,13 @@ fun SakoNavGraph(
                     navController.navigate(Screen.Register.route) {
                         popUpTo(Screen.Splash.route) { inclusive = true }
                     }
-                }
+                },
+                onNavigateToHome = {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Splash.route) { inclusive = true }
+                    }
+                },
+                userPreference = userPreference
             )
         }
 
@@ -67,7 +79,8 @@ fun SakoNavGraph(
                     navController.navigate(Screen.Login.route) {
                         popUpTo(Screen.Register.route) { inclusive = true }
                     }
-                }
+                },
+                viewModel = authViewModel
             )
         }
 
@@ -81,7 +94,9 @@ fun SakoNavGraph(
                     navController.navigate(Screen.Home.route) {
                         popUpTo(Screen.Login.route) { inclusive = true }
                     }
-                }
+                },
+                viewModel = authViewModel,
+                userPreference = userPreference
             )
         }
 

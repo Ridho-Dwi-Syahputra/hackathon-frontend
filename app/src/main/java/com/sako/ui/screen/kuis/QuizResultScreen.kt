@@ -34,10 +34,8 @@ fun QuizResultScreen(
     modifier: Modifier = Modifier
 ) {
     val submitState by viewModel.submitState.collectAsState()
+    val quizResult by viewModel.quizResult.collectAsState()
     var showBadgeDialog by remember { mutableStateOf<Pair<String, String>?>(null) }
-
-    // Get quiz result
-    val quizResult = viewModel.getQuizResult()
 
     // Show badges earned dialog
     LaunchedEffect(quizResult) {
@@ -51,11 +49,14 @@ fun QuizResultScreen(
             modifier = modifier.fillMaxSize(),
             color = Color.Transparent
         ) {
+        // Extract delegated property to local variable for smart cast
+        val currentQuizResult = quizResult
+        
         when {
             submitState is Resource.Loading -> {
                 LoadingScreen()
             }
-            quizResult != null -> {
+            currentQuizResult != null -> {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -67,7 +68,7 @@ fun QuizResultScreen(
                     Spacer(modifier = Modifier.height(16.dp))
 
                     // Result Icon & Status
-                    val isPassed = quizResult.isPassed
+                    val isPassed = currentQuizResult.isPassed
                     Text(
                         text = if (isPassed) "🎉" else "😢",
                         style = MaterialTheme.typography.displayLarge,
@@ -95,23 +96,23 @@ fun QuizResultScreen(
 
                     // Score Card
                     ScoreCard(
-                        scorePoints = quizResult.scorePoints,
-                        percentCorrect = quizResult.percentCorrect,
+                        scorePoints = currentQuizResult.scorePoints,
+                        percentCorrect = currentQuizResult.percentCorrect,
                         isPassed = isPassed
                     )
 
                     // Statistics Card
                     StatisticsCard(
-                        correctCount = quizResult.correctCount,
-                        wrongCount = quizResult.wrongCount,
-                        unansweredCount = quizResult.unansweredCount
+                        correctCount = currentQuizResult.correctCount,
+                        wrongCount = currentQuizResult.wrongCount,
+                        unansweredCount = currentQuizResult.unansweredCount
                     )
 
                     // Rewards Card
                     RewardsCard(
-                        xpEarned = quizResult.xpEarned,
-                        pointsEarned = quizResult.pointsEarned,
-                        badgesCount = quizResult.badgesEarned?.size ?: 0
+                        xpEarned = currentQuizResult.xpEarned,
+                        pointsEarned = currentQuizResult.pointsEarned,
+                        badgesCount = currentQuizResult.badgesEarned?.size ?: 0
                     )
 
                     // Action Buttons

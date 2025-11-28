@@ -8,6 +8,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -17,17 +19,28 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sako.R
+import com.sako.data.pref.UserPreference
 import com.sako.ui.theme.SakoPrimary
 import kotlinx.coroutines.delay
 
 @Composable
 fun SplashScreen(
-    onNavigateToRegister: () -> Unit
+    onNavigateToRegister: () -> Unit,
+    onNavigateToHome: () -> Unit,
+    userPreference: UserPreference
 ) {
-    // Delay 2 detik lalu navigasi ke Register
+    val userSession by userPreference.getSession().collectAsState(initial = null)
+
+    // Cek session setelah delay
     LaunchedEffect(key1 = true) {
         delay(2000L) // 2 detik
-        onNavigateToRegister()
+        
+        // Cek apakah user sudah login
+        if (userSession?.isLogin == true && userSession?.token?.isNotEmpty() == true) {
+            onNavigateToHome()
+        } else {
+            onNavigateToRegister()
+        }
     }
 
     Box(

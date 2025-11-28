@@ -81,7 +81,7 @@ class SakoRepository private constructor(
                     id = authData.user.id,
                     fullName = authData.user.fullName,
                     email = authData.user.email,
-                    totalXp = authData.user.totalXp,
+                    totalXp = authData.user.totalXp ?: 0,
                     status = authData.user.status,
                     userImageUrl = authData.user.userImageUrl,
                     token = authData.token,

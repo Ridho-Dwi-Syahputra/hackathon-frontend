@@ -26,20 +26,61 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sako.R
+import com.sako.data.pref.UserModel
+import com.sako.data.pref.UserPreference
 import com.sako.ui.components.BackgroundImage
 import com.sako.ui.theme.SakoPrimary
 import com.sako.ui.theme.SakoAccent
+import com.sako.viewmodel.AuthViewModel
+import com.sako.utils.Resource
 
 @Composable
 fun LoginScreen(
     onNavigateToRegister: () -> Unit,
-    onLoginSuccess: () -> Unit
+    onLoginSuccess: () -> Unit,
+    viewModel: AuthViewModel,
+    userPreference: UserPreference
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+
+    val loginState by viewModel.loginState.collectAsState()
+
+    LaunchedEffect(loginState) {
+        when (val state = loginState) {
+            is Resource.Success -> {
+                state.data.data?.let { authData ->
+                    val userModel = UserModel(
+                        id = authData.user.id,
+                        fullName = authData.user.fullName,
+                        email = authData.user.email,
+                        totalXp = authData.user.totalXp,
+                        status = authData.user.status,
+                        userImageUrl = authData.user.userImageUrl,
+                        token = authData.token,
+                        isLogin = true
+                    )
+                    userPreference.saveSession(userModel)
+                }
+                viewModel.clearLoginState()
+                onLoginSuccess()
+            }
+            is Resource.Error -> {
+                errorMessage = state.error
+                isLoading = false
+            }
+            is Resource.Loading -> {
+                isLoading = true
+                errorMessage = null
+            }
+            null -> {
+                isLoading = false
+            }
+        }
+    }
 
     BackgroundImage(alpha = 0.08f) {
         Box(
@@ -168,9 +209,7 @@ fun LoginScreen(
                                 password.isBlank() -> errorMessage = "Password tidak boleh kosong"
                                 else -> {
                                     errorMessage = null
-                                    // TODO: Implement login API call
-                                    // Sementara langsung navigasi ke home
-                                    onLoginSuccess()
+                                    viewModel.login(email, password)
                                 }
                             }
                         },

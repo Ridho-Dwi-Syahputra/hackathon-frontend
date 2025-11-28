@@ -61,7 +61,7 @@ fun QuizAttemptScreen(
         if (submitState is Resource.Success) {
             val attemptId = (submitState as Resource.Success).data.data.attemptId
             onNavigateToResult(attemptId)
-            viewModel.clearSubmitState()
+            // Jangan clear submitState di sini agar data masih available di ResultScreen
         }
     }
 

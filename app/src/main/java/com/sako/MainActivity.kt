@@ -71,6 +71,7 @@ fun SakoApp() {
         SakoNavGraph(
             navController = navController,
             viewModelFactory = viewModelFactory,
+            userPreference = userPreference,
             modifier = Modifier.padding(innerPadding)
         )
     }
