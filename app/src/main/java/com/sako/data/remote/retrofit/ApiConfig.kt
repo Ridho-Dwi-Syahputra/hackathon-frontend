@@ -37,7 +37,9 @@ object ApiConfig {
                 userPreference.getSession().first()
             }
 
-            android.util.Log.d("AUTH_INTERCEPTOR", "🔐 Session - Login: ${userSession.isLogin}, AccessToken: ${userSession.accessToken.take(20)}..., DatabaseToken: ${userSession.databaseToken.take(10)}...")
+            android.util.Log.d("AUTH_INTERCEPTOR", "🔐 Session - Login: ${userSession.isLogin}")
+            android.util.Log.d("AUTH_INTERCEPTOR", "🔐 AccessToken length: ${userSession.accessToken.length}, value: ${userSession.accessToken.take(30)}...")
+            android.util.Log.d("AUTH_INTERCEPTOR", "🔐 DatabaseToken length: ${userSession.databaseToken.length}, value: ${userSession.databaseToken.take(30)}...")
 
             val requestHeaders = req.newBuilder()
                 .addHeader("Accept", "application/json")

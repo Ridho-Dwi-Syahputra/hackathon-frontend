@@ -163,4 +163,47 @@ interface ApiService {
     @GET("videos/favorites")
     suspend fun getFavoriteVideos(): VideoListResponse
 
+    // ========== Video Collection Endpoints ==========
+
+    @POST("video-collections/collections")
+    suspend fun createVideoCollection(
+        @Body request: CreateVideoCollectionRequest
+    ): VideoCollectionResponse
+
+    @GET("video-collections/collections")
+    suspend fun getVideoCollections(): VideoCollectionListResponse
+
+    @GET("video-collections/collections/{collectionId}")
+    suspend fun getVideoCollectionDetail(
+        @Path("collectionId") collectionId: String
+    ): VideoCollectionDetailResponse
+
+    @PUT("video-collections/collections/{collectionId}")
+    suspend fun updateVideoCollection(
+        @Path("collectionId") collectionId: String,
+        @Body request: UpdateVideoCollectionRequest
+    ): VideoCollectionResponse
+
+    @DELETE("video-collections/collections/{collectionId}")
+    suspend fun deleteVideoCollection(
+        @Path("collectionId") collectionId: String
+    ): CollectionVideoResponse
+
+    @POST("video-collections/collections/{collectionId}/videos/{videoId}")
+    suspend fun addVideoToCollection(
+        @Path("collectionId") collectionId: String,
+        @Path("videoId") videoId: String
+    ): CollectionVideoResponse
+
+    @DELETE("video-collections/collections/{collectionId}/videos/{videoId}")
+    suspend fun removeVideoFromCollection(
+        @Path("collectionId") collectionId: String,
+        @Path("videoId") videoId: String
+    ): CollectionVideoResponse
+
+    @GET("video-collections/videos/{videoId}/collections")
+    suspend fun getCollectionsForVideo(
+        @Path("videoId") videoId: String
+    ): VideoCollectionsForVideoResponse
+
 }

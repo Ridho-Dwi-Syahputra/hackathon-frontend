@@ -178,6 +178,112 @@ class SakoRepository private constructor(
         }
     }
 
+    // ========== Video Collections ==========
+
+    fun createVideoCollection(request: CreateVideoCollectionRequest): Flow<Resource<VideoCollectionResponse>> = flow {
+        emit(Resource.Loading)
+        try {
+            val response = apiService.createVideoCollection(request)
+            emit(Resource.Success(response))
+        } catch (e: HttpException) {
+            val errorBody = e.response()?.errorBody()?.string()
+            emit(Resource.Error(parseErrorMessage(errorBody)))
+        } catch (e: Exception) {
+            emit(Resource.Error(e.message ?: "Terjadi kesalahan"))
+        }
+    }
+
+    fun getVideoCollections(): Flow<Resource<VideoCollectionListResponse>> = flow {
+        emit(Resource.Loading)
+        try {
+            val response = apiService.getVideoCollections()
+            emit(Resource.Success(response))
+        } catch (e: HttpException) {
+            val errorBody = e.response()?.errorBody()?.string()
+            emit(Resource.Error(parseErrorMessage(errorBody)))
+        } catch (e: Exception) {
+            emit(Resource.Error(e.message ?: "Terjadi kesalahan"))
+        }
+    }
+
+    fun getVideoCollectionDetail(collectionId: String): Flow<Resource<VideoCollectionDetailResponse>> = flow {
+        emit(Resource.Loading)
+        try {
+            val response = apiService.getVideoCollectionDetail(collectionId)
+            emit(Resource.Success(response))
+        } catch (e: HttpException) {
+            val errorBody = e.response()?.errorBody()?.string()
+            emit(Resource.Error(parseErrorMessage(errorBody)))
+        } catch (e: Exception) {
+            emit(Resource.Error(e.message ?: "Terjadi kesalahan"))
+        }
+    }
+
+    fun updateVideoCollection(collectionId: String, request: UpdateVideoCollectionRequest): Flow<Resource<VideoCollectionResponse>> = flow {
+        emit(Resource.Loading)
+        try {
+            val response = apiService.updateVideoCollection(collectionId, request)
+            emit(Resource.Success(response))
+        } catch (e: HttpException) {
+            val errorBody = e.response()?.errorBody()?.string()
+            emit(Resource.Error(parseErrorMessage(errorBody)))
+        } catch (e: Exception) {
+            emit(Resource.Error(e.message ?: "Terjadi kesalahan"))
+        }
+    }
+
+    fun deleteVideoCollection(collectionId: String): Flow<Resource<CollectionVideoResponse>> = flow {
+        emit(Resource.Loading)
+        try {
+            val response = apiService.deleteVideoCollection(collectionId)
+            emit(Resource.Success(response))
+        } catch (e: HttpException) {
+            val errorBody = e.response()?.errorBody()?.string()
+            emit(Resource.Error(parseErrorMessage(errorBody)))
+        } catch (e: Exception) {
+            emit(Resource.Error(e.message ?: "Terjadi kesalahan"))
+        }
+    }
+
+    fun addVideoToCollection(collectionId: String, videoId: String): Flow<Resource<CollectionVideoResponse>> = flow {
+        emit(Resource.Loading)
+        try {
+            val response = apiService.addVideoToCollection(collectionId, videoId)
+            emit(Resource.Success(response))
+        } catch (e: HttpException) {
+            val errorBody = e.response()?.errorBody()?.string()
+            emit(Resource.Error(parseErrorMessage(errorBody)))
+        } catch (e: Exception) {
+            emit(Resource.Error(e.message ?: "Terjadi kesalahan"))
+        }
+    }
+
+    fun removeVideoFromCollection(collectionId: String, videoId: String): Flow<Resource<CollectionVideoResponse>> = flow {
+        emit(Resource.Loading)
+        try {
+            val response = apiService.removeVideoFromCollection(collectionId, videoId)
+            emit(Resource.Success(response))
+        } catch (e: HttpException) {
+            val errorBody = e.response()?.errorBody()?.string()
+            emit(Resource.Error(parseErrorMessage(errorBody)))
+        } catch (e: Exception) {
+            emit(Resource.Error(e.message ?: "Terjadi kesalahan"))
+        }
+    }
+
+    fun getCollectionsForVideo(videoId: String): Flow<Resource<VideoCollectionsForVideoResponse>> = flow {
+        emit(Resource.Loading)
+        try {
+            val response = apiService.getCollectionsForVideo(videoId)
+            emit(Resource.Success(response))
+        } catch (e: HttpException) {
+            val errorBody = e.response()?.errorBody()?.string()
+            emit(Resource.Error(parseErrorMessage(errorBody)))
+        } catch (e: Exception) {
+            emit(Resource.Error(e.message ?: "Terjadi kesalahan"))
+        }
+    }
+
     // ========== Badges ==========
 
     fun getAllBadges(): Flow<Resource<CategoryListResponse>> = flow {

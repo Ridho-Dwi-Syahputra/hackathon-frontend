@@ -1,6 +1,7 @@
 package com.sako.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -21,13 +22,21 @@ import com.sako.viewmodel.AuthViewModel
 import com.sako.viewmodel.KuisViewModel
 import com.sako.viewmodel.QuizAttemptViewModel
 import com.sako.viewmodel.VideoViewModel
+import com.sako.viewmodel.VideoCollectionViewModel
 import com.sako.viewmodel.ViewModelFactory
 import com.sako.viewmodel.AuthViewModelFactory
 import com.sako.ui.screen.video.VideoListScreen
 import com.sako.ui.screen.video.VideoDetailScreen
 import com.sako.ui.screen.video.VideoFavoriteScreen
+import com.sako.ui.screen.video.VideoCollectionListScreen
+import com.sako.ui.screen.video.VideoCollectionDetailScreen
+import com.sako.ui.screen.video.CreateCollectionDialog
+import com.sako.ui.screen.video.AddToCollectionBottomSheet
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import com.sako.data.pref.UserPreference
 
 @Composable
@@ -378,6 +387,11 @@ fun SakoNavGraph(
                 viewModelStoreOwner = navController.getBackStackEntry(Screen.Home.route)
             )
             
+            val collectionViewModel: VideoCollectionViewModel = viewModel(
+                factory = viewModelFactory,
+                viewModelStoreOwner = navController.getBackStackEntry(Screen.Home.route)
+            )
+            
             // Reload favorites saat masuk screen
             sharedVideoViewModel.loadFavoriteVideos()
             
@@ -388,7 +402,92 @@ fun SakoNavGraph(
                 onNavigateToDetail = { videoId ->
                     navController.navigate(Screen.VideoDetail.createRoute(videoId))
                 },
-                viewModel = sharedVideoViewModel
+                onNavigateToCollections = {
+                    navController.navigate(Screen.VideoCollectionList.route)
+                },
+                viewModel = sharedVideoViewModel,
+                collectionViewModel = collectionViewModel
+            )
+        }
+
+        composable(route = Screen.VideoCollectionList.route) {
+            // Use shared ViewModel scoped to Home route
+            val collectionViewModel: VideoCollectionViewModel = viewModel(
+                factory = viewModelFactory,
+                viewModelStoreOwner = navController.getBackStackEntry(Screen.Home.route)
+            )
+            val collections by collectionViewModel.collections.collectAsState()
+            val isLoading by collectionViewModel.isLoading.collectAsState()
+            var showCreateDialog by remember { mutableStateOf(false) }
+            
+            // Reload collections when entering screen
+            LaunchedEffect(Unit) {
+                collectionViewModel.loadCollections()
+            }
+
+            VideoCollectionListScreen(
+                collections = collections,
+                isLoading = isLoading,
+                onNavigateToDetail = { collectionId ->
+                    navController.navigate(Screen.VideoCollectionDetail.createRoute(collectionId))
+                },
+                onCreateCollection = {
+                    showCreateDialog = true
+                }
+            )
+
+            if (showCreateDialog) {
+                CreateCollectionDialog(
+                    onDismiss = { showCreateDialog = false },
+                    onCreate = { nama, deskripsi ->
+                        collectionViewModel.createCollection(nama, deskripsi)
+                        showCreateDialog = false
+                    },
+                    isLoading = isLoading
+                )
+            }
+        }
+
+        composable(
+            route = Screen.VideoCollectionDetail.route,
+            arguments = listOf(navArgument("collectionId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            // Use shared ViewModel scoped to Home route
+            val collectionViewModel: VideoCollectionViewModel = viewModel(
+                factory = viewModelFactory,
+                viewModelStoreOwner = navController.getBackStackEntry(Screen.Home.route)
+            )
+            val collectionId = backStackEntry.arguments?.getString("collectionId") ?: ""
+            val selectedCollection by collectionViewModel.selectedCollection.collectAsState()
+            val collectionVideos by collectionViewModel.collectionVideos.collectAsState()
+            val isLoading by collectionViewModel.isLoading.collectAsState()
+
+            // Load collection detail when screen opens
+            remember(collectionId) {
+                collectionViewModel.loadCollectionDetail(collectionId)
+                true
+            }
+
+            VideoCollectionDetailScreen(
+                collectionName = selectedCollection?.namaKoleksi ?: "Loading...",
+                collectionDescription = selectedCollection?.deskripsi,
+                videoCount = selectedCollection?.jumlahVideo ?: 0,
+                videos = collectionVideos,
+                isLoading = isLoading,
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onNavigateToVideoDetail = { videoId ->
+                    navController.navigate(Screen.VideoDetail.createRoute(videoId))
+                },
+                onRemoveVideo = { videoId ->
+                    collectionViewModel.removeVideoFromCollection(collectionId, videoId)
+                },
+                onDeleteCollection = {
+                    collectionViewModel.deleteCollection(collectionId)
+                    // Wait a bit before navigating back to let the state update
+                    navController.popBackStack()
+                }
             )
         }
 

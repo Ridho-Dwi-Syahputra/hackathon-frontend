@@ -35,6 +35,10 @@ sealed class Screen(val route: String) {
         fun createRoute(videoId: String) = "video_detail/$videoId"
     }
     object VideoFavorite : Screen("video_favorite")
+    object VideoCollectionList : Screen("video_collection_list")
+    object VideoCollectionDetail : Screen("video_collection_detail/{collectionId}") {
+        fun createRoute(collectionId: String) = "video_collection_detail/$collectionId"
+    }
 
     // Map Module Screens
     object MapDetail : Screen("map_detail/{locationId}") {

@@ -1,5 +1,10 @@
 package com.sako.ui.screen.video
 
+import android.app.Activity
+import android.content.Intent
+import android.speech.RecognizerIntent
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -22,6 +27,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -33,13 +39,17 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.sako.data.remote.response.VideoItem
+import com.sako.R
 import com.sako.ui.theme.SakoCustomTypography
 import com.sako.ui.components.SakoTextInputField
 import com.sako.ui.components.BackgroundImage
 import com.sako.ui.theme.SakoTheme
+import java.util.Locale
 
 /**
  * VideoListScreen - Menampilkan daftar video dengan search bar, kategori dan FAB favorite
@@ -63,15 +73,58 @@ fun VideoListScreen(
 				.fillMaxSize()
 				.padding(16.dp)) {
 
-				// Search bar
+				// Search bar with voice search
 				var query by remember { mutableStateOf("") }
-				SakoTextInputField(
-					value = query,
-					onValueChange = { query = it },
-					label = "Cari video...",
-					leadingIcon = Icons.Default.Search,
-					placeholder = "Cari berdasarkan judul atau kategori"
-				)
+				
+				// Speech-to-Text launcher
+				val context = LocalContext.current
+				val speechLauncher = rememberLauncherForActivityResult(
+					contract = ActivityResultContracts.StartActivityForResult()
+				) { result ->
+					if (result.resultCode == Activity.RESULT_OK) {
+						val spokenText = result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.get(0)
+						if (spokenText != null) {
+							query = spokenText
+							println("🎤 Voice search: $spokenText")
+						}
+					}
+				}
+				
+				Row(
+					modifier = Modifier.fillMaxWidth(),
+					horizontalArrangement = Arrangement.spacedBy(8.dp),
+					verticalAlignment = Alignment.CenterVertically
+				) {
+					SakoTextInputField(
+						value = query,
+						onValueChange = { query = it },
+						label = "Cari video...",
+						leadingIcon = Icons.Default.Search,
+						placeholder = "Cari berdasarkan judul atau kategori",
+						modifier = Modifier.weight(1f)
+					)
+					
+					// Voice search button
+					FloatingActionButton(
+						onClick = {
+							val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+								putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+								putExtra(RecognizerIntent.EXTRA_LANGUAGE, "id-ID") // Bahasa Indonesia
+								putExtra(RecognizerIntent.EXTRA_PROMPT, "Katakan kata kunci pencarian...")
+							}
+							speechLauncher.launch(intent)
+						},
+						containerColor = MaterialTheme.colorScheme.primary,
+						contentColor = MaterialTheme.colorScheme.onPrimary,
+						modifier = Modifier.height(48.dp)
+					) {
+						Icon(
+							painter = painterResource(id = R.drawable.microphone),
+							contentDescription = "Voice Search",
+							modifier = Modifier.padding(12.dp)
+						)
+					}
+				}
 
 				// Categories - limit to only these options
 				val categories = remember { listOf("All", "Wisata", "Kesenian", "Kuliner", "Adat") }

@@ -34,6 +34,10 @@ class ViewModelFactory(
                 val repository = Injection.provideRepository(context)
                 VideoViewModel(repository) as T
             }
+            modelClass.isAssignableFrom(VideoCollectionViewModel::class.java) -> {
+                val repository = Injection.provideRepository(context)
+                VideoCollectionViewModel(repository) as T
+            }
             modelClass.isAssignableFrom(MapViewModel::class.java) -> {
                 val mapRepository = Injection.provideMapRepository(context)
                 MapViewModel(mapRepository) as T

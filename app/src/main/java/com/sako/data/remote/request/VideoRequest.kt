@@ -22,3 +22,26 @@ data class FavoriteVideoRequest(
     @SerializedName("video_id")
     val videoId: String
 )
+
+// Video Collection Requests
+data class CreateVideoCollectionRequest(
+    @SerializedName("nama_koleksi")
+    val namaKoleksi: String,
+
+    @SerializedName("deskripsi")
+    val deskripsi: String? = null,
+
+    @SerializedName("thumbnail_url")
+    val thumbnailUrl: String? = null
+)
+
+data class UpdateVideoCollectionRequest(
+    @SerializedName("nama_koleksi")
+    val namaKoleksi: String? = null,
+
+    @SerializedName("deskripsi")
+    val deskripsi: String? = null,
+
+    @SerializedName("thumbnail_url")
+    val thumbnailUrl: String? = null
+)

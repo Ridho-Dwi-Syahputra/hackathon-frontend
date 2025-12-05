@@ -5,26 +5,48 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.sako.data.remote.response.VideoCollectionWithFlag
 import com.sako.ui.components.BackgroundImage
-import com.sako.ui.components.VideoListItem
+import com.sako.ui.components.VideoListItemWithCollection
 import com.sako.viewmodel.VideoViewModel
+import com.sako.viewmodel.VideoCollectionViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VideoFavoriteScreen(
     onNavigateBack: () -> Unit,
     onNavigateToDetail: (String) -> Unit,
-    viewModel: VideoViewModel
+    onNavigateToCollections: () -> Unit,
+    viewModel: VideoViewModel,
+    collectionViewModel: VideoCollectionViewModel
 ) {
     val favoriteVideos by viewModel.favoriteVideos.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
+    val collectionsForVideo by collectionViewModel.collectionsForVideo.collectAsState()
+    val isLoadingCollections by collectionViewModel.isLoading.collectAsState()
+    
+    var selectedVideoId by remember { mutableStateOf<String?>(null) }
+    var showBottomSheet by remember { mutableStateOf(false) }
+    var showCreateDialog by remember { mutableStateOf(false) }
+    
+    // Load collections when bottom sheet is shown
+    LaunchedEffect(showBottomSheet) {
+        if (showBottomSheet && selectedVideoId != null) {
+            collectionViewModel.loadCollectionsForVideo(selectedVideoId!!)
+        }
+    }
 
     BackgroundImage {
         Scaffold(
@@ -40,6 +62,18 @@ fun VideoFavoriteScreen(
                         }
                     }
                 )
+            },
+            floatingActionButton = {
+                FloatingActionButton(
+                    onClick = onNavigateToCollections,
+                    containerColor = MaterialTheme.colorScheme.primary
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Folder,
+                        contentDescription = "Koleksi",
+                        tint = MaterialTheme.colorScheme.onPrimary
+                    )
+                }
             }
         ) { innerPadding ->
             Box(
@@ -80,12 +114,52 @@ fun VideoFavoriteScreen(
                             items = favoriteVideos,
                             key = { it.id }
                         ) { video ->
-                            VideoListItem(
+                            VideoListItemWithCollection(
                                 video = video,
-                                onClick = { onNavigateToDetail(video.id) }
+                                onClick = { onNavigateToDetail(video.id) },
+                                onAddToCollection = {
+                                    selectedVideoId = video.id
+                                    showBottomSheet = true
+                                }
                             )
                         }
                     }
+                }
+                
+                // Bottom Sheet untuk Add to Collection
+                if (showBottomSheet && selectedVideoId != null) {
+                    AddToCollectionBottomSheet(
+                        videoId = selectedVideoId!!,
+                        collections = collectionsForVideo,
+                        isLoading = isLoadingCollections,
+                        onDismiss = { 
+                            showBottomSheet = false
+                            selectedVideoId = null
+                        },
+                        onAddToCollection = { collectionId: String ->
+                            collectionViewModel.addVideoToCollection(collectionId, selectedVideoId!!)
+                            showBottomSheet = false
+                            selectedVideoId = null
+                        },
+                        onCreateNewCollection = {
+                            showCreateDialog = true
+                        }
+                    )
+                }
+                
+                // Dialog untuk Create Collection
+                if (showCreateDialog) {
+                    CreateCollectionDialog(
+                        onDismiss = { showCreateDialog = false },
+                        onCreate = { name: String, description: String? ->
+                            collectionViewModel.createCollection(name, description)
+                            showCreateDialog = false
+                            // Reload collections after creating
+                            if (selectedVideoId != null) {
+                                collectionViewModel.loadCollectionsForVideo(selectedVideoId!!)
+                            }
+                        }
+                    )
                 }
             }
         }
