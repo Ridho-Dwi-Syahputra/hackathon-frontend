@@ -144,16 +144,16 @@ dependencies {
     // implementation("com.google.zxing:core:3.5.3")
     // implementation("com.journeyapps:zxing-android-embedded:4.3.0")
 
+    // ==================== YouTube Player ====================
+    // Android YouTube Player by Pierfrancesco Soffritti (untuk embed YouTube di app)
+    implementation("com.pierfrancescosoffritti.androidyoutubeplayer:core:12.1.0")
+    
     // ==================== ExoPlayer (Video Player untuk YouTube) ====================
     // ExoPlayer for video playback
     val exoplayerVersion = "2.19.1"
     implementation("com.google.android.exoplayer:exoplayer:$exoplayerVersion")
     implementation("com.google.android.exoplayer:exoplayer-ui:$exoplayerVersion")
     implementation("com.google.android.exoplayer:exoplayer-core:$exoplayerVersion")
-
-    // ==================== YouTube Player ====================
-    // Android YouTube Player for playing YouTube videos
-    implementation("com.pierfrancescosoffritti.androidyoutubeplayer:core:12.1.0")
 
     // ==================== Speech Recognition ====================
     // Android built-in speech recognition (tidak perlu dependency tambahan)

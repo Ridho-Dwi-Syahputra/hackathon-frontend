@@ -52,7 +52,7 @@ import com.sako.ui.theme.SakoTheme
 @Composable
 fun VideoListScreen(
     modifier: Modifier = Modifier,
-    videos: List<VideoItem> = sampleVideos(),
+    videos: List<VideoItem>,
     onNavigateToFavorite: () -> Unit = {},
     onNavigateToDetail: (String) -> Unit = {}
 ) {
@@ -74,7 +74,7 @@ fun VideoListScreen(
 				)
 
 				// Categories - limit to only these options
-				val categories = remember { listOf("All", "Wisata", "Kesenian", "Kuliner") }
+				val categories = remember { listOf("All", "Wisata", "Kesenian", "Kuliner", "Adat") }
 				var selectedCategory by remember { mutableStateOf("All") }
 
 				androidx.compose.foundation.lazy.LazyRow(
@@ -105,9 +105,15 @@ fun VideoListScreen(
 
 				// Filtered list
 				val filtered = remember(videos, query, selectedCategory) {
+					// Debug: print total videos received
+					println("VideoListScreen - Total videos: ${videos.size}")
+					videos.forEach { v ->
+						println("Video: ${v.judul}, Kategori: '${v.kategori}'")
+					}
+					
 					videos.filter { v ->
 						val matchesQuery = query.isBlank() || v.judul.contains(query, ignoreCase = true) || v.kategori.contains(query, ignoreCase = true)
-						val matchesCategory = selectedCategory == "All" || v.kategori == selectedCategory
+						val matchesCategory = selectedCategory == "All" || v.kategori.trim().equals(selectedCategory, ignoreCase = true)
 						matchesQuery && matchesCategory
 					}
 				}
@@ -207,8 +213,8 @@ private fun sampleVideos(): List<VideoItem> = listOf(
 		youtubeUrl = "https://youtu.be/dummy1",
 		thumbnailUrl = null,
 		deskripsi = "Video jelajah lokasi wisata Danau Maninjau",
-		isActive = true,
-		isFavorited = false,
+		isActive = 1,
+		isFavorited = 0,
 		createdAt = "2025-01-01"
 	),
 	VideoItem(
@@ -218,8 +224,8 @@ private fun sampleVideos(): List<VideoItem> = listOf(
 		youtubeUrl = "https://youtu.be/dummy2",
 		thumbnailUrl = null,
 		deskripsi = "Mengenal tarian tradisional dari Sumatera Barat",
-		isActive = true,
-		isFavorited = false,
+		isActive = 1,
+		isFavorited = 0,
 		createdAt = "2025-02-01"
 	),
 	VideoItem(
@@ -229,8 +235,8 @@ private fun sampleVideos(): List<VideoItem> = listOf(
 		youtubeUrl = "https://youtu.be/dummy3",
 		thumbnailUrl = null,
 		deskripsi = "Kesenian Musik Talempong",
-		isActive = true,
-		isFavorited = true,
+		isActive = 1,
+		isFavorited = 1,
 		createdAt = "2025-03-01"
 	)
 )

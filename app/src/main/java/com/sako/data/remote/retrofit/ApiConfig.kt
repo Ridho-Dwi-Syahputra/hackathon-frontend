@@ -12,8 +12,14 @@ import java.util.concurrent.TimeUnit
 
 object ApiConfig {
 
-    // TODO: Ganti dengan URL backend Anda
-    private const val BASE_URL = "http://10.0.2.2:3000/api/"
+    // Konfigurasi Base URL
+    // Gunakan salah satu sesuai kebutuhan:
+    // - Emulator: http://10.0.2.2:3000/api/
+    // - Physical Device (same WiFi): http://[IP_KOMPUTER]:3000/api/ (cek dengan ipconfig)
+    // - ngrok (bypass WiFi isolation): https://your-subdomain.ngrok-free.dev/api/
+    // - Production: https://your-backend-domain.com/api/
+    
+    private const val BASE_URL = "https://lowery-marcus-nonreputably.ngrok-free.dev/api/"
 
 
     fun getApiService(userPreference: UserPreference): ApiService {

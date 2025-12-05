@@ -23,69 +23,77 @@ class VideoViewModel(private val repository: SakoRepository) : ViewModel() {
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
     init {
+        println("VideoViewModel - INIT CALLED")
         loadVideos()
-        loadFavoriteVideos()
     }
 
     private fun loadVideos() {
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                // Temporary sample data until repository is implemented
-                _videos.value = listOf(
-                    VideoItem(
-                        id = "1",
-                        judul = "App SAKO: Mengenal Budaya Minang",
-                        kategori = "Kesenian",
-                        youtubeUrl = "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-                        thumbnailUrl = null,
-                        deskripsi = "Perkenalan aplikasi SAKO yang bertujuan mengenalkan budaya Minangkabau, adat, dan tradisi lokal.",
-                        isActive = true,
-                        isFavorited = false,
-                        createdAt = "2025-01-01"
-                    ),
-                    VideoItem(
-                        id = "2",
-                        judul = "Kebudayaan Minang: Tari, Musik, dan Tradisi",
-                        kategori = "Kesenian",
-                        youtubeUrl = "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-                        thumbnailUrl = null,
-                        deskripsi = "Mengenal berbagai aspek kebudayaan Minangkabau: tarian tradisional, musik, dan nilai-nilai masyarakat.",
-                        isActive = true,
-                        isFavorited = false,
-                        createdAt = "2025-01-02"
-                    ),
-                    VideoItem(
-                        id = "3",
-                        judul = "Wisata Alam Danau Maninjau",
-                        kategori = "Wisata",
-                        youtubeUrl = "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-                        thumbnailUrl = null,
-                        deskripsi = "Mengenal lokasi wisata di Danau Maninjau, Sumatera Barat.",
-                        isActive = true,
-                        isFavorited = false,
-                        createdAt = "2025-01-02"
-                    )
-                )
-                // TODO: Implement actual API call when ready
-                // _videos.value = repository.getVideos()
+                println("VideoViewModel - Starting to load videos from API")
+                // Fetch videos from API
+                repository.getVideos().collect { resource ->
+                    println("VideoViewModel - Resource received: ${resource.javaClass.simpleName}")
+                    when (resource) {
+                        is com.sako.utils.Resource.Success -> {
+                            val videoList = resource.data?.data?.videos ?: emptyList()
+                            println("VideoViewModel - Success! Videos count: ${videoList.size}")
+                            videoList.forEach { v ->
+                                println("VideoViewModel - Video: ${v.judul}, Kategori: ${v.kategori}")
+                            }
+                            _videos.value = videoList
+                            // Update favorite videos setelah videos di-load
+                            _favoriteVideos.value = videoList.filter { it.isFavorited == 1 }
+                        }
+                        is com.sako.utils.Resource.Error -> {
+                            // TODO: Handle error properly - show to user
+                            println("VideoViewModel - Error loading videos: ${resource.error}")
+                            _videos.value = emptyList()
+                        }
+                        is com.sako.utils.Resource.Loading -> {
+                            println("VideoViewModel - Loading...")
+                            _isLoading.value = true
+                        }
+                    }
+                }
             } catch (e: Exception) {
-                // TODO: Handle error
+                println("VideoViewModel - Exception: ${e.message}")
+                e.printStackTrace()
+                _videos.value = emptyList()
             } finally {
                 _isLoading.value = false
+                println("VideoViewModel - Finished loading. Final count: ${_videos.value.size}")
             }
         }
     }
 
-    private fun loadFavoriteVideos() {
+    fun loadFavoriteVideos() {
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                // For now, filter from videos list
-                _favoriteVideos.value = _videos.value.filter { it.isFavorited }
+                println("VideoViewModel - Loading favorite videos from API")
+                repository.getFavoriteVideos().collect { resource ->
+                    when (resource) {
+                        is com.sako.utils.Resource.Success -> {
+                            val favoriteList = resource.data?.data?.videos ?: emptyList()
+                            println("VideoViewModel - Favorite videos count: ${favoriteList.size}")
+                            _favoriteVideos.value = favoriteList
+                        }
+                        is com.sako.utils.Resource.Error -> {
+                            println("VideoViewModel - Error loading favorites: ${resource.error}")
+                            // Fallback: filter dari videos list
+                            _favoriteVideos.value = _videos.value.filter { it.isFavorited == 1 }
+                        }
+                        is com.sako.utils.Resource.Loading -> {
+                            _isLoading.value = true
+                        }
+                    }
+                }
             } catch (e: Exception) {
-                // TODO: Handle error properly
-                println("Error loading favorites: ${e.message}")
+                println("VideoViewModel - Error loading favorites: ${e.message}")
+                // Fallback: filter dari videos list
+                _favoriteVideos.value = _videos.value.filter { it.isFavorited == 1 }
             } finally {
                 _isLoading.value = false
             }
@@ -98,33 +106,10 @@ class VideoViewModel(private val repository: SakoRepository) : ViewModel() {
             try {
                 // First try to find in existing videos
                 val existingVideo = _videos.value.find { it.id == videoId }
-                if (existingVideo != null) {
-                    _selectedVideo.value = existingVideo
-                } else {
-                    // If not found, we could fetch it from repository
-                    // TODO: Implement when repository is ready
-                    // _selectedVideo.value = repository.getVideoById(videoId)
-
-                    // For now, create a sample video if not found
-                    _selectedVideo.value = VideoItem(
-                        id = videoId,
-                        judul = "App SAKO: Mengenal Budaya Minang",
-                        kategori = "Kesenian",
-                        youtubeUrl = "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-                        thumbnailUrl = null,
-                        deskripsi = """
-                            App SAKO ini bertujuan untuk mengenalkan kebudayaan Minangkabau, termasuk adat,
-                            tradisi, kesenian, dan nilai-nilai yang diwariskan secara turun-temurun.
-
-                            Konten ini adalah data sample sementara sampai integrasi API backend siap.
-                        """.trimIndent(),
-                        isActive = true,
-                        isFavorited = false,
-                        createdAt = "2025-01-01"
-                    )
-                }
+                _selectedVideo.value = existingVideo
             } catch (e: Exception) {
-                // TODO: Handle error
+                println("Error loading video detail: ${e.message}")
+                _selectedVideo.value = null
             } finally {
                 _isLoading.value = false
             }
@@ -134,42 +119,62 @@ class VideoViewModel(private val repository: SakoRepository) : ViewModel() {
     fun toggleVideoFavorite(videoId: String) {
         viewModelScope.launch {
             try {
-                // Update in all videos list
-                val currentVideos = _videos.value.toMutableList()
-                val videoIndex = currentVideos.indexOfFirst { it.id == videoId }
+                println("VideoViewModel - Toggling favorite for video: $videoId")
+                
+                // Get current video state
+                val currentVideo = _videos.value.find { it.id == videoId }
+                    ?: _selectedVideo.value
+                
+                if (currentVideo == null) {
+                    println("VideoViewModel - Video not found: $videoId")
+                    return@launch
+                }
+                
+                val isFavorited = currentVideo.isFavorited == 1
+                println("VideoViewModel - Current favorite state: $isFavorited")
+                
+                // Call API to toggle favorite
+                val apiCall = if (isFavorited) {
+                    repository.removeFavoriteVideo(videoId)
+                } else {
+                    repository.addFavoriteVideo(videoId)
+                }
+                
+                apiCall.collect { resource ->
+                    when (resource) {
+                        is com.sako.utils.Resource.Success -> {
+                            println("VideoViewModel - Toggle favorite success")
+                            
+                            // Update local state
+                            val currentVideos = _videos.value.toMutableList()
+                            val videoIndex = currentVideos.indexOfFirst { it.id == videoId }
 
-                if (videoIndex != -1) {
-                    val video = currentVideos[videoIndex]
-                    val updatedVideo = video.copy(isFavorited = !video.isFavorited)
-                    currentVideos[videoIndex] = updatedVideo
-                    _videos.value = currentVideos
+                            if (videoIndex != -1) {
+                                val video = currentVideos[videoIndex]
+                                val updatedVideo = video.copy(isFavorited = if (isFavorited) 0 else 1)
+                                currentVideos[videoIndex] = updatedVideo
+                                _videos.value = currentVideos
 
-                    // Update selected video if it's the same
-                    if (_selectedVideo.value?.id == videoId) {
-                        _selectedVideo.value = updatedVideo
+                                // Update selected video if it's the same
+                                if (_selectedVideo.value?.id == videoId) {
+                                    _selectedVideo.value = updatedVideo
+                                }
+                            }
+                            
+                            // Reload favorite videos from API
+                            loadFavoriteVideos()
+                        }
+                        is com.sako.utils.Resource.Error -> {
+                            println("VideoViewModel - Error toggling favorite: ${resource.error}")
+                        }
+                        is com.sako.utils.Resource.Loading -> {
+                            println("VideoViewModel - Toggling favorite...")
+                        }
                     }
-
-                    // Update favorite videos list immediately
-                    _favoriteVideos.value = currentVideos.filter { it.isFavorited }
-
-                    // TODO: Update in repository when ready
-                    // repository.toggleVideoFavorite(videoId)
-                    saveFavoriteVideos()
                 }
             } catch (e: Exception) {
-                // TODO: Handle error properly
-                println("Error toggling favorite: ${e.message}")
-            }
-        }
-    }
-
-    private fun saveFavoriteVideos() {
-        viewModelScope.launch {
-            try {
-                // TODO: Save to local storage using DataStore or SharedPreferences
-                // For now, we'll just keep it in memory
-            } catch (e: Exception) {
-                // TODO: Handle error
+                println("VideoViewModel - Error toggling favorite: ${e.message}")
+                e.printStackTrace()
             }
         }
     }
