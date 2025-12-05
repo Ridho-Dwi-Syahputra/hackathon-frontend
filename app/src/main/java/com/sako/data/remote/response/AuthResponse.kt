@@ -3,8 +3,8 @@ package com.sako.data.remote.response
 import com.google.gson.annotations.SerializedName
 
 data class AuthResponse(
-    @SerializedName("status")
-    val status: String,
+    @SerializedName("success")
+    val success: Boolean,
 
     @SerializedName("message")
     val message: String,
@@ -17,8 +17,17 @@ data class AuthData(
     @SerializedName("user")
     val user: UserData,
 
+    @SerializedName("access_token")
+    val accessToken: String? = null,
+    
     @SerializedName("token")
-    val token: String
+    val token: String? = null,
+    
+    @SerializedName("database_token") 
+    val databaseToken: String? = null,
+    
+    @SerializedName("expires_in")
+    val expiresIn: Int? = null
 )
 
 data class UserData(
@@ -32,7 +41,7 @@ data class UserData(
     val email: String,
 
     @SerializedName("total_xp")
-    val totalXp: Int,
+    val totalXp: Int = 0,
 
     @SerializedName("status")
     val status: String,
@@ -40,6 +49,29 @@ data class UserData(
     @SerializedName("user_image_url")
     val userImageUrl: String?,
 
+    @SerializedName("fcm_token")
+    val fcmToken: String? = null,
+
     @SerializedName("created_at")
     val createdAt: String
+)
+
+// Update Profile Response
+data class UpdateProfileResponse(
+    @SerializedName("success")
+    val success: Boolean,
+
+    @SerializedName("message")
+    val message: String,
+
+    @SerializedName("data")
+    val data: UpdateProfileData?
+)
+
+data class UpdateProfileData(
+    @SerializedName("user")
+    val user: UserData,
+    
+    @SerializedName("image_url")
+    val imageUrl: String? = null
 )

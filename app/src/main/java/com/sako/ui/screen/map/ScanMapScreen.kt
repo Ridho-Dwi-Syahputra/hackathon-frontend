@@ -26,6 +26,7 @@ import com.google.android.gms.location.LocationServices
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
+import com.sako.data.remote.response.ScanQRData
 import com.sako.ui.components.BackgroundImage
 import com.sako.utils.Resource
 import com.sako.viewmodel.MapViewModel
@@ -51,7 +52,7 @@ fun ScanMapScreen(
     var showErrorDialog by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf("") }
     
-    val checkinResult by viewModel.checkinResult.collectAsState()
+    val scanResult by viewModel.scanResult.collectAsState()
 
     // Request permissions when screen loads
     LaunchedEffect(Unit) {
@@ -63,10 +64,10 @@ fun ScanMapScreen(
         }
     }
 
-    // Handle checkin result
-    LaunchedEffect(checkinResult) {
-        when (val result = checkinResult) {
-            is Resource.Success -> {
+    // Handle scan result
+    LaunchedEffect(scanResult) {
+        when (val result = scanResult) {
+            is Resource.Success<ScanQRData> -> {
                 isProcessing = false
                 showSuccessDialog = true
             }
@@ -184,11 +185,8 @@ fun ScanMapScreen(
                                     try {
                                         fusedLocationClient.lastLocation.addOnSuccessListener { location ->
                                             if (location != null) {
-                                                viewModel.checkinLocation(
-                                                    qrToken = code,
-                                                    latitude = location.latitude,
-                                                    longitude = location.longitude
-                                                )
+                                                // Location verification passed, scan QR code
+                                                viewModel.scanQRCode(code)
                                             } else {
                                                 errorMessage = "Tidak dapat mendapatkan lokasi"
                                                 showErrorDialog = true
@@ -256,19 +254,23 @@ fun ScanMapScreen(
                 title = { Text("Check-in Berhasil!") },
                 text = {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        (checkinResult as? Resource.Success)?.data?.let { data ->
-                            Text("Selamat! Anda telah check-in di ${data.place.name}")
-                            Text("XP yang didapat: +${data.xpEarned}")
-                            Text("Total XP: ${data.newTotalXp}")
+                        (scanResult as? Resource.Success)?.data?.let { data ->
+                            Text("Selamat! Anda telah berhasil scan lokasi")
+                            data.tourist_place?.let { place ->
+                                Text("Lokasi: ${place.name}")
+                            }
+                            data.visited_at?.let { visitTime ->
+                                Text("Waktu kunjungan: $visitTime")
+                            }
                         }
                     }
                 },
                 confirmButton = {
                     TextButton(
                         onClick = {
-                            viewModel.resetCheckinResult()
+                            viewModel.resetScanResult()
                             showSuccessDialog = false
-                            (checkinResult as? Resource.Success)?.data?.place?.id?.let { placeId ->
+                            (scanResult as? Resource.Success)?.data?.tourist_place?.id?.let { placeId ->
                                 onNavigateToDetail(placeId)
                             } ?: onNavigateBack()
                         }
@@ -279,7 +281,7 @@ fun ScanMapScreen(
                 dismissButton = {
                     TextButton(
                         onClick = {
-                            viewModel.resetCheckinResult()
+                            viewModel.resetScanResult()
                             showSuccessDialog = false
                             onNavigateBack()
                         }
@@ -304,12 +306,12 @@ fun ScanMapScreen(
                         tint = MaterialTheme.colorScheme.error
                     )
                 },
-                title = { Text("Gagal Check-in") },
+                title = { Text("Gagal Scan QR") },
                 text = { Text(errorMessage) },
                 confirmButton = {
                     TextButton(
                         onClick = {
-                            viewModel.resetCheckinResult()
+                            viewModel.resetScanResult()
                             showErrorDialog = false
                             scannedCode = null
                         }

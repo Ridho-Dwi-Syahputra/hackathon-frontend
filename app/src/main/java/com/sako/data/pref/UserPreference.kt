@@ -23,7 +23,9 @@ class UserPreference private constructor(private val dataStore: DataStore<Prefer
             preferences[TOTAL_XP_KEY] = user.totalXp
             preferences[STATUS_KEY] = user.status
             preferences[USER_IMAGE_URL_KEY] = user.userImageUrl ?: ""
-            preferences[TOKEN_KEY] = user.token
+            preferences[ACCESS_TOKEN_KEY] = user.accessToken
+            preferences[DATABASE_TOKEN_KEY] = user.databaseToken
+            preferences[FCM_TOKEN_KEY] = user.fcmToken ?: ""
             preferences[IS_LOGIN_KEY] = true
         }
     }
@@ -37,7 +39,9 @@ class UserPreference private constructor(private val dataStore: DataStore<Prefer
                 totalXp = preferences[TOTAL_XP_KEY] ?: 0,
                 status = preferences[STATUS_KEY] ?: "active",
                 userImageUrl = preferences[USER_IMAGE_URL_KEY]?.takeIf { it.isNotEmpty() },
-                token = preferences[TOKEN_KEY] ?: "",
+                accessToken = preferences[ACCESS_TOKEN_KEY] ?: "",
+                databaseToken = preferences[DATABASE_TOKEN_KEY] ?: "",
+                fcmToken = preferences[FCM_TOKEN_KEY]?.takeIf { it.isNotEmpty() },
                 isLogin = preferences[IS_LOGIN_KEY] ?: false
             )
         }
@@ -74,7 +78,9 @@ class UserPreference private constructor(private val dataStore: DataStore<Prefer
         private val TOTAL_XP_KEY = intPreferencesKey("total_xp")
         private val STATUS_KEY = stringPreferencesKey("status")
         private val USER_IMAGE_URL_KEY = stringPreferencesKey("user_image_url")
-        private val TOKEN_KEY = stringPreferencesKey("token")
+        private val ACCESS_TOKEN_KEY = stringPreferencesKey("access_token")
+        private val DATABASE_TOKEN_KEY = stringPreferencesKey("database_token")
+        private val FCM_TOKEN_KEY = stringPreferencesKey("fcm_token")
         private val IS_LOGIN_KEY = booleanPreferencesKey("is_login")
 
         fun getInstance(dataStore: DataStore<Preferences>): UserPreference {

@@ -1,22 +1,20 @@
 package com.sako.ui.screen.auth
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -24,15 +22,16 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.sako.R
 import com.sako.data.pref.UserModel
 import com.sako.data.pref.UserPreference
 import com.sako.ui.components.BackgroundImage
+import com.sako.ui.components.SakoPrimaryButton
+import com.sako.ui.components.SakoStatusDialog
+import com.sako.ui.components.SakoTextInputField
 import com.sako.ui.theme.SakoPrimary
-import com.sako.ui.theme.SakoAccent
-import com.sako.viewmodel.AuthViewModel
 import com.sako.utils.Resource
+import com.sako.viewmodel.AuthViewModel
 
 @Composable
 fun LoginScreen(
@@ -44,14 +43,30 @@ fun LoginScreen(
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
+    
+    // Error states
+    var emailError by remember { mutableStateOf<String?>(null) }
+    var passwordError by remember { mutableStateOf<String?>(null) }
+    
+    // Loading state
     var isLoading by remember { mutableStateOf(false) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
+    
+    // Dialog state
+    var showDialog by remember { mutableStateOf(false) }
+    var dialogMessage by remember { mutableStateOf("") }
+    var isSuccess by remember { mutableStateOf(false) }
 
+    // Observe login state
     val loginState by viewModel.loginState.collectAsState()
-
+    
+    // Handle login state
     LaunchedEffect(loginState) {
         when (val state = loginState) {
+            is Resource.Loading -> {
+                isLoading = true
+            }
             is Resource.Success -> {
+                isLoading = false
                 state.data.data?.let { authData ->
                     val userModel = UserModel(
                         id = authData.user.id,
@@ -60,207 +75,202 @@ fun LoginScreen(
                         totalXp = authData.user.totalXp,
                         status = authData.user.status,
                         userImageUrl = authData.user.userImageUrl,
-                        token = authData.token,
+                        accessToken = authData.accessToken ?: "",
+                        databaseToken = authData.databaseToken ?: "",
                         isLogin = true
                     )
                     userPreference.saveSession(userModel)
                 }
                 viewModel.clearLoginState()
-                onLoginSuccess()
+                isSuccess = true
+                dialogMessage = "Login berhasil! Selamat datang kembali."
+                showDialog = true
             }
             is Resource.Error -> {
-                errorMessage = state.error
                 isLoading = false
-            }
-            is Resource.Loading -> {
-                isLoading = true
-                errorMessage = null
+                isSuccess = false
+                dialogMessage = state.error
+                showDialog = true
             }
             null -> {
                 isLoading = false
             }
         }
     }
+    
+    // Validation functions
+    fun validateEmail(email: String): Boolean {
+        return if (email.isEmpty()) {
+            emailError = "Email tidak boleh kosong"
+            false
+        } else if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            emailError = "Format email tidak valid"
+            false
+        } else {
+            emailError = null
+            true
+        }
+    }
+    
+    fun validatePassword(password: String): Boolean {
+        return if (password.isEmpty()) {
+            passwordError = "Kata sandi tidak boleh kosong"
+            false
+        } else if (password.length < 6) {
+            passwordError = "Kata sandi minimal 6 karakter"
+            false
+        } else {
+            passwordError = null
+            true
+        }
+    }
+    
+    fun performLogin() {
+        val isEmailValid = validateEmail(email)
+        val isPasswordValid = validatePassword(password)
+        
+        if (isEmailValid && isPasswordValid) {
+            viewModel.login(email.trim(), password)
+        }
+    }
 
-    BackgroundImage(alpha = 0.08f) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(SakoPrimary.copy(alpha = 0.95f))
-        ) {
+    BackgroundImage {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .padding(horizontal = 24.dp)
+                .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            Spacer(modifier = Modifier.height(64.dp))
-
+            Spacer(modifier = Modifier.height(60.dp))
+            
             // Logo
             Image(
                 painter = painterResource(id = R.drawable.sako),
-                contentDescription = "Logo SAKO",
-                modifier = Modifier.size(100.dp),
-                contentScale = ContentScale.Fit
+                contentDescription = "Logo Sako",
+                modifier = Modifier
+                    .height(80.dp)
+                    .fillMaxWidth(0.6f)
             )
-
-            Spacer(modifier = Modifier.height(32.dp))
-
+            
+            Spacer(modifier = Modifier.height(48.dp))
+            
+            // Title
             Text(
-                text = "Selamat Datang!",
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = "Masuk untuk melanjutkan",
-                fontSize = 14.sp,
-                color = Color.White.copy(alpha = 0.8f),
+                text = "Masuk",
+                style = MaterialTheme.typography.headlineMedium.copy(
+                    fontWeight = FontWeight.Bold,
+                    color = SakoPrimary
+                ),
                 textAlign = TextAlign.Center
             )
-
-            Spacer(modifier = Modifier.height(40.dp))
-
-            // Form Card
-            Card(
+            
+            Spacer(modifier = Modifier.height(32.dp))
+            
+            // Email field
+            SakoTextInputField(
+                value = email,
+                onValueChange = { 
+                    email = it
+                    if (emailError != null) validateEmail(it)
+                },
+                label = "Email",
+                placeholder = "Masukkan email Anda",
+                leadingIcon = Icons.Default.Email,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Email
+                ),
+                isError = emailError != null,
+                errorMessage = emailError ?: "",
+                modifier = Modifier.fillMaxWidth()
+            )
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // Password field
+            SakoTextInputField(
+                value = password,
+                onValueChange = { 
+                    password = it
+                    if (passwordError != null) validatePassword(it)
+                },
+                label = "Kata Sandi",
+                placeholder = "Masukkan kata sandi Anda",
+                leadingIcon = Icons.Default.Lock,
+                trailingIcon = {
+                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                        Icon(
+                            imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                            contentDescription = if (passwordVisible) "Sembunyikan kata sandi" else "Tampilkan kata sandi"
+                        )
+                    }
+                },
+                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Password
+                ),
+                isError = passwordError != null,
+                errorMessage = passwordError ?: "",
+                modifier = Modifier.fillMaxWidth()
+            )
+            
+            Spacer(modifier = Modifier.height(32.dp))
+            
+            // Login button
+            SakoPrimaryButton(
+                text = if (isLoading) "Masuk..." else "Masuk",
+                onClick = { performLogin() },
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = Color.White
-                )
-            ) {
-                Column(
-                    modifier = Modifier.padding(20.dp)
-                ) {
-                    // Email Field
-                    OutlinedTextField(
-                        value = email,
-                        onValueChange = { email = it },
-                        label = { Text("Email") },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = SakoPrimary,
-                            focusedLabelColor = SakoPrimary
-                        )
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // Password Field
-                    OutlinedTextField(
-                        value = password,
-                        onValueChange = { password = it },
-                        label = { Text("Password") },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                        trailingIcon = {
-                            IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                                Icon(
-                                    imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                                    contentDescription = if (passwordVisible) "Sembunyikan password" else "Tampilkan password"
-                                )
-                            }
-                        },
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = SakoPrimary,
-                            focusedLabelColor = SakoPrimary
-                        )
-                    )
-
-                    // Error Message
-                    if (errorMessage != null) {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = errorMessage ?: "",
-                            color = MaterialTheme.colorScheme.error,
-                            fontSize = 12.sp
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    // Forgot Password Link
-                    Text(
-                        text = "Lupa Password?",
-                        color = SakoPrimary,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Medium,
-                        modifier = Modifier
-                            .align(Alignment.End)
-                            .clickable { /* TODO: Implement forgot password */ }
-                    )
-
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                    // Login Button
-                    Button(
-                        onClick = {
-                            // Validasi
-                            when {
-                                email.isBlank() -> errorMessage = "Email tidak boleh kosong"
-                                password.isBlank() -> errorMessage = "Password tidak boleh kosong"
-                                else -> {
-                                    errorMessage = null
-                                    viewModel.login(email, password)
-                                }
-                            }
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(50.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = SakoPrimary
-                        ),
-                        enabled = !isLoading
-                    ) {
-                        if (isLoading) {
-                            CircularProgressIndicator(
-                                color = Color.White,
-                                modifier = Modifier.size(24.dp)
-                            )
-                        } else {
-                            Text(
-                                text = "Masuk",
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    }
-                }
-            }
-
+                enabled = !isLoading
+            )
+            
             Spacer(modifier = Modifier.height(24.dp))
-
-            // Register Link
+            
+            // Register link
             Row(
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
                     text = "Belum punya akun? ",
-                    color = Color.White,
-                    fontSize = 14.sp
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
                 )
                 Text(
                     text = "Daftar",
-                    color = SakoAccent,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        color = SakoPrimary,
+                        fontWeight = FontWeight.SemiBold
+                    ),
                     modifier = Modifier.clickable { onNavigateToRegister() }
                 )
             }
-
-            Spacer(modifier = Modifier.height(24.dp))
+            
+            Spacer(modifier = Modifier.height(60.dp))
         }
+        
+        // Status dialog
+        if (showDialog) {
+            SakoStatusDialog(
+                onDismissRequest = { 
+                    showDialog = false
+                    if (isSuccess) {
+                        onLoginSuccess()
+                    }
+                },
+                icon = painterResource(id = if (isSuccess) R.drawable.success else R.drawable.warning),
+                title = if (isSuccess) "Login Berhasil" else "Login Gagal",
+                message = dialogMessage,
+                buttonText = if (isSuccess) "Lanjutkan" else "Coba Lagi",
+                onConfirm = { 
+                    showDialog = false
+                    if (isSuccess) {
+                        onLoginSuccess()
+                    }
+                }
+            )
         }
     }
 }

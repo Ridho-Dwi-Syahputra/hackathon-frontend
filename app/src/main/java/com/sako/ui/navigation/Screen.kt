@@ -10,8 +10,7 @@ sealed class Screen(val route: String) {
     object Splash : Screen("splash")
     object Login : Screen("login")
     object Register : Screen("register")
-    object ForgetPassword : Screen("forget_password")
-    object ConfirmPassword : Screen("confirm_password")
+
 
     // Main Bottom Nav Screens
     object Home : Screen("home")
@@ -45,9 +44,9 @@ sealed class Screen(val route: String) {
     object TambahUlasan : Screen("tambah_ulasan/{locationId}/{placeName}") {
         fun createRoute(locationId: String, placeName: String) = "tambah_ulasan/$locationId/$placeName"
     }
-    object EditUlasan : Screen("edit_ulasan/{reviewId}/{placeId}/{rating}/{reviewText}") {
-        fun createRoute(reviewId: String, placeId: String, rating: Int, reviewText: String?) = 
-            "edit_ulasan/$reviewId/$placeId/$rating/${reviewText ?: "null"}"
+    object EditUlasan : Screen("edit_ulasan/{reviewId}/{placeId}/{placeName}/{rating}/{reviewText}") {
+        fun createRoute(reviewId: String, placeId: String, placeName: String, rating: Int, reviewText: String?) = 
+            "edit_ulasan/$reviewId/$placeId/$placeName/$rating/${reviewText ?: "null"}"
     }
 
     // Profile Module Screens

@@ -2,6 +2,7 @@ package com.sako.ui.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -21,6 +22,7 @@ import com.sako.viewmodel.KuisViewModel
 import com.sako.viewmodel.QuizAttemptViewModel
 import com.sako.viewmodel.VideoViewModel
 import com.sako.viewmodel.ViewModelFactory
+import com.sako.viewmodel.AuthViewModelFactory
 import com.sako.ui.screen.video.VideoListScreen
 import com.sako.ui.screen.video.VideoDetailScreen
 import com.sako.ui.screen.video.VideoFavoriteScreen
@@ -40,8 +42,10 @@ fun SakoNavGraph(
     // are consistent across navigation destinations.
     val sharedVideoViewModel: VideoViewModel = viewModel(factory = viewModelFactory)
     
-    // Create AuthViewModel for login and register screens
-    val authViewModel: AuthViewModel = viewModel(factory = viewModelFactory)
+    // Create AuthViewModel using dedicated AuthViewModelFactory
+    val context = LocalContext.current
+    val authViewModelFactory = remember { AuthViewModelFactory(context) }
+    val authViewModel: AuthViewModel = viewModel(factory = authViewModelFactory)
 
     NavHost(
         navController = navController,
@@ -252,24 +256,24 @@ fun SakoNavGraph(
         ) { backStackEntry ->
             val placeId = backStackEntry.arguments?.getString(NavArgs.LOCATION_ID) ?: ""
             val mapViewModel: com.sako.viewmodel.MapViewModel = viewModel(factory = viewModelFactory)
-            val profileViewModel: com.sako.viewmodel.ProfileViewModel = viewModel(factory = viewModelFactory)
-            val userProfile = profileViewModel.userProfile.collectAsState().value
 
             com.sako.ui.screen.map.DetailMapScreen(
                 placeId = placeId,
                 viewModel = mapViewModel,
-                currentUserId = (userProfile as? com.sako.utils.Resource.Success)?.data?.user?.id,
                 onNavigateBack = {
                     navController.popBackStack()
+                },
+                onNavigateToScan = {
+                    navController.navigate(Screen.ScanMap.route)
                 },
                 onNavigateToAddReview = { locationId ->
                     // Get place name from detail
                     val placeDetail = mapViewModel.touristPlaceDetail.value
-                    val placeName = (placeDetail as? com.sako.utils.Resource.Success)?.data?.place?.name ?: "Tempat Wisata"
+                    val placeName = (placeDetail as? com.sako.utils.Resource.Success)?.data?.name ?: "Tempat Wisata"
                     navController.navigate(Screen.TambahUlasan.createRoute(locationId, placeName))
                 },
-                onNavigateToEditReview = { reviewId, locationId, rating, reviewText ->
-                    navController.navigate(Screen.EditUlasan.createRoute(reviewId, locationId, rating, reviewText))
+                onNavigateToEditReview = { reviewId, locationId, placeName, rating, reviewText ->
+                    navController.navigate(Screen.EditUlasan.createRoute(reviewId, locationId, placeName, rating, reviewText))
                 }
             )
         }
@@ -316,6 +320,7 @@ fun SakoNavGraph(
             arguments = listOf(
                 navArgument(NavArgs.REVIEW_ID) { type = NavType.StringType },
                 navArgument(NavArgs.PLACE_ID) { type = NavType.StringType },
+                navArgument(NavArgs.PLACE_NAME) { type = NavType.StringType },
                 navArgument(NavArgs.RATING) { type = NavType.IntType },
                 navArgument(NavArgs.REVIEW_TEXT) { 
                     type = NavType.StringType
@@ -325,6 +330,7 @@ fun SakoNavGraph(
         ) { backStackEntry ->
             val reviewId = backStackEntry.arguments?.getString(NavArgs.REVIEW_ID) ?: ""
             val placeId = backStackEntry.arguments?.getString(NavArgs.PLACE_ID) ?: ""
+            val placeName = backStackEntry.arguments?.getString(NavArgs.PLACE_NAME) ?: ""
             val rating = backStackEntry.arguments?.getInt(NavArgs.RATING) ?: 0
             val reviewText = backStackEntry.arguments?.getString(NavArgs.REVIEW_TEXT)
                 ?.let { if (it == "null") null else it }
@@ -333,6 +339,7 @@ fun SakoNavGraph(
             com.sako.ui.screen.map.EditUlasanScreen(
                 reviewId = reviewId,
                 placeId = placeId,
+                placeName = placeName,
                 initialRating = rating,
                 initialReviewText = reviewText,
                 viewModel = mapViewModel,

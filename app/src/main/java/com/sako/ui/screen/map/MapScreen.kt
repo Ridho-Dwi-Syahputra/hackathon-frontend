@@ -1,7 +1,6 @@
 package com.sako.ui.screen.map
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -12,18 +11,23 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.sako.R
 import com.sako.data.remote.response.TouristPlaceItem
+import com.sako.data.remote.response.VisitedPlaceItem
 import com.sako.ui.components.BackgroundImage
+import com.sako.ui.components.SakoPrimaryButton
+import com.sako.ui.theme.SakoPrimary
 import com.sako.utils.Resource
 import com.sako.viewmodel.MapViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MapScreen(
     viewModel: MapViewModel,
@@ -32,108 +36,124 @@ fun MapScreen(
     modifier: Modifier = Modifier
 ) {
     val touristPlaces by viewModel.touristPlaces.collectAsState()
-    val searchQuery by viewModel.searchQuery.collectAsState()
+    val visitedPlaces by viewModel.visitedPlaces.collectAsState()
     
     var showVisited by remember { mutableStateOf(false) }
 
+    LaunchedEffect(Unit) {
+        viewModel.loadTouristPlaces()
+    }
+
     BackgroundImage {
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    title = {
-                        Text(
-                            text = if (showVisited) "Tempat yang Dikunjungi" else "Peta Wisata",
-                            style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.Bold
-                        )
+        Column(
+            modifier = modifier
+                .fillMaxSize()
+                .padding(horizontal = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Spacer(modifier = Modifier.height(60.dp))
+            
+            // Header dengan Logo Sako
+            Image(
+                painter = painterResource(id = R.drawable.sako),
+                contentDescription = "Logo Sako",
+                modifier = Modifier
+                    .height(80.dp)
+                    .fillMaxWidth(0.6f)
+            )
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // Subtitle text
+            Text(
+                text = "Temukan tempat wisata menarik di sekitar Anda",
+                style = MaterialTheme.typography.bodyLarge.copy(
+                    color = MaterialTheme.colorScheme.onSurface,
+                    textAlign = TextAlign.Center
+                ),
+                modifier = Modifier.fillMaxWidth()
+            )
+            
+            Spacer(modifier = Modifier.height(32.dp))
+            
+            // Filter buttons
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                FilterButton(
+                    text = "Semua Tempat",
+                    isSelected = !showVisited,
+                    onClick = {
+                        showVisited = false
+                        viewModel.loadTouristPlaces()
                     },
-                    actions = {
-                        IconButton(onClick = {
-                            showVisited = !showVisited
-                            if (showVisited) {
-                                viewModel.loadVisitedPlaces()
-                            } else {
-                                viewModel.loadTouristPlaces()
-                            }
-                        }) {
-                            Icon(
-                                imageVector = if (showVisited) Icons.Default.Map else Icons.Default.LocationOn,
-                                contentDescription = if (showVisited) "Lihat Semua" else "Lihat Dikunjungi"
-                            )
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)
-                    )
+                    modifier = Modifier.weight(1f)
                 )
-            },
-            floatingActionButton = {
-                ExtendedFloatingActionButton(
-                    onClick = onNavigateToScan,
-                    icon = {
-                        Icon(
-                            imageVector = Icons.Default.QrCode,
-                            contentDescription = "Scan QR"
-                        )
+                FilterButton(
+                    text = "Dikunjungi",
+                    isSelected = showVisited,
+                    onClick = {
+                        showVisited = true
+                        viewModel.loadVisitedPlaces()
                     },
-                    text = { Text("Scan QR") },
-                    containerColor = MaterialTheme.colorScheme.primary
+                    modifier = Modifier.weight(1f)
                 )
             }
-        ) { paddingValues ->
-            Column(
-                modifier = modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-            ) {
-                // Search Bar
-                if (!showVisited) {
-                    SearchBar(
-                        query = searchQuery,
-                        onQueryChange = { viewModel.updateSearchQuery(it) },
-                        onClearQuery = { viewModel.clearSearchQuery() },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp)
-                    )
-                }
-
-                // Content
-                when (val resource = touristPlaces) {
-                    is Resource.Loading -> {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
+            
+            Spacer(modifier = Modifier.height(24.dp))
+            
+            // Content - pilih antara tourist places atau visited places
+            val currentResource = if (showVisited) visitedPlaces else touristPlaces
+            when (currentResource) {
+                is Resource.Loading -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                CircularProgressIndicator()
-                                Text(
-                                    text = "Memuat data...",
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
-                            }
+                            CircularProgressIndicator(
+                                color = SakoPrimary
+                            )
+                            Text(
+                                text = "Memuat data...",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
                         }
                     }
-                    is Resource.Success -> {
-                        if (resource.data.isEmpty()) {
-                            EmptyState(
-                                message = if (showVisited) {
-                                    "Belum ada tempat yang dikunjungi.\nScan QR di lokasi wisata untuk check-in!"
-                                } else {
-                                    "Tidak ada tempat wisata ditemukan"
-                                }
-                            )
-                        } else {
-                            LazyColumn(
-                                contentPadding = PaddingValues(16.dp),
-                                verticalArrangement = Arrangement.spacedBy(12.dp),
-                                modifier = Modifier.fillMaxSize()
-                            ) {
+                }
+                is Resource.Success -> {
+                    if (currentResource.data.isEmpty()) {
+                        EmptyState(
+                            message = if (showVisited) {
+                                "Belum ada tempat yang dikunjungi.\nScan QR di lokasi wisata untuk check-in!"
+                            } else {
+                                "Tidak ada tempat wisata ditemukan"
+                            }
+                        )
+                    } else {
+                        LazyColumn(
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            if (showVisited) {
+                                // For visited places
                                 items(
-                                    items = resource.data,
+                                    items = currentResource.data as List<VisitedPlaceItem>,
+                                    key = { it.id }
+                                ) { place ->
+                                    VisitedPlaceCard(
+                                        place = place,
+                                        onClick = { onNavigateToDetail(place.id) }
+                                    )
+                                }
+                            } else {
+                                // For all tourist places
+                                items(
+                                    items = currentResource.data as List<TouristPlaceItem>,
                                     key = { it.id }
                                 ) { place ->
                                     TouristPlaceCard(
@@ -142,61 +162,76 @@ fun MapScreen(
                                     )
                                 }
                             }
+                            
+                            // Spacer untuk BottomNav
+                            item {
+                                Spacer(modifier = Modifier.height(80.dp))
+                            }
                         }
                     }
-                    is Resource.Error -> {
-                        ErrorState(
-                            message = resource.error,
-                            onRetry = {
-                                if (showVisited) {
-                                    viewModel.loadVisitedPlaces()
-                                } else {
-                                    viewModel.loadTouristPlaces()
-                                }
-                            }
-                        )
-                    }
                 }
+                is Resource.Error -> {
+                    ErrorState(
+                        message = currentResource.error,
+                        onRetry = {
+                            if (showVisited) {
+                                viewModel.loadVisitedPlaces()
+                            } else {
+                                viewModel.loadTouristPlaces()
+                            }
+                        }
+                    )
+                }
+            }
+        }
+        
+        // Floating Action Button untuk Scan QR
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(24.dp),
+            contentAlignment = Alignment.BottomEnd
+        ) {
+            FloatingActionButton(
+                onClick = onNavigateToScan,
+                containerColor = SakoPrimary,
+                contentColor = Color.White
+            ) {
+                Icon(
+                    imageVector = Icons.Default.QrCode,
+                    contentDescription = "Scan QR"
+                )
             }
         }
     }
 }
 
 @Composable
-fun SearchBar(
-    query: String,
-    onQueryChange: (String) -> Unit,
-    onClearQuery: () -> Unit,
+fun FilterButton(
+    text: String,
+    isSelected: Boolean,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    OutlinedTextField(
-        value = query,
-        onValueChange = onQueryChange,
-        modifier = modifier,
-        placeholder = { Text("Cari tempat wisata...") },
-        leadingIcon = {
-            Icon(
-                imageVector = Icons.Default.Search,
-                contentDescription = "Search"
+    Button(
+        onClick = onClick,
+        modifier = modifier.height(48.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = if (isSelected) SakoPrimary else Color.Transparent,
+            contentColor = if (isSelected) Color.White else SakoPrimary
+        ),
+        border = if (!isSelected) {
+            androidx.compose.foundation.BorderStroke(1.dp, SakoPrimary)
+        } else null,
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodyMedium.copy(
+                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
             )
-        },
-        trailingIcon = {
-            if (query.isNotEmpty()) {
-                IconButton(onClick = onClearQuery) {
-                    Icon(
-                        imageVector = Icons.Default.Clear,
-                        contentDescription = "Clear"
-                    )
-                }
-            }
-        },
-        singleLine = true,
-        shape = RoundedCornerShape(12.dp),
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedContainerColor = MaterialTheme.colorScheme.surface,
-            unfocusedContainerColor = MaterialTheme.colorScheme.surface
         )
-    )
+    }
 }
 
 @Composable
@@ -206,122 +241,111 @@ fun TouristPlaceCard(
     modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
+        onClick = onClick,
+        modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        )
     ) {
-        Column {
-            // Image
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(180.dp)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Gambar tempat wisata
+            Card(
+                modifier = Modifier.size(80.dp),
+                shape = RoundedCornerShape(12.dp)
             ) {
                 AsyncImage(
                     model = place.imageUrl,
                     contentDescription = place.name,
                     modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
+                    contentScale = ContentScale.Crop,
+                    error = painterResource(id = R.drawable.sako),
+                    placeholder = painterResource(id = R.drawable.sako)
                 )
-                
-                // Visited Badge
-                if (place.isVisited) {
-                    Surface(
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .padding(8.dp),
-                        shape = RoundedCornerShape(8.dp),
-                        color = MaterialTheme.colorScheme.primary
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                            horizontalArrangement = Arrangement.spacedBy(4.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.CheckCircle,
-                                contentDescription = "Visited",
-                                modifier = Modifier.size(16.dp),
-                                tint = MaterialTheme.colorScheme.onPrimary
-                            )
-                            Text(
-                                text = "Dikunjungi",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onPrimary
-                            )
-                        }
-                    }
-                }
             }
-
-            // Content
+            
+            Spacer(modifier = Modifier.width(16.dp))
+            
+            // Detail tempat
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
+                modifier = Modifier.weight(1f)
             ) {
                 Text(
                     text = place.name,
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 2,
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold
+                    ),
+                    maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-
+                
                 Spacer(modifier = Modifier.height(4.dp))
-
-                place.description?.let { desc ->
-                    Text(
-                        text = desc,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                // Rating and Reviews Count
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+                
+                Text(
+                    text = place.address ?: "Alamat tidak tersedia",
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    ),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                // Status kunjungan
+                if (place.isVisited) {
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Star,
-                            contentDescription = "Rating",
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(20.dp)
+                            imageVector = Icons.Default.CheckCircle,
+                            contentDescription = "Dikunjungi",
+                            tint = Color(0xFF4CAF50),
+                            modifier = Modifier.size(16.dp)
                         )
                         Text(
-                            text = place.averageRating?.toString() ?: "0.0",
-                            style = MaterialTheme.typography.bodyLarge,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                        Text(
-                            text = "(${place.totalReviews} ulasan)",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            text = "Dikunjungi",
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                color = Color(0xFF4CAF50),
+                                fontWeight = FontWeight.Medium
+                            )
                         )
                     }
-
-                    TextButton(onClick = onClick) {
-                        Text("Lihat Detail")
+                } else {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
                         Icon(
-                            imageVector = Icons.Default.ArrowForward,
-                            contentDescription = "Arrow",
+                            imageVector = Icons.Default.LocationOn,
+                            contentDescription = "Belum dikunjungi",
+                            tint = SakoPrimary,
                             modifier = Modifier.size(16.dp)
+                        )
+                        Text(
+                            text = "Belum dikunjungi",
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                color = SakoPrimary,
+                                fontWeight = FontWeight.Medium
+                            )
                         )
                     }
                 }
             }
+            
+            // Arrow icon
+            Icon(
+                imageVector = Icons.Default.ChevronRight,
+                contentDescription = "Lihat detail",
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
@@ -337,20 +361,21 @@ fun EmptyState(
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.padding(32.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Icon(
-                imageVector = Icons.Default.LocationOn,
+                imageVector = Icons.Default.LocationOff,
                 contentDescription = null,
-                modifier = Modifier.size(64.dp),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(64.dp)
             )
             Text(
                 text = message,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                style = MaterialTheme.typography.bodyLarge.copy(
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                ),
+                modifier = Modifier.padding(horizontal = 32.dp)
             )
         }
     }
@@ -368,30 +393,122 @@ fun ErrorState(
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            modifier = Modifier.padding(32.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Icon(
-                imageVector = Icons.Default.Error,
+                imageVector = Icons.Default.ErrorOutline,
                 contentDescription = null,
-                modifier = Modifier.size(64.dp),
-                tint = MaterialTheme.colorScheme.error
+                tint = MaterialTheme.colorScheme.error,
+                modifier = Modifier.size(64.dp)
             )
             Text(
                 text = message,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.error,
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                style = MaterialTheme.typography.bodyLarge.copy(
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.error
+                ),
+                modifier = Modifier.padding(horizontal = 32.dp)
             )
-            Button(onClick = onRetry) {
-                Icon(
-                    imageVector = Icons.Default.Refresh,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp)
+            SakoPrimaryButton(
+                text = "Coba Lagi",
+                onClick = onRetry,
+                modifier = Modifier.padding(horizontal = 32.dp)
+            )
+        }
+    }
+}
+
+@Composable
+fun VisitedPlaceCard(
+    place: VisitedPlaceItem,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        onClick = onClick,
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Gambar tempat wisata
+            Card(
+                modifier = Modifier.size(80.dp),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                AsyncImage(
+                    model = place.imageUrl,
+                    contentDescription = place.name,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop,
+                    error = painterResource(id = R.drawable.sako),
+                    placeholder = painterResource(id = R.drawable.sako)
                 )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Coba Lagi")
             }
+            
+            Spacer(modifier = Modifier.width(16.dp))
+            
+            // Detail tempat
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(
+                    text = place.name,
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold
+                    ),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                
+                Spacer(modifier = Modifier.height(4.dp))
+                
+                Text(
+                    text = place.address ?: "Alamat tidak tersedia",
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    ),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                // Status kunjungan (selalu dikunjungi untuk visited places)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.CheckCircle,
+                        contentDescription = "Dikunjungi",
+                        tint = Color(0xFF4CAF50),
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Text(
+                        text = "Dikunjungi",
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            color = Color(0xFF4CAF50),
+                            fontWeight = FontWeight.Medium
+                        )
+                    )
+                }
+            }
+            
+            // Arrow icon
+            Icon(
+                imageVector = Icons.Default.ChevronRight,
+                contentDescription = "Lihat detail",
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }

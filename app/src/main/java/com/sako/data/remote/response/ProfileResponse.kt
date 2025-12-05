@@ -3,8 +3,8 @@ package com.sako.data.remote.response
 import com.google.gson.annotations.SerializedName
 
 data class ProfileResponse(
-    @SerializedName("status")
-    val status: String,
+    @SerializedName("success")
+    val success: Boolean,
 
     @SerializedName("message")
     val message: String,
@@ -15,7 +15,7 @@ data class ProfileResponse(
 
 data class ProfileData(
     @SerializedName("user")
-    val user: UserData,
+    val user: ProfileUserData,
 
     @SerializedName("stats")
     val stats: UserStats,
@@ -55,21 +55,29 @@ data class BadgeItem(
     val earnedAt: String
 )
 
-data class UpdateProfileResponse(
+// Profile user data untuk menghindari konflik dengan AuthResponse.UserData
+data class ProfileUserData(
+    @SerializedName("users_id")
+    val id: String,
+
+    @SerializedName("full_name")
+    val fullName: String,
+
+    @SerializedName("email")
+    val email: String,
+
+    @SerializedName("total_xp")
+    val totalXp: Int = 0,
+
     @SerializedName("status")
     val status: String,
 
-    @SerializedName("message")
-    val message: String,
+    @SerializedName("user_image_url")
+    val userImageUrl: String?,
 
-    @SerializedName("data")
-    val data: UpdateProfileData?
-)
+    @SerializedName("fcm_token")
+    val fcmToken: String? = null,
 
-data class UpdateProfileData(
-    @SerializedName("user")
-    val user: UserData,
-
-    @SerializedName("image_url")
-    val imageUrl: String?
+    @SerializedName("created_at")
+    val createdAt: String
 )

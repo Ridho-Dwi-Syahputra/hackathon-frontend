@@ -22,10 +22,67 @@ interface ApiService {
     @POST("auth/logout")
     suspend fun logout(): AuthResponse
 
+    @GET("auth/profile")
+    suspend fun getProfile(): ProfileResponse
+
+    @GET("auth/auto-login")
+    suspend fun autoLogin(): AuthResponse
+
+    // ========== Map Endpoints ==========
+
+    @GET("map/places")
+    suspend fun getTouristPlaces(
+        @Query("search") search: String? = null,
+        @Query("page") page: Int = 1
+    ): TouristPlaceListResponse
+
+    @GET("map/places/{id}")
+    suspend fun getTouristPlaceDetail(
+        @Path("id") placeId: String
+    ): TouristPlaceDetailResponse
+
+    @GET("map/visited")
+    suspend fun getVisitedPlaces(
+        @Query("page") page: Int = 1
+    ): VisitedPlaceListResponse
+
+    @POST("map/scan/qr")
+    suspend fun scanQRCode(
+        @Body request: ScanQRRequest
+    ): ScanQRResponse
+
+    @GET("map/places/{id}/reviews")
+    suspend fun getPlaceReviews(
+        @Path("id") placeId: String,
+        @Query("page") page: Int = 1,
+        @Query("limit") limit: Int = 10
+    ): ReviewListResponse
+
+    @POST("map/reviews/add")
+    suspend fun addReview(
+        @Body request: AddReviewRequest
+    ): ReviewResponse
+
+    @PUT("map/reviews/{id}/edit")
+    suspend fun updateReview(
+        @Path("id") reviewId: String,
+        @Body request: UpdateReviewRequest
+    ): ReviewResponse
+
+    @DELETE("map/reviews/{id}/delete")
+    suspend fun deleteReview(
+        @Path("id") reviewId: String
+    ): ReviewResponse
+
+    @POST("map/reviews/{id}/toggle-like")
+    suspend fun toggleReviewLike(
+        @Path("id") reviewId: String
+    ): ToggleLikeResponse
+
     // ========== Profile Endpoints ==========
 
-    @GET("users/profile")
-    suspend fun getProfile(): ProfileResponse
+//    @GET("users/profile")
+//    suspend fun getProfile(): ProfileResponse
 
     @PUT("users/profile")
     suspend fun updateProfile(
@@ -106,41 +163,4 @@ interface ApiService {
     @GET("videos/favorites")
     suspend fun getFavoriteVideos(): VideoListResponse
 
-    // ========== Tourist Place (Map) Endpoints ==========
-
-    @GET("locations")
-    suspend fun getTouristPlaces(
-        @Query("search") search: String? = null
-    ): TouristPlaceListResponse
-
-    @GET("locations/{placeId}")
-    suspend fun getTouristPlaceDetail(
-        @Path("placeId") placeId: String
-    ): TouristPlaceDetailResponse
-
-    @POST("locations/checkin")
-    suspend fun checkinLocation(
-        @Body request: CheckinLocationRequest
-    ): CheckinLocationResponse
-
-    @GET("locations/visited")
-    suspend fun getVisitedPlaces(): TouristPlaceListResponse
-
-    // ========== Review Endpoints ==========
-
-    @POST("reviews")
-    suspend fun addReview(
-        @Body request: AddReviewRequest
-    ): AddReviewResponse
-
-    @PUT("reviews/{reviewId}")
-    suspend fun updateReview(
-        @Path("reviewId") reviewId: String,
-        @Body request: UpdateReviewRequest
-    ): AddReviewResponse
-
-    @DELETE("reviews/{reviewId}")
-    suspend fun deleteReview(
-        @Path("reviewId") reviewId: String
-    ): AddReviewResponse
 }
