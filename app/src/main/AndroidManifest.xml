@@ -59,6 +59,11 @@
     <!-- Wake Lock: untuk keep screen on saat quiz atau scan QR -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
+    <!-- ==================== Firebase Permissions ==================== -->
+    <!-- Push Notifications: untuk Firebase Cloud Messaging -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    
     <!-- ==================== Foreground Service (Optional) ==================== -->
     <!-- Jika butuh foreground service untuk location tracking -->
     <!-- <uses-permission android:name="android.permission.FOREGROUND_SERVICE" /> -->
@@ -97,6 +102,27 @@
             android:name="com.google.mlkit.vision.DEPENDENCIES"
             android:value="barcode" />
 
+        <!-- ==================== Firebase Metadata ==================== -->
+        <!-- Firebase Cloud Messaging: notification channels dan default settings -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_notification" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_color"
+            android:resource="@color/colorPrimary" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="sako_map_notifications" />
+
+        <!-- ==================== Firebase Cloud Messaging Service ==================== -->
+        <service
+            android:name="com.sako.firebase.FCMService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+
         <!-- ==================== Main Activity ==================== -->
         <activity
             android:name=".MainActivity"
@@ -128,6 +154,12 @@
                 <data
                     android:scheme="sako"
                     android:host="quiz" />
+            </intent-filter>
+
+            <!-- Firebase Notification Intent Filter -->
+            <intent-filter>
+                <action android:name="OPEN_ACTIVITY_FROM_NOTIFICATION" />
+                <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
 

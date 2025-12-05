@@ -8,7 +8,10 @@ data class LoginRequest(
     val email: String,
 
     @SerializedName("password")
-    val password: String
+    val password: String,
+    
+    @SerializedName("fcm_token")
+    val fcmToken: String? = null
 )
 
 // Register Request
@@ -20,14 +23,8 @@ data class RegisterRequest(
     val email: String,
 
     @SerializedName("password")
-    val password: String
-)
-
-// Change Password Request
-data class ChangePasswordRequest(
-    @SerializedName("old_password")
-    val oldPassword: String,
-
-    @SerializedName("new_password")
-    val newPassword: String
+    val password: String,
+    
+    @SerializedName("fcm_token")
+    val fcmToken: String? = null
 )

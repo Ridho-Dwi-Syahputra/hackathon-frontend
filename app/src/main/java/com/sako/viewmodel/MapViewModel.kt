@@ -2,11 +2,8 @@ package com.sako.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.sako.data.remote.response.CheckinData
-import com.sako.data.remote.response.ReviewItem
-import com.sako.data.remote.response.TouristPlaceDetail
-import com.sako.data.remote.response.TouristPlaceItem
-import com.sako.data.repository.SakoRepository
+import com.sako.data.remote.response.*
+import com.sako.data.repository.MapRepository
 import com.sako.utils.Resource
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -14,7 +11,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class MapViewModel(
-    private val repository: SakoRepository
+    private val mapRepository: MapRepository
 ) : ViewModel() {
 
     // State for tourist places list
@@ -26,14 +23,18 @@ class MapViewModel(
     val touristPlaceDetail: StateFlow<Resource<TouristPlaceDetail>> = _touristPlaceDetail.asStateFlow()
 
     // State for visited places
-    private val _visitedPlaces = MutableStateFlow<Resource<List<TouristPlaceItem>>>(Resource.Loading)
-    val visitedPlaces: StateFlow<Resource<List<TouristPlaceItem>>> = _visitedPlaces.asStateFlow()
+    private val _visitedPlaces = MutableStateFlow<Resource<List<VisitedPlaceItem>>>(Resource.Loading)
+    val visitedPlaces: StateFlow<Resource<List<VisitedPlaceItem>>> = _visitedPlaces.asStateFlow()
 
-    // State for checkin
-    private val _checkinResult = MutableStateFlow<Resource<CheckinData>?>(null)
-    val checkinResult: StateFlow<Resource<CheckinData>?> = _checkinResult.asStateFlow()
+    // State for QR scan result
+    private val _scanResult = MutableStateFlow<Resource<ScanQRData>?>(null)
+    val scanResult: StateFlow<Resource<ScanQRData>?> = _scanResult.asStateFlow()
 
-    // State for review operations
+    // State for reviews list
+    private val _reviewsList = MutableStateFlow<Resource<ReviewsData>>(Resource.Loading)
+    val reviewsList: StateFlow<Resource<ReviewsData>> = _reviewsList.asStateFlow()
+
+    // State for add/update review operations
     private val _reviewResult = MutableStateFlow<Resource<ReviewItem>?>(null)
     val reviewResult: StateFlow<Resource<ReviewItem>?> = _reviewResult.asStateFlow()
 
@@ -45,9 +46,9 @@ class MapViewModel(
         loadTouristPlaces()
     }
 
-    fun loadTouristPlaces(search: String? = null) {
+    fun loadTouristPlaces(search: String? = null, page: Int = 1) {
         viewModelScope.launch {
-            repository.getTouristPlaces(search).collect { resource ->
+            mapRepository.getTouristPlaces(search, page).collect { resource ->
                 when (resource) {
                     is Resource.Success -> {
                         _touristPlaces.value = Resource.Success(resource.data.data)
@@ -65,7 +66,7 @@ class MapViewModel(
 
     fun loadTouristPlaceDetail(placeId: String) {
         viewModelScope.launch {
-            repository.getTouristPlaceDetail(placeId).collect { resource ->
+            mapRepository.getTouristPlaceDetail(placeId).collect { resource ->
                 when (resource) {
                     is Resource.Success -> {
                         _touristPlaceDetail.value = Resource.Success(resource.data.data)
@@ -81,9 +82,9 @@ class MapViewModel(
         }
     }
 
-    fun loadVisitedPlaces() {
+    fun loadVisitedPlaces(page: Int = 1) {
         viewModelScope.launch {
-            repository.getVisitedPlaces().collect { resource ->
+            mapRepository.getVisitedPlaces(page).collect { resource ->
                 when (resource) {
                     is Resource.Success -> {
                         _visitedPlaces.value = Resource.Success(resource.data.data)
@@ -100,36 +101,17 @@ class MapViewModel(
     }
 
     fun checkinLocation(qrToken: String, latitude: Double, longitude: Double) {
-        viewModelScope.launch {
-            repository.checkinLocation(qrToken, latitude, longitude).collect { resource ->
-                when (resource) {
-                    is Resource.Success -> {
-                        resource.data.data?.let { checkinData ->
-                            _checkinResult.value = Resource.Success(checkinData)
-                            // Reload places after successful checkin
-                            loadTouristPlaces()
-                        } ?: run {
-                            _checkinResult.value = Resource.Error("Data checkin tidak valid")
-                        }
-                    }
-                    is Resource.Error -> {
-                        _checkinResult.value = Resource.Error(resource.error)
-                    }
-                    is Resource.Loading -> {
-                        _checkinResult.value = Resource.Loading
-                    }
-                }
-            }
-        }
+        // For now, delegate to scanQRCode since checkinLocation doesn't exist in MapRepository
+        scanQRCode(qrToken)
     }
 
     fun addReview(touristPlaceId: String, rating: Int, reviewText: String?) {
         viewModelScope.launch {
-            repository.addReview(touristPlaceId, rating, reviewText).collect { resource ->
+            mapRepository.addReview(touristPlaceId, rating, reviewText).collect { resource ->
                 when (resource) {
                     is Resource.Success -> {
-                        resource.data.data?.let { reviewData ->
-                            _reviewResult.value = Resource.Success(reviewData)
+                        resource.data.data?.review?.let { reviewItem ->
+                            _reviewResult.value = Resource.Success(reviewItem)
                             // Reload detail to show new review
                             loadTouristPlaceDetail(touristPlaceId)
                         } ?: run {
@@ -149,11 +131,11 @@ class MapViewModel(
 
     fun updateReview(reviewId: String, touristPlaceId: String, rating: Int, reviewText: String?) {
         viewModelScope.launch {
-            repository.updateReview(reviewId, touristPlaceId, rating, reviewText).collect { resource ->
+            mapRepository.updateReview(reviewId, touristPlaceId, rating, reviewText).collect { resource ->
                 when (resource) {
                     is Resource.Success -> {
-                        resource.data.data?.let { reviewData ->
-                            _reviewResult.value = Resource.Success(reviewData)
+                        resource.data.data?.review?.let { reviewItem ->
+                            _reviewResult.value = Resource.Success(reviewItem)
                             // Reload detail to show updated review
                             loadTouristPlaceDetail(touristPlaceId)
                         } ?: run {
@@ -173,10 +155,10 @@ class MapViewModel(
 
     fun deleteReview(reviewId: String, touristPlaceId: String) {
         viewModelScope.launch {
-            repository.deleteReview(reviewId).collect { resource ->
+            mapRepository.deleteReview(reviewId).collect { resource ->
                 when (resource) {
                     is Resource.Success -> {
-                        _reviewResult.value = resource.data.data?.let { Resource.Success(it) }
+                        _reviewResult.value = resource.data.data?.review?.let { Resource.Success(it) }
                         // Reload detail to remove deleted review
                         loadTouristPlaceDetail(touristPlaceId)
                     }
@@ -201,11 +183,100 @@ class MapViewModel(
         loadTouristPlaces()
     }
 
+    fun loadPlaceReviews(placeId: String, page: Int = 1) {
+        viewModelScope.launch {
+            mapRepository.getPlaceReviews(placeId, page).collect { resource ->
+                when (resource) {
+                    is Resource.Success -> {
+                        _reviewsList.value = Resource.Success(resource.data.data)
+                    }
+                    is Resource.Error -> {
+                        _reviewsList.value = Resource.Error(resource.error)
+                    }
+                    is Resource.Loading -> {
+                        _reviewsList.value = Resource.Loading
+                    }
+                }
+            }
+        }
+    }
+
+    fun toggleReviewLike(reviewId: String) {
+        viewModelScope.launch {
+            mapRepository.toggleReviewLike(reviewId).collect { resource ->
+                when (resource) {
+                    is Resource.Success -> {
+                        // Refresh reviews to update like status
+                        val currentDetailResource = _touristPlaceDetail.value
+                        if (currentDetailResource is Resource.Success) {
+                            loadPlaceReviews(currentDetailResource.data.id)
+                        }
+                    }
+                    is Resource.Error -> {
+                        // Handle error if needed
+                    }
+                    is Resource.Loading -> {
+                        // Handle loading if needed
+                    }
+                }
+            }
+        }
+    }
+
+    fun deleteReview(reviewId: String) {
+        viewModelScope.launch {
+            val currentDetailResource = _touristPlaceDetail.value
+            if (currentDetailResource is Resource.Success) {
+                mapRepository.deleteReview(reviewId).collect { resource ->
+                    when (resource) {
+                        is Resource.Success -> {
+                            // Reload both detail and reviews after deletion
+                            loadTouristPlaceDetail(currentDetailResource.data.id)
+                            loadPlaceReviews(currentDetailResource.data.id)
+                        }
+                        is Resource.Error -> {
+                            _reviewResult.value = Resource.Error(resource.error)
+                        }
+                        is Resource.Loading -> {
+                            _reviewResult.value = Resource.Loading
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    fun resetScanResult() {
+        _scanResult.value = null
+    }
+
     fun resetCheckinResult() {
-        _checkinResult.value = null
+        _scanResult.value = null
     }
 
     fun resetReviewResult() {
         _reviewResult.value = null
+    }
+
+    fun scanQRCode(qrToken: String) {
+        viewModelScope.launch {
+            mapRepository.scanQRCode(qrToken).collect { resource ->
+                when (resource) {
+                    is Resource.Success -> {
+                        _scanResult.value = Resource.Success(resource.data.data ?: ScanQRData(
+                            scan_success = false,
+                            tourist_place = null,
+                            visited_at = null
+                        ))
+                    }
+                    is Resource.Error -> {
+                        _scanResult.value = Resource.Error(resource.error)
+                    }
+                    is Resource.Loading -> {
+                        _scanResult.value = Resource.Loading
+                    }
+                }
+            }
+        }
     }
 }

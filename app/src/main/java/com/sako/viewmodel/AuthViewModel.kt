@@ -3,7 +3,7 @@ package com.sako.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sako.data.remote.response.AuthResponse
-import com.sako.data.repository.SakoRepository
+import com.sako.data.repository.AuthRepository
 import com.sako.utils.Resource
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class AuthViewModel(
-    private val repository: SakoRepository
+    private val repository: AuthRepository
 ) : ViewModel() {
 
     private val _registerState = MutableStateFlow<Resource<AuthResponse>?>(null)

@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -38,6 +39,7 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
+        isCoreLibraryDesugaringEnabled = true
     }
 
     kotlinOptions {
@@ -61,6 +63,9 @@ android {
 }
 
 dependencies {
+    // ==================== Core Library Desugaring ====================
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.3")
+    
     // ==================== AndroidX Core ====================
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -144,10 +149,19 @@ dependencies {
     // implementation("com.google.zxing:core:3.5.3")
     // implementation("com.journeyapps:zxing-android-embedded:4.3.0")
 
-    // ==================== YouTube Player ====================
-    // Android YouTube Player by Pierfrancesco Soffritti (untuk embed YouTube di app)
-    implementation("com.pierfrancescosoffritti.androidyoutubeplayer:core:12.1.0")
+    // ==================== Firebase ====================
+    // Firebase BOM (Bill of Materials) untuk version management
+    implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
     
+    // Firebase Cloud Messaging untuk push notifications
+    implementation("com.google.firebase:firebase-messaging-ktx")
+    
+    // Firebase Analytics (optional)
+    implementation("com.google.firebase:firebase-analytics-ktx")
+    
+    // Google Play Services untuk Firebase
+    implementation("com.google.android.gms:play-services-base:18.7.0")
+
     // ==================== ExoPlayer (Video Player untuk YouTube) ====================
     // ExoPlayer for video playback
     val exoplayerVersion = "2.19.1"

@@ -36,7 +36,7 @@ fun SplashScreen(
         delay(2000L) // 2 detik
         
         // Cek apakah user sudah login
-        if (userSession?.isLogin == true && userSession?.token?.isNotEmpty() == true) {
+        if (userSession?.isLogin == true && userSession?.accessToken?.isNotEmpty() == true) {
             onNavigateToHome()
         } else {
             onNavigateToRegister()

@@ -7,6 +7,8 @@ data class UserModel(
     val totalXp: Int = 0,
     val status: String = "active",
     val userImageUrl: String? = null,
-    val token: String = "",
+    val accessToken: String = "",
+    val databaseToken: String = "",
+    val fcmToken: String? = null,
     val isLogin: Boolean = false
 )

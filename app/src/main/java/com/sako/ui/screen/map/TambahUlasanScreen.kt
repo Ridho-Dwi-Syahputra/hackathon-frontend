@@ -1,17 +1,28 @@
 package com.sako.ui.screen.map
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.sako.ui.components.BackgroundImage
+import com.sako.R
+import com.sako.ui.components.*
+import com.sako.ui.theme.SakoTheme
 import com.sako.utils.Resource
 import com.sako.viewmodel.MapViewModel
 
@@ -19,246 +30,274 @@ import com.sako.viewmodel.MapViewModel
 @Composable
 fun TambahUlasanScreen(
     placeId: String,
-    placeName: String?,
+    placeName: String,
     viewModel: MapViewModel,
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var rating by remember { mutableStateOf(0) }
+    var rating by remember { mutableIntStateOf(0) }
     var reviewText by remember { mutableStateOf("") }
+    var showValidationDialog by remember { mutableStateOf(false) }
     var showSuccessDialog by remember { mutableStateOf(false) }
     
     val reviewResult by viewModel.reviewResult.collectAsState()
 
-    // Handle review submission result
+    // Handle review result
     LaunchedEffect(reviewResult) {
         when (reviewResult) {
             is Resource.Success -> {
                 showSuccessDialog = true
             }
             is Resource.Error -> {
-                // Error will be shown in the UI
+                // Handle error - bisa tambahkan error dialog jika diperlukan
             }
             else -> {}
         }
     }
 
     BackgroundImage {
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    title = { Text("Tulis Ulasan") },
-                    navigationIcon = {
-                        IconButton(onClick = onNavigateBack) {
-                            Icon(
-                                imageVector = Icons.Default.ArrowBack,
-                                contentDescription = "Back"
-                            )
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)
+        Column(
+            modifier = modifier
+                .fillMaxSize()
+                .padding(24.dp)
+                .verticalScroll(rememberScrollState())
+        ) {
+            // Header dengan Back Button
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Back Arrow Button
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.8f))
+                        .clickable { onNavigateBack() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.arrow),
+                        contentDescription = "Kembali",
+                        modifier = Modifier.size(24.dp),
+                        colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface)
                     )
+                }
+                
+                Spacer(modifier = Modifier.width(16.dp))
+                
+                Text(
+                    text = "Tambah Ulasan",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onBackground
                 )
             }
-        ) { paddingValues ->
-            Column(
-                modifier = modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-                    .verticalScroll(rememberScrollState())
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(24.dp)
+            
+            Spacer(modifier = Modifier.height(32.dp))
+            
+            // Place Name Card
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f)
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
             ) {
-                // Place Name
-                placeName?.let {
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer
-                        )
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.LocationOn,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-                            Text(
-                                text = it,
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-                        }
-                    }
-                }
-
-                // Rating Section
                 Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Text(
+                        text = "Tempat Wisata",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    
+                    Spacer(modifier = Modifier.height(4.dp))
+                    
+                    Text(
+                        text = placeName,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(24.dp))
+            
+            // Rating Section
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f)
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
                         text = "Berikan Rating",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
-
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        repeat(5) { index ->
-                            IconButton(
-                                onClick = { rating = index + 1 },
-                                modifier = Modifier.size(48.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Star,
-                                    contentDescription = "Star ${index + 1}",
-                                    tint = if (index < rating) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.size(40.dp)
-                                )
-                            }
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    // Star Rating Component
+                    StarRatingComponent(
+                        rating = rating,
+                        onRatingChanged = { newRating ->
+                            rating = newRating
                         }
-                    }
-
-                    if (rating > 0) {
-                        Text(
-                            text = when (rating) {
-                                1 -> "Sangat Buruk"
-                                2 -> "Buruk"
-                                3 -> "Cukup"
-                                4 -> "Bagus"
-                                5 -> "Sangat Bagus"
-                                else -> ""
-                            },
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
+                    )
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    Text(
+                        text = when (rating) {
+                            1 -> "Sangat Buruk"
+                            2 -> "Buruk"
+                            3 -> "Cukup"
+                            4 -> "Baik" 
+                            5 -> "Sangat Baik"
+                            else -> "Pilih rating"
+                        },
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
-
-                // Review Text Section
+            }
+            
+            Spacer(modifier = Modifier.height(24.dp))
+            
+            // Review Text Section
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f)
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            ) {
                 Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    modifier = Modifier.padding(16.dp)
                 ) {
                     Text(
                         text = "Tulis Ulasan (Opsional)",
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
-
-                    OutlinedTextField(
+                    
+                    Spacer(modifier = Modifier.height(12.dp))
+                    
+                    SakoTextInputField(
                         value = reviewText,
                         onValueChange = { reviewText = it },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(200.dp),
-                        placeholder = { Text("Ceritakan pengalaman Anda berkunjung ke tempat ini...") },
-                        maxLines = 10
+                        label = "Bagikan pengalaman Anda",
+                        placeholder = "Ceritakan pengalaman Anda mengunjungi tempat ini...",
+                        singleLine = false,
+                        maxLines = 5,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+                        modifier = Modifier.fillMaxWidth()
                     )
-                }
-
-                // Error Message
-                when (val result = reviewResult) {
-                    is Resource.Error -> {
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.errorContainer
-                            )
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Error,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onErrorContainer
-                                )
-                                Text(
-                                    text = result.error,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onErrorContainer
-                                )
-                            }
-                        }
-                    }
-                    else -> {}
-                }
-
-                // Submit Button
-                Button(
-                    onClick = {
-                        if (rating > 0) {
-                            viewModel.addReview(
-                                touristPlaceId = placeId,
-                                rating = rating,
-                                reviewText = reviewText.ifBlank { null }
-                            )
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = rating > 0 && reviewResult !is Resource.Loading
-                ) {
-                    if (reviewResult is Resource.Loading) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(20.dp),
-                            color = MaterialTheme.colorScheme.onPrimary,
-                            strokeWidth = 2.dp
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Mengirim...")
-                    } else {
-                        Icon(
-                            imageVector = Icons.Default.Send,
-                            contentDescription = null,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Kirim Ulasan")
-                    }
                 }
             }
-        }
-
-        // Success Dialog
-        if (showSuccessDialog) {
-            AlertDialog(
-                onDismissRequest = { },
-                icon = {
-                    Icon(
-                        imageVector = Icons.Default.CheckCircle,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                },
-                title = { Text("Berhasil!") },
-                text = { Text("Ulasan Anda telah berhasil ditambahkan.") },
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            viewModel.resetReviewResult()
-                            onNavigateBack()
-                        }
-                    ) {
-                        Text("OK")
+            
+            Spacer(modifier = Modifier.height(32.dp))
+            
+            // Submit Button
+            SakoPrimaryButton(
+                text = if (reviewResult is Resource.Loading) "Menyimpan..." else "Simpan Ulasan",
+                onClick = {
+                    if (rating > 0) {
+                        viewModel.addReview(
+                            touristPlaceId = placeId,
+                            rating = rating,
+                            reviewText = reviewText.takeIf { it.isNotBlank() }
+                        )
+                    } else {
+                        showValidationDialog = true
                     }
-                }
+                },
+                enabled = reviewResult !is Resource.Loading,
+                modifier = Modifier.fillMaxWidth()
+            )
+            
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+    }
+
+    // Validation Dialog
+    if (showValidationDialog) {
+        SakoConfirmationDialog(
+            onDismissRequest = { showValidationDialog = false },
+            title = "Rating Diperlukan",
+            message = "Mohon berikan rating terlebih dahulu sebelum menyimpan ulasan.",
+            confirmButtonText = "OK",
+            onConfirm = { /* Dialog will dismiss automatically */ }
+        )
+    }
+
+    // Success Dialog
+    if (showSuccessDialog) {
+        SakoStatusDialog(
+            onDismissRequest = { 
+                showSuccessDialog = false
+                onNavigateBack()
+            },
+            icon = painterResource(id = R.drawable.success),
+            title = "Ulasan Berhasil Disimpan",
+            message = "Terima kasih! Ulasan Anda telah berhasil ditambahkan dan akan membantu pengunjung lain.",
+            buttonText = "Kembali",
+            onConfirm = { 
+                showSuccessDialog = false
+                onNavigateBack()
+            }
+        )
+    }
+}
+
+@Composable
+private fun StarRatingComponent(
+    rating: Int,
+    onRatingChanged: (Int) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        repeat(5) { index ->
+            val starNumber = index + 1
+            val isSelected = starNumber <= rating
+            
+            Image(
+                painter = painterResource(id = R.drawable.star),
+                contentDescription = "Rating $starNumber",
+                modifier = Modifier
+                    .size(48.dp)
+                    .clickable { onRatingChanged(starNumber) }
+                    .padding(4.dp),
+                colorFilter = ColorFilter.tint(
+                    if (isSelected) 
+                        Color(0xFFFFD700) // Gold color for selected stars
+                    else 
+                        Color(0xFFBDBDBD) // Gray color for unselected stars
+                )
             )
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun TambahUlasanScreenPreview() {
+    SakoTheme {
+        // Preview tidak bisa menggunakan ViewModel, jadi buat mock
     }
 }

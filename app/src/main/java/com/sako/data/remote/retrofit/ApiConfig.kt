@@ -1,6 +1,7 @@
 package com.sako.data.remote.retrofit
 
 import com.sako.data.pref.UserPreference
+import com.sako.utils.LoggingInterceptor
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor
@@ -26,18 +27,34 @@ object ApiConfig {
         val loggingInterceptor = HttpLoggingInterceptor().setLevel(
             HttpLoggingInterceptor.Level.BODY
         )
+        
+        // Custom logging interceptor untuk debugging yang lebih detail
+        val customLoggingInterceptor = LoggingInterceptor()
 
         val authInterceptor = Interceptor { chain ->
             val req = chain.request()
-            val token = runBlocking {
-                userPreference.getSession().first().token
+            val userSession = runBlocking {
+                userPreference.getSession().first()
             }
+
+            android.util.Log.d("AUTH_INTERCEPTOR", "🔐 Session - Login: ${userSession.isLogin}, AccessToken: ${userSession.accessToken.take(20)}..., DatabaseToken: ${userSession.databaseToken.take(10)}...")
 
             val requestHeaders = req.newBuilder()
                 .addHeader("Accept", "application/json")
                 .apply {
-                    if (token.isNotEmpty()) {
-                        addHeader("Authorization", "Bearer $token")
+                    // Prioritas: gunakan access_token, fallback ke database_token jika ada
+                    when {
+                        userSession.accessToken.isNotEmpty() -> {
+                            addHeader("Authorization", "Bearer ${userSession.accessToken}")
+                            android.util.Log.d("AUTH_INTERCEPTOR", "📤 Using access token for ${req.url}")
+                        }
+                        userSession.databaseToken.isNotEmpty() -> {
+                            addHeader("Authorization", "Bearer ${userSession.databaseToken}")
+                            android.util.Log.d("AUTH_INTERCEPTOR", "📤 Using database token for ${req.url}")
+                        }
+                        else -> {
+                            android.util.Log.w("AUTH_INTERCEPTOR", "⚠️ No token available for ${req.url}")
+                        }
                     }
                 }
                 .build()
@@ -46,6 +63,7 @@ object ApiConfig {
         }
 
         val client = OkHttpClient.Builder()
+            .addInterceptor(customLoggingInterceptor) // Custom logging untuk debugging integrasi
             .addInterceptor(loggingInterceptor)
             .addInterceptor(authInterceptor)
             .connectTimeout(30, TimeUnit.SECONDS)
