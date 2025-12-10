@@ -382,15 +382,31 @@ fun SakoNavGraph(
         }
 
         composable(route = Screen.VideoFavorite.route) {
-            val sharedVideoViewModel: VideoViewModel = viewModel(
-                factory = viewModelFactory,
-                viewModelStoreOwner = navController.getBackStackEntry(Screen.Home.route)
-            )
+            // Check if Home route exists in back stack for shared ViewModel
+            val homeEntry = remember {
+                navController.currentBackStack.value.find { 
+                    it.destination.route == Screen.Home.route 
+                }
+            }
             
-            val collectionViewModel: VideoCollectionViewModel = viewModel(
-                factory = viewModelFactory,
-                viewModelStoreOwner = navController.getBackStackEntry(Screen.Home.route)
-            )
+            val sharedVideoViewModel: VideoViewModel = if (homeEntry != null) {
+                viewModel(
+                    factory = viewModelFactory,
+                    viewModelStoreOwner = navController.getBackStackEntry(Screen.Home.route)
+                )
+            } else {
+                // Home route not in back stack (e.g., opened from notification)
+                viewModel(factory = viewModelFactory)
+            }
+            
+            val collectionViewModel: VideoCollectionViewModel = if (homeEntry != null) {
+                viewModel(
+                    factory = viewModelFactory,
+                    viewModelStoreOwner = navController.getBackStackEntry(Screen.Home.route)
+                )
+            } else {
+                viewModel(factory = viewModelFactory)
+            }
             
             // Reload favorites saat masuk screen
             sharedVideoViewModel.loadFavoriteVideos()

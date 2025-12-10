@@ -29,11 +29,13 @@ class FCMService : FirebaseMessagingService() {
         const val CHANNEL_DEFAULT = "sako_default"
         const val CHANNEL_MAP_REVIEWS = "sako_map_reviews"
         const val CHANNEL_MAP_VISITS = "sako_map_visits"
+        const val CHANNEL_VIDEO_FAVORITES = "sako_favorites"
         
         // Notification IDs
         const val NOTIFICATION_ID_DEFAULT = 1001
         const val NOTIFICATION_ID_MAP_REVIEW = 1002
         const val NOTIFICATION_ID_MAP_VISIT = 1003
+        const val NOTIFICATION_ID_VIDEO_FAVORITE = 1004
     }
 
     override fun onCreate() {
@@ -58,6 +60,7 @@ class FCMService : FirebaseMessagingService() {
         when (notificationType) {
             "review_added" -> handleReviewAddedNotification(remoteMessage)
             "place_visited" -> handlePlaceVisitedNotification(remoteMessage)
+            "video_favorited" -> handleVideoFavoritedNotification(remoteMessage)
             else -> handleDefaultNotification(remoteMessage)
         }
     }
@@ -114,6 +117,29 @@ class FCMService : FirebaseMessagingService() {
         )
         
         Log.d(TAG, "🏛️ Visit notification shown for place: ${data["place_name"]}")
+    }
+
+    private fun handleVideoFavoritedNotification(remoteMessage: RemoteMessage) {
+        val title = remoteMessage.notification?.title ?: "Video Ditambahkan ke Favorit!"
+        val body = remoteMessage.notification?.body ?: "Video berhasil ditambahkan ke koleksi favorit"
+        val data = remoteMessage.data
+        
+        val intent = Intent(this, MainActivity::class.java).apply {
+            putExtra("navigation_target", "VideoFavoriteScreen")
+            putExtra("video_id", data["video_id"])
+            putExtra("video_title", data["video_title"])
+            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        }
+        
+        showNotification(
+            title = title,
+            body = body,
+            intent = intent,
+            notificationId = NOTIFICATION_ID_VIDEO_FAVORITE,
+            channelId = CHANNEL_VIDEO_FAVORITES
+        )
+        
+        Log.d(TAG, "🎬 Video favorite notification shown: ${data["video_title"]}")
     }
 
     private fun handleDefaultNotification(remoteMessage: RemoteMessage) {
@@ -195,8 +221,17 @@ class FCMService : FirebaseMessagingService() {
                 description = "Notifications about place visits"
             }
 
+            // Video Favorites Channel
+            val favoritesChannel = NotificationChannel(
+                CHANNEL_VIDEO_FAVORITES,
+                "Video Favorites",
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                description = "Notifications about video favorites"
+            }
+
             notificationManager.createNotificationChannels(
-                listOf(defaultChannel, reviewsChannel, visitsChannel)
+                listOf(defaultChannel, reviewsChannel, visitsChannel, favoritesChannel)
             )
 
             Log.d(TAG, "📱 Notification channels created")

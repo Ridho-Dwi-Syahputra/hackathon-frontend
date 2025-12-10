@@ -68,26 +68,26 @@ class MainActivity : ComponentActivity() {
 
     private fun handleNotificationIntent(intent: Intent?) {
         intent?.extras?.let { extras ->
-            val notificationType = extras.getString("type")
-            val placeId = extras.getString("placeId")
-            val placeName = extras.getString("placeName")
-            val reviewId = extras.getString("reviewId")
+            val navigationTarget = extras.getString("navigation_target")
+            val videoId = extras.getString("video_id")
+            val videoTitle = extras.getString("video_title")
             
-            FirebaseDebugUtils.logInfo("Notification intent received: type=$notificationType, placeId=$placeId")
+            FirebaseDebugUtils.logInfo("Notification intent received: target=$navigationTarget")
             
-            // TODO: Navigate to specific screen based on notification type
-            // This will be handled by the navigation system in SakoNavGraph
-            when (notificationType) {
-                "review_added" -> {
-                    FirebaseDebugUtils.logInfo("Handling review_added notification for place: $placeName")
-                    // Navigation will be handled in SakoNavGraph
-                }
-                "place_visited" -> {
-                    FirebaseDebugUtils.logInfo("Handling place_visited notification for place: $placeName")
-                    // Navigation will be handled in SakoNavGraph
+            // Hanya handle video notifications
+            when (navigationTarget) {
+                "VideoFavoriteScreen" -> {
+                    FirebaseDebugUtils.logInfo("Handling video_favorited notification: $videoTitle")
+                    pendingNavigationTarget = navigationTarget
+                    pendingVideoId = videoId
                 }
             }
         }
+    }
+    
+    companion object {
+        var pendingNavigationTarget: String? = null
+        var pendingVideoId: String? = null
     }
 }
 
@@ -112,6 +112,45 @@ fun SakoApp() {
             FirebaseDebugUtils.logInfo("Successfully subscribed to map notifications")
         } catch (e: Exception) {
             FirebaseDebugUtils.logError("Failed to subscribe to map notifications", e)
+        }
+    }
+
+    // Handle pending video notification navigation
+    LaunchedEffect(navController) {
+        MainActivity.pendingNavigationTarget?.let { target ->
+            try {
+                // Tunggu sebentar untuk memastikan app sudah ready
+                kotlinx.coroutines.delay(1000)
+                
+                // Cek apakah user sudah login
+                userPreference.getSession().collect { session ->
+                    if (session.isLogin) {
+                        // User sudah login, bisa navigate
+                        when (target) {
+                            "VideoFavoriteScreen" -> {
+                                // Navigate langsung tanpa popUpTo
+                                navController.navigate(Screen.VideoFavorite.route) {
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                                FirebaseDebugUtils.logInfo("Navigated to VideoFavoriteScreen from notification")
+                            }
+                        }
+                    } else {
+                        // User belum login, tidak navigate
+                        FirebaseDebugUtils.logInfo("User not logged in, skipping notification navigation")
+                    }
+                    
+                    // Clear pending navigation
+                    MainActivity.pendingNavigationTarget = null
+                    MainActivity.pendingVideoId = null
+                }
+            } catch (e: Exception) {
+                FirebaseDebugUtils.logError("Navigation failed from notification", e)
+                // Clear pending navigation on error
+                MainActivity.pendingNavigationTarget = null
+                MainActivity.pendingVideoId = null
+            }
         }
     }
 
