@@ -7,7 +7,6 @@ import com.sako.data.remote.retrofit.ApiConfig
 import com.sako.data.repository.AuthRepository
 import com.sako.data.repository.MapRepository
 import com.sako.data.repository.SakoRepository
-import com.sako.firebase.notifications.map.MapNotificationManager
 import com.sako.utils.BackendConnectionMonitor
 
 object Injection {
@@ -29,11 +28,5 @@ object Injection {
         val pref = UserPreference.getInstance(context.dataStore)
         val apiService = ApiConfig.getApiService(pref)
         return SakoRepository.getInstance(apiService, pref)
-    }
-
-    fun provideMapNotificationManager(context: Context): MapNotificationManager {
-        val pref = UserPreference.getInstance(context.dataStore)
-        val mapRepository = provideMapRepository(context)
-        return MapNotificationManager(context, mapRepository, pref)
     }
 }

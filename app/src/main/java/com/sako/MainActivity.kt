@@ -1,11 +1,15 @@
 package com.sako
 
+import android.Manifest
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
@@ -14,14 +18,14 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.sako.data.pref.UserPreference
 import com.sako.data.remote.retrofit.ApiConfig
 import com.sako.data.repository.SakoRepository
-import com.sako.firebase.FirebaseConfig
-import com.sako.firebase.FirebaseDebugUtils
+import com.sako.firebase.FirebaseHelper
 import com.sako.ui.components.BottomNav
 import com.sako.ui.navigation.SakoNavGraph
 import com.sako.ui.navigation.Screen
@@ -34,6 +38,17 @@ private val Context.dataStore by preferencesDataStore(name = "user_preferences")
 
 class MainActivity : ComponentActivity() {
     
+    // Permission launcher for POST_NOTIFICATIONS
+    private val notificationPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            android.util.Log.d("MainActivity", "✅ Notification permission granted")
+        } else {
+            android.util.Log.w("MainActivity", "⚠️ Notification permission denied")
+        }
+    }
+    
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -41,11 +56,16 @@ class MainActivity : ComponentActivity() {
         // Initialize Firebase Configuration
         initializeFirebase()
         
+        // Request notification permission for Android 13+
+        requestNotificationPermission()
+        
         // Handle notification intents when app is opened from notification
         handleNotificationIntent(intent)
         
         setContent {
+            android.util.Log.d("MainActivity", "🚀 Setting content - SakoTheme")
             SakoTheme {
+                android.util.Log.d("MainActivity", "🚀 Calling SakoApp")
                 SakoApp()
             }
         }
@@ -59,10 +79,30 @@ class MainActivity : ComponentActivity() {
 
     private fun initializeFirebase() {
         try {
-            FirebaseConfig.initialize(this)
-            FirebaseDebugUtils.logInfo("Firebase initialized successfully in MainActivity")
+            FirebaseHelper.initialize(this)
+            android.util.Log.d("MainActivity", "Firebase initialized successfully")
         } catch (e: Exception) {
-            FirebaseDebugUtils.logError("Failed to initialize Firebase in MainActivity", e)
+            android.util.Log.e("MainActivity", "Failed to initialize Firebase", e)
+        }
+    }
+
+    private fun requestNotificationPermission() {
+        // Only request notification permission for Android 13+ (API 33+)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            when {
+                ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) == PackageManager.PERMISSION_GRANTED -> {
+                    android.util.Log.d("MainActivity", "✅ Notification permission already granted")
+                }
+                else -> {
+                    android.util.Log.d("MainActivity", "📲 Requesting notification permission")
+                    notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                }
+            }
+        } else {
+            android.util.Log.d("MainActivity", "ℹ️ Notification permission not required for Android < 13")
         }
     }
 
@@ -73,17 +113,17 @@ class MainActivity : ComponentActivity() {
             val placeName = extras.getString("placeName")
             val reviewId = extras.getString("reviewId")
             
-            FirebaseDebugUtils.logInfo("Notification intent received: type=$notificationType, placeId=$placeId")
+            android.util.Log.d("MainActivity", "Notification intent received: type=$notificationType, placeId=$placeId")
             
             // TODO: Navigate to specific screen based on notification type
             // This will be handled by the navigation system in SakoNavGraph
             when (notificationType) {
                 "review_added" -> {
-                    FirebaseDebugUtils.logInfo("Handling review_added notification for place: $placeName")
+                    android.util.Log.d("MainActivity", "Handling review_added notification for place: $placeName")
                     // Navigation will be handled in SakoNavGraph
                 }
                 "place_visited" -> {
-                    FirebaseDebugUtils.logInfo("Handling place_visited notification for place: $placeName")
+                    android.util.Log.d("MainActivity", "Handling place_visited notification for place: $placeName")
                     // Navigation will be handled in SakoNavGraph
                 }
             }
@@ -97,6 +137,8 @@ class MainActivity : ComponentActivity() {
  */
 @Composable
 fun SakoApp() {
+    android.util.Log.d("SakoApp", "🎯 SakoApp started")
+    
     val context = LocalContext.current
     val navController = rememberNavController()
 
@@ -104,14 +146,16 @@ fun SakoApp() {
     val userPreference = UserPreference.getInstance(context.dataStore)
     val viewModelFactory = ViewModelFactory(context)
 
+    android.util.Log.d("SakoApp", "📱 UserPreference dan ViewModelFactory created")
+
     // Firebase setup with automatic token handling
     LaunchedEffect(Unit) {
         try {
             // Subscribe to map notifications
-            FirebaseConfig.subscribeToMapNotifications()
-            FirebaseDebugUtils.logInfo("Successfully subscribed to map notifications")
+            FirebaseHelper.subscribeToTopic("map_notifications")
+            android.util.Log.d("SakoApp", "Successfully subscribed to map notifications")
         } catch (e: Exception) {
-            FirebaseDebugUtils.logError("Failed to subscribe to map notifications", e)
+            android.util.Log.e("SakoApp", "Failed to subscribe to map notifications", e)
         }
     }
 

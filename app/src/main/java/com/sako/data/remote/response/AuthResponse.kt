@@ -16,14 +16,11 @@ data class AuthResponse(
 data class AuthData(
     @SerializedName("user")
     val user: UserData,
-
-    @SerializedName("access_token")
+    
+    @SerializedName("access_token") // Token JWT dari backend (1 jam)
     val accessToken: String? = null,
     
-    @SerializedName("token")
-    val token: String? = null,
-    
-    @SerializedName("database_token") 
+    @SerializedName("database_token") // Token database untuk auto-login (30 hari)
     val databaseToken: String? = null,
     
     @SerializedName("expires_in")

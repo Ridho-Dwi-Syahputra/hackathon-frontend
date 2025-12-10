@@ -67,20 +67,7 @@ fun LoginScreen(
             }
             is Resource.Success -> {
                 isLoading = false
-                state.data.data?.let { authData ->
-                    val userModel = UserModel(
-                        id = authData.user.id,
-                        fullName = authData.user.fullName,
-                        email = authData.user.email,
-                        totalXp = authData.user.totalXp,
-                        status = authData.user.status,
-                        userImageUrl = authData.user.userImageUrl,
-                        accessToken = authData.accessToken ?: "",
-                        databaseToken = authData.databaseToken ?: "",
-                        isLogin = true
-                    )
-                    userPreference.saveSession(userModel)
-                }
+                // Session sudah disimpan di AuthRepository, tidak perlu save lagi di sini
                 viewModel.clearLoginState()
                 isSuccess = true
                 dialogMessage = "Login berhasil! Selamat datang kembali."

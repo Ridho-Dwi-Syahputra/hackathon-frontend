@@ -188,6 +188,7 @@ class MapViewModel(
             mapRepository.getPlaceReviews(placeId, page).collect { resource ->
                 when (resource) {
                     is Resource.Success -> {
+                        // Backend now returns data directly in correct format
                         _reviewsList.value = Resource.Success(resource.data.data)
                     }
                     is Resource.Error -> {

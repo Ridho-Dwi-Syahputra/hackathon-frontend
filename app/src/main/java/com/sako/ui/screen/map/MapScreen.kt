@@ -103,46 +103,42 @@ fun MapScreen(
             
             Spacer(modifier = Modifier.height(24.dp))
             
-            // Content - pilih antara tourist places atau visited places
-            val currentResource = if (showVisited) visitedPlaces else touristPlaces
-            when (currentResource) {
-                is Resource.Loading -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
+            // Content - handle two separate resources to avoid cast issues
+            if (showVisited) {
+                // Visited Places Tab
+                val visitedResource = visitedPlaces // Capture to local variable for smart cast
+                when (visitedResource) {
+                    is Resource.Loading -> {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
                         ) {
-                            CircularProgressIndicator(
-                                color = SakoPrimary
-                            )
-                            Text(
-                                text = "Memuat data...",
-                                style = MaterialTheme.typography.bodyMedium
-                            )
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                CircularProgressIndicator(
+                                    color = SakoPrimary
+                                )
+                                Text(
+                                    text = "Memuat data...",
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
                         }
                     }
-                }
-                is Resource.Success -> {
-                    if (currentResource.data.isEmpty()) {
-                        EmptyState(
-                            message = if (showVisited) {
-                                "Belum ada tempat yang dikunjungi.\nScan QR di lokasi wisata untuk check-in!"
-                            } else {
-                                "Tidak ada tempat wisata ditemukan"
-                            }
-                        )
-                    } else {
-                        LazyColumn(
-                            verticalArrangement = Arrangement.spacedBy(12.dp),
-                            modifier = Modifier.fillMaxSize()
-                        ) {
-                            if (showVisited) {
-                                // For visited places
+                    is Resource.Success -> {
+                        if (visitedResource.data.isEmpty()) {
+                            EmptyState(
+                                message = "Belum ada tempat yang dikunjungi.\nScan QR di lokasi wisata untuk check-in!"
+                            )
+                        } else {
+                            LazyColumn(
+                                verticalArrangement = Arrangement.spacedBy(12.dp),
+                                modifier = Modifier.fillMaxSize()
+                            ) {
                                 items(
-                                    items = currentResource.data as List<VisitedPlaceItem>,
+                                    items = visitedResource.data,
                                     key = { it.id }
                                 ) { place ->
                                     VisitedPlaceCard(
@@ -150,10 +146,56 @@ fun MapScreen(
                                         onClick = { onNavigateToDetail(place.id) }
                                     )
                                 }
-                            } else {
-                                // For all tourist places
+                                
+                                // Spacer untuk BottomNav
+                                item {
+                                    Spacer(modifier = Modifier.height(80.dp))
+                                }
+                            }
+                        }
+                    }
+                    is Resource.Error -> {
+                        ErrorState(
+                            message = visitedResource.error,
+                            onRetry = { viewModel.loadVisitedPlaces() }
+                        )
+                    }
+                }
+            } else {
+                // All Tourist Places Tab
+                val placesResource = touristPlaces // Capture to local variable for smart cast
+                when (placesResource) {
+                    is Resource.Loading -> {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                CircularProgressIndicator(
+                                    color = SakoPrimary
+                                )
+                                Text(
+                                    text = "Memuat data...",
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
+                        }
+                    }
+                    is Resource.Success -> {
+                        if (placesResource.data.isEmpty()) {
+                            EmptyState(
+                                message = "Tidak ada tempat wisata ditemukan"
+                            )
+                        } else {
+                            LazyColumn(
+                                verticalArrangement = Arrangement.spacedBy(12.dp),
+                                modifier = Modifier.fillMaxSize()
+                            ) {
                                 items(
-                                    items = currentResource.data as List<TouristPlaceItem>,
+                                    items = placesResource.data,
                                     key = { it.id }
                                 ) { place ->
                                     TouristPlaceCard(
@@ -161,26 +203,20 @@ fun MapScreen(
                                         onClick = { onNavigateToDetail(place.id) }
                                     )
                                 }
-                            }
-                            
-                            // Spacer untuk BottomNav
-                            item {
-                                Spacer(modifier = Modifier.height(80.dp))
+                                
+                                // Spacer untuk BottomNav
+                                item {
+                                    Spacer(modifier = Modifier.height(80.dp))
+                                }
                             }
                         }
                     }
-                }
-                is Resource.Error -> {
-                    ErrorState(
-                        message = currentResource.error,
-                        onRetry = {
-                            if (showVisited) {
-                                viewModel.loadVisitedPlaces()
-                            } else {
-                                viewModel.loadTouristPlaces()
-                            }
-                        }
-                    )
+                    is Resource.Error -> {
+                        ErrorState(
+                            message = placesResource.error,
+                            onRetry = { viewModel.loadTouristPlaces() }
+                        )
+                    }
                 }
             }
         }
