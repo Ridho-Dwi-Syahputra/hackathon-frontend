@@ -314,7 +314,7 @@ data class LikeData(
     val isLikedByMe: Boolean,
 
     @SerializedName("user_info")
-    val userInfo: UserInfo
+    val userInfo: UserInfo? = null // Make optional since backend doesn't send this
 )
 
 data class UserInfo(
