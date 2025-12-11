@@ -65,6 +65,14 @@ data class UpdateProfileResponse(
     val data: UpdateProfileData?
 )
 
+data class ChangePasswordResponse(
+    @SerializedName("success")
+    val success: Boolean,
+
+    @SerializedName("message")
+    val message: String
+)
+
 data class UpdateProfileData(
     @SerializedName("user")
     val user: UserData,

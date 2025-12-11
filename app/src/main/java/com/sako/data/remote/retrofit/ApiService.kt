@@ -81,24 +81,29 @@ interface ApiService {
 
     // ========== Profile Endpoints ==========
 
-//    @GET("users/profile")
-//    suspend fun getProfile(): ProfileResponse
-
-    @PUT("users/profile")
+    @PUT("auth/profile")
     suspend fun updateProfile(
         @Body request: UpdateProfileRequest
     ): UpdateProfileResponse
 
     @Multipart
-    @PUT("users/profile/image")
+    @PUT("auth/profile/image")
     suspend fun updateProfileImage(
         @Part image: MultipartBody.Part
     ): UpdateProfileResponse
 
-    @PUT("users/password")
+    @PUT("auth/password")
     suspend fun changePassword(
         @Body request: ChangePasswordRequest
-    ): AuthResponse
+    ): ChangePasswordResponse
+    
+    @GET("auth/notification-preferences")
+    suspend fun getNotificationPreferences(): NotificationPreferencesResponse
+    
+    @PUT("auth/notification-preferences")
+    suspend fun updateNotificationPreferences(
+        @Body request: UpdateNotificationPreferencesRequest
+    ): NotificationPreferencesResponse
 
     // ========== Quiz Category Endpoints ==========
 

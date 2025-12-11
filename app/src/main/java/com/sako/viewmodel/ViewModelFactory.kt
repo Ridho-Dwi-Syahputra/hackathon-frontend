@@ -26,10 +26,7 @@ class ViewModelFactory(
                 val repository = Injection.provideRepository(context)
                 HomeViewModel(repository) as T
             }
-            modelClass.isAssignableFrom(ProfileViewModel::class.java) -> {
-                val repository = Injection.provideRepository(context)
-                ProfileViewModel(repository) as T
-            }
+            // ProfileViewModel menggunakan ProfileViewModelFactory sendiri
             modelClass.isAssignableFrom(VideoViewModel::class.java) -> {
                 val repository = Injection.provideRepository(context)
                 VideoViewModel(repository) as T

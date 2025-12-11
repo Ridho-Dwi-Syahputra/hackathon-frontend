@@ -34,10 +34,14 @@ object ApiConfig {
         val authInterceptor = Interceptor { chain ->
             val req = chain.request()
             
-            // Skip auth untuk endpoint login/register
-            val isAuthEndpoint = req.url.pathSegments.any { it == "auth" }
-            if (isAuthEndpoint) {
-                android.util.Log.d("AUTH_INTERCEPTOR", "⏭️ Skipping auth for auth endpoint: ${req.url}")
+            // Skip auth HANYA untuk endpoint login/register/auto-login (tidak butuh token)
+            val url = req.url.toString()
+            val isPublicAuthEndpoint = url.contains("/auth/login") || 
+                                       url.contains("/auth/register") || 
+                                       url.contains("/auth/auto-login")
+            
+            if (isPublicAuthEndpoint) {
+                android.util.Log.d("AUTH_INTERCEPTOR", "⏭️ Skipping auth for public endpoint: ${req.url}")
                 return@Interceptor chain.proceed(req.newBuilder().addHeader("Accept", "application/json").build())
             }
             
@@ -96,10 +100,14 @@ object ApiConfig {
                 return@Authenticator null
             }
 
-            // Skip auth endpoints
-            val isAuthEndpoint = response.request.url.pathSegments.any { it == "auth" }
-            if (isAuthEndpoint) {
-                android.util.Log.d("AUTH_AUTHENTICATOR", "⏭️ Skipping refresh for auth endpoint")
+            // Skip HANYA untuk public auth endpoints (login/register/auto-login)
+            val url = response.request.url.toString()
+            val isPublicAuthEndpoint = url.contains("/auth/login") || 
+                                       url.contains("/auth/register") || 
+                                       url.contains("/auth/auto-login")
+            
+            if (isPublicAuthEndpoint) {
+                android.util.Log.d("AUTH_AUTHENTICATOR", "⏭️ Skipping refresh for public endpoint")
                 return@Authenticator null
             }
 

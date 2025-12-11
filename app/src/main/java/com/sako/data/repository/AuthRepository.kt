@@ -26,7 +26,7 @@ import java.io.File
 class AuthRepository private constructor(
     private val apiService: ApiService,
     private val userPreference: UserPreference,
-    private val connectionMonitor: BackendConnectionMonitor
+    private val connectionMonitor: BackendConnectionMonitor?
 ) {
 
     // ========== Error Handling ==========
@@ -209,7 +209,9 @@ class AuthRepository private constructor(
     fun updateProfile(fullName: String): Flow<Resource<UpdateProfileResponse>> = flow {
         emit(Resource.Loading)
         try {
-            val request = UpdateProfileRequest(fullName)
+            // Get current user email from session
+            val currentUser = userPreference.getSession().first()
+            val request = UpdateProfileRequest(fullName, currentUser.email)
             val response = apiService.updateProfile(request)
 
             // Update session
@@ -255,7 +257,7 @@ class AuthRepository private constructor(
         }
     }
 
-    fun changePassword(oldPassword: String, newPassword: String): Flow<Resource<AuthResponse>> = flow {
+    fun changePassword(oldPassword: String, newPassword: String): Flow<Resource<ChangePasswordResponse>> = flow {
         emit(Resource.Loading)
         try {
             val request = ChangePasswordRequest(oldPassword, newPassword)
@@ -276,7 +278,7 @@ class AuthRepository private constructor(
         fun getInstance(
             apiService: ApiService,
             userPreference: UserPreference,
-            connectionMonitor: BackendConnectionMonitor
+            connectionMonitor: BackendConnectionMonitor?
         ): AuthRepository =
             instance ?: synchronized(this) {
                 instance ?: AuthRepository(apiService, userPreference, connectionMonitor)

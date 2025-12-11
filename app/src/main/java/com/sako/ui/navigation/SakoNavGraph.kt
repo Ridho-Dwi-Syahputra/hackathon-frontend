@@ -17,10 +17,14 @@ import com.sako.ui.screen.kuis.QuizLevelChooseScreen
 import com.sako.ui.screen.kuis.QuizAttemptScreen
 import com.sako.ui.screen.kuis.QuizResultScreen
 import com.sako.ui.screen.welcome.SplashScreen
+import com.sako.ui.screen.profile.ProfileScreen
+import com.sako.ui.screen.profile.SettingScreen
 import com.sako.viewmodel.AuthViewModel
 import com.sako.viewmodel.KuisViewModel
 import com.sako.viewmodel.QuizAttemptViewModel
 import com.sako.viewmodel.VideoViewModel
+import com.sako.viewmodel.ProfileViewModel
+import com.sako.viewmodel.ProfileViewModelFactory
 import com.sako.viewmodel.ViewModelFactory
 import com.sako.viewmodel.AuthViewModelFactory
 import com.sako.ui.screen.video.VideoListScreen
@@ -29,6 +33,7 @@ import com.sako.ui.screen.video.VideoFavoriteScreen
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
 import com.sako.data.pref.UserPreference
+import com.sako.di.Injection
 
 @Composable
 fun SakoNavGraph(
@@ -354,9 +359,12 @@ fun SakoNavGraph(
         // ============================================
         
         composable(route = Screen.VideoList.route) {
+            val backStackEntry = remember(navController) {
+                navController.getBackStackEntry(Screen.Home.route)
+            }
             val sharedVideoViewModel: VideoViewModel = viewModel(
                 factory = viewModelFactory,
-                viewModelStoreOwner = navController.getBackStackEntry(Screen.Home.route)
+                viewModelStoreOwner = backStackEntry
             )
             
             VideoListScreen(
@@ -373,9 +381,12 @@ fun SakoNavGraph(
         }
 
         composable(route = Screen.VideoFavorite.route) {
+            val backStackEntry = remember(navController) {
+                navController.getBackStackEntry(Screen.Home.route)
+            }
             val sharedVideoViewModel: VideoViewModel = viewModel(
                 factory = viewModelFactory,
-                viewModelStoreOwner = navController.getBackStackEntry(Screen.Home.route)
+                viewModelStoreOwner = backStackEntry
             )
             
             // Reload favorites saat masuk screen
@@ -396,9 +407,12 @@ fun SakoNavGraph(
             route = Screen.VideoDetail.route,
             arguments = listOf(navArgument(NavArgs.VIDEO_ID) { type = NavType.StringType })
         ) { backStackEntry ->
+            val homeBackStackEntry = remember(navController) {
+                navController.getBackStackEntry(Screen.Home.route)
+            }
             val sharedVideoViewModel: VideoViewModel = viewModel(
                 factory = viewModelFactory,
-                viewModelStoreOwner = navController.getBackStackEntry(Screen.Home.route)
+                viewModelStoreOwner = homeBackStackEntry
             )
             
             val videoId = backStackEntry.arguments?.getString(NavArgs.VIDEO_ID) ?: ""
@@ -419,6 +433,64 @@ fun SakoNavGraph(
                 },
                 video = sharedVideoViewModel.selectedVideo.collectAsState().value,
                 videos = sharedVideoViewModel.videos.collectAsState()
+            )
+        }
+
+        // ============================================
+        // Profile Module Screens
+        // ============================================
+        
+        composable(route = Screen.Profile.route) {
+            // ProfileViewModel menggunakan ProfileViewModelFactory dengan UserPreference
+            val profileViewModelFactory = remember { 
+                ProfileViewModelFactory(userPreference) 
+            }
+            val profileViewModel: ProfileViewModel = viewModel(factory = profileViewModelFactory)
+
+            ProfileScreen(
+                navController = navController,
+                viewModel = profileViewModel
+            )
+        }
+
+        composable(route = Screen.EditProfile.route) {
+            // TODO: Implement EditProfileScreen
+            // Placeholder for now
+        }
+
+        composable(route = Screen.ChangePassword.route) {
+            // TODO: Implement ChangePasswordScreen
+            // Placeholder for now
+        }
+
+        composable(route = Screen.BadgeList.route) {
+            // TODO: Implement BadgeListScreen
+            // Placeholder for now
+        }
+
+        composable(route = Screen.Setting.route) {
+            val context = LocalContext.current
+            val profileViewModelFactory = remember { 
+                ProfileViewModelFactory(userPreference) 
+            }
+            val profileViewModel: ProfileViewModel = viewModel(factory = profileViewModelFactory)
+            
+            SettingScreen(
+                viewModel = profileViewModel,
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onNavigateToChangePassword = {
+                    navController.navigate(Screen.ChangePassword.route)
+                },
+                onNavigateToAbout = {
+                    // TODO: Navigate to About screen when implemented
+                },
+                onLogoutSuccess = {
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
             )
         }
     }
