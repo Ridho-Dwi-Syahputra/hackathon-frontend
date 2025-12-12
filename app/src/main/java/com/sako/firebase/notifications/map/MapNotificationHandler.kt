@@ -1,156 +1,140 @@
 package com.sako.firebase.notifications.map
 
+import android.content.Context
 import android.util.Log
 import com.sako.data.remote.response.ReviewResponse
 import com.sako.data.remote.response.ScanQRResponse
-import com.sako.firebase.FirebaseConfig
 
 /**
  * Map Notification Handler
- * Handles incoming notifications from backend for map module
- * Processes notification data dan triggers appropriate actions
+ * Handles FCM notifications specifically for map module events
  */
 object MapNotificationHandler {
     
     private const val TAG = "MAP_NOTIFICATION_HANDLER"
 
     /**
-     * Handle review added notification from backend
-     * Triggered when user successfully adds a review
+     * Process FCM notification data for map module
+     * Called by SakoFirebaseMessagingService when module="map"
      */
-    fun handleReviewAddedNotification(
-        response: ReviewResponse,
-        placeName: String,
-        rating: Int
-    ) {
+    fun processMapNotification(
+        context: Context,
+        notificationData: Map<String, String>
+    ): Boolean {
         try {
-            Log.d(TAG, "⭐ Processing review added notification")
-            Log.d(TAG, "📍 Place: $placeName, Rating: $rating")
+            val notificationType = notificationData["type"] ?: return false
+            val placeName = notificationData["place_name"] ?: "Unknown Place"
+            val userName = notificationData["user_name"] ?: "Unknown User"
             
-            if (response.success) {
-                // Log successful review
-                val message = "Ulasan berhasil ditambahkan untuk $placeName dengan rating $rating bintang"
-                Log.i(TAG, message)
-                
-                // Notification akan dikirim otomatis dari backend via FCM
-                // FCMService akan menangani notifikasi yang masuk
-                
-            } else {
-                Log.w(TAG, "⚠️ Review failed, no notification sent")
-            }
-            
-        } catch (e: Exception) {
-            Log.e(TAG, "❌ Error handling review notification: ${e.message}")
-        }
-    }
-
-    /**
-     * Handle place visited notification from backend
-     * Triggered when user successfully scans QR code
-     */
-    fun handlePlaceVisitedNotification(
-        response: ScanQRResponse,
-        placeName: String
-    ) {
-        try {
-            Log.d(TAG, "🏛️ Processing place visited notification")
-            Log.d(TAG, "📍 Place: $placeName")
-            
-            if (response.success && response.data?.scan_success == true) {
-                // Log successful visit
-                val message = "Kunjungan berhasil dicatat untuk $placeName"
-                Log.i(TAG, message)
-                
-                // Notification akan dikirim otomatis dari backend via FCM
-                // FCMService akan menangani notifikasi yang masuk
-                
-                // Log visit info for debugging
-                response.data?.let { scanData ->
-                    Log.d(TAG, "✅ Visit recorded successfully")
-                }
-                
-            } else {
-                Log.w(TAG, "⚠️ QR scan failed, no notification sent")
-            }
-            
-        } catch (e: Exception) {
-            Log.e(TAG, "❌ Error handling visit notification: ${e.message}")
-        }
-    }
-
-    /**
-     * Process notification data from FCM
-     * Called by FCMService when notification is received
-     */
-    fun processNotificationData(data: Map<String, String>) {
-        try {
-            val notificationType = data["type"] ?: return
-            val module = data["module"] ?: return
-            
-            if (module != "map") return
-            
-            Log.d(TAG, "📨 Processing FCM notification data")
-            Log.d(TAG, "🔔 Type: $notificationType")
+            Log.d(TAG, "📍 Processing map notification: type=$notificationType, place=$placeName")
             
             when (notificationType) {
                 "review_added" -> {
-                    val placeName = data["place_name"] ?: "Unknown Place"
-                    val rating = data["rating"]?.toIntOrNull() ?: 0
-                    val userName = data["user_name"] ?: "Unknown User"
-                    
-                    Log.d(TAG, "⭐ Review notification: $userName reviewed $placeName ($rating stars)")
+                    handleReviewAddedNotification(context, notificationData)
                 }
-                
                 "place_visited" -> {
-                    val placeName = data["place_name"] ?: "Unknown Place"
-                    val userName = data["user_name"] ?: "Unknown User"
-                    val qrCodeValue = data["qr_code_value"] ?: ""
-                    
-                    Log.d(TAG, "🏛️ Visit notification: $userName visited $placeName (QR: $qrCodeValue)")
+                    handlePlaceVisitedNotification(context, notificationData)
                 }
-                
                 else -> {
-                    Log.d(TAG, "🔔 Unknown notification type: $notificationType")
+                    Log.w(TAG, "⚠️ Unknown map notification type: $notificationType")
+                    return false
                 }
             }
             
+            return true
+            
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Error processing notification data: ${e.message}")
+            Log.e(TAG, "❌ Error processing map notification: ${e.message}")
+            return false
         }
     }
 
     /**
-     * Check notification preferences and filter accordingly
+     * Handle review added notification
      */
-    fun shouldShowNotification(
-        notificationType: String,
-        preferences: MapNotificationPreferences
-    ): Boolean {
-        return when (notificationType) {
-            "review_added" -> preferences.reviewAdded
-            "place_visited" -> preferences.placeVisited
-            else -> true // Show unknown types by default
-        }.also { shouldShow ->
-            Log.d(TAG, "🔔 Should show $notificationType notification: $shouldShow")
-        }
-    }
-
-    /**
-     * Log notification activity for debugging
-     */
-    fun logNotificationActivity(
-        action: String,
-        notificationType: String,
-        details: Map<String, Any> = emptyMap()
+    private fun handleReviewAddedNotification(
+        context: Context,
+        data: Map<String, String>
     ) {
-        val timestamp = System.currentTimeMillis()
-        val logMessage = "📊 Notification Activity: $action - $notificationType"
+        val placeName = data["place_name"] ?: "Unknown Place"
+        val userName = data["user_name"] ?: "Unknown User"
+        val rating = data["rating"] ?: "0"
+        val reviewId = data["review_id"] ?: ""
         
-        Log.d(TAG, logMessage)
-        Log.d(TAG, "⏰ Timestamp: $timestamp")
+        Log.d(TAG, "⭐ Review notification: $userName rated $placeName ($rating stars)")
         
-        details.forEach { (key, value) ->
-            Log.d(TAG, "📋 $key: $value")
+        // Log untuk debugging backend integration
+        Log.d(TAG, "Review details - ID: $reviewId, Rating: $rating")
+    }
+
+    /**
+     * Handle place visited notification
+     */
+    private fun handlePlaceVisitedNotification(
+        context: Context,
+        data: Map<String, String>
+    ) {
+        val placeName = data["place_name"] ?: "Unknown Place"
+        val userName = data["user_name"] ?: "Unknown User"
+        val qrCode = data["qr_code_value"] ?: ""
+        val visitId = data["visit_id"] ?: ""
+        
+        Log.d(TAG, "🏛️ Visit notification: $userName visited $placeName")
+        
+        // Log untuk debugging backend integration
+        Log.d(TAG, "Visit details - QR: $qrCode, Visit ID: $visitId")
+    }
+
+    /**
+     * Create notification title and body for map events
+     */
+    fun createNotificationContent(
+        notificationType: String,
+        data: Map<String, String>
+    ): Pair<String, String> {
+        val placeName = data["place_name"] ?: "Tempat Wisata"
+        val userName = data["user_name"] ?: "Pengguna"
+        
+        return when (notificationType) {
+            "review_added" -> {
+                val rating = data["rating"] ?: "5"
+                Pair(
+                    "Review Baru Ditambahkan",
+                    "$userName menambahkan review $rating bintang untuk $placeName"
+                )
+            }
+            "place_visited" -> {
+                Pair(
+                    "Kunjungan Tercatat",
+                    "$userName telah mengunjungi $placeName"
+                )
+            }
+            else -> {
+                Pair("Notifikasi Map", "Ada aktivitas baru di peta")
+            }
+        }
+    }
+
+    /**
+     * Get navigation intent data for map notifications
+     */
+    fun getNavigationData(
+        notificationType: String,
+        data: Map<String, String>
+    ): Map<String, String> {
+        return when (notificationType) {
+            "review_added" -> mapOf(
+                "screen" to "place_detail",
+                "place_id" to (data["place_id"] ?: ""),
+                "review_id" to (data["review_id"] ?: ""),
+                "tab" to "reviews"
+            )
+            "place_visited" -> mapOf(
+                "screen" to "place_detail", 
+                "place_id" to (data["place_id"] ?: ""),
+                "tab" to "info"
+            )
+            else -> mapOf("screen" to "map_home")
         }
     }
 }

@@ -31,14 +31,19 @@ fun SplashScreen(
 ) {
     val userSession by userPreference.getSession().collectAsState(initial = null)
 
-    // Cek session setelah delay
+    // Log untuk debugging
     LaunchedEffect(key1 = true) {
+        android.util.Log.d("SplashScreen", "🔄 SplashScreen dimulai")
         delay(2000L) // 2 detik
+        
+        android.util.Log.d("SplashScreen", "🔍 Checking session: isLogin=${userSession?.isLogin}, token=${userSession?.accessToken}")
         
         // Cek apakah user sudah login
         if (userSession?.isLogin == true && userSession?.accessToken?.isNotEmpty() == true) {
+            android.util.Log.d("SplashScreen", "🏠 Navigating to Home")
             onNavigateToHome()
         } else {
+            android.util.Log.d("SplashScreen", "📝 Navigating to Register")
             onNavigateToRegister()
         }
     }
@@ -54,17 +59,7 @@ fun SplashScreen(
             verticalArrangement = Arrangement.Center,
             modifier = Modifier.padding(32.dp)
         ) {
-            // Logo SAKO
-            Image(
-                painter = painterResource(id = R.drawable.sako),
-                contentDescription = "Logo SAKO",
-                modifier = Modifier.size(120.dp),
-                contentScale = ContentScale.Fit
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // App Name
+            // App Name tanpa image dulu untuk debugging
             Text(
                 text = "SAKO",
                 fontSize = 32.sp,
@@ -75,12 +70,12 @@ fun SplashScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "Gamifikasi Pelestarian Budaya untuk Mendorong Pariwisata Berkelanjutan.",
+                text = "Loading...",
                 fontSize = 14.sp,
                 color = Color.White.copy(alpha = 0.9f)
             )
 
-            Spacer(modifier = Modifier.height(48.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
             // Loading Indicator
             CircularProgressIndicator(

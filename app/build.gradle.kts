@@ -151,13 +151,13 @@ dependencies {
 
     // ==================== Firebase ====================
     // Firebase BOM (Bill of Materials) untuk version management
-    implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
+    implementation(platform("com.google.firebase:firebase-bom:34.0.0"))
     
     // Firebase Cloud Messaging untuk push notifications
-    implementation("com.google.firebase:firebase-messaging-ktx")
+    implementation("com.google.firebase:firebase-messaging")
     
     // Firebase Analytics (optional)
-    implementation("com.google.firebase:firebase-analytics-ktx")
+    implementation("com.google.firebase:firebase-analytics")
     
     // Google Play Services untuk Firebase
     implementation("com.google.android.gms:play-services-base:18.7.0")

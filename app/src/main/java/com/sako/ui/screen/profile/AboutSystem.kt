@@ -1,4 +1,4 @@
 package com.sako.ui.screen.profile
 
-class BadgeDetailScreen {
+class AboutSystem {
 }

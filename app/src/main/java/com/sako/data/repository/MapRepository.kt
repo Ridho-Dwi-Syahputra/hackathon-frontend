@@ -5,7 +5,6 @@ import com.sako.data.pref.UserPreference
 import com.sako.data.remote.request.*
 import com.sako.data.remote.response.*
 import com.sako.data.remote.retrofit.ApiService
-import com.sako.firebase.notifications.map.MapNotificationHandler
 import com.sako.utils.Resource
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -88,7 +87,7 @@ class MapRepository private constructor(
             // Handle notification if scan was successful
             if (response.success && response.data?.scan_success == true) {
                 val placeName = response.data.tourist_place?.name ?: "Unknown Place"
-                MapNotificationHandler.handlePlaceVisitedNotification(response, placeName)
+                android.util.Log.d("MAP_REPOSITORY", "✅ Place visit successful: $placeName")
             }
             
             emit(Resource.Success(response))
@@ -124,7 +123,7 @@ class MapRepository private constructor(
             // Handle notification if review was successful
             if (response.success) {
                 val placeName = response.data?.touristPlace?.name ?: "Unknown Place"
-                MapNotificationHandler.handleReviewAddedNotification(response, placeName, rating)
+                android.util.Log.d("MAP_REPOSITORY", "✅ Review added successfully: $placeName, rating: $rating")
             }
             
             emit(Resource.Success(response))

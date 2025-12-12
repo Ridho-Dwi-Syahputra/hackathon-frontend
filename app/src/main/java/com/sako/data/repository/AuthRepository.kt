@@ -6,11 +6,13 @@ import com.sako.data.pref.UserPreference
 import com.sako.data.remote.request.*
 import com.sako.data.remote.response.*
 import com.sako.data.remote.retrofit.ApiService
-import com.sako.firebase.FirebaseConfig
+import com.sako.firebase.FirebaseHelper
 import com.sako.utils.Resource
 import com.sako.utils.BackendConnectionMonitor
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.first
 import retrofit2.HttpException
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
@@ -24,7 +26,7 @@ import java.io.File
 class AuthRepository private constructor(
     private val apiService: ApiService,
     private val userPreference: UserPreference,
-    private val connectionMonitor: BackendConnectionMonitor
+    private val connectionMonitor: BackendConnectionMonitor?
 ) {
 
     // ========== Error Handling ==========
@@ -65,12 +67,17 @@ class AuthRepository private constructor(
         emit(Resource.Loading)
         try {
             // Get FCM token if not provided
-            val actualFcmToken = fcmToken ?: FirebaseConfig.getFCMToken()
+            val actualFcmToken = fcmToken ?: FirebaseHelper.generateFCMToken()
             
             val request = RegisterRequest(fullName, email, password, actualFcmToken)
             val response = apiService.register(request)
 
             response.data?.let { authData ->
+                android.util.Log.d("AUTH_REPO", "🔍 Register response received")
+                android.util.Log.d("AUTH_REPO", "  - AccessToken from backend: ${authData.accessToken}")
+                android.util.Log.d("AUTH_REPO", "  - DatabaseToken from backend: ${authData.databaseToken}")
+                android.util.Log.d("AUTH_REPO", "  - User ID: ${authData.user.id}")
+                
                 val userModel = UserModel(
                     id = authData.user.id,
                     fullName = authData.user.fullName,
@@ -78,12 +85,21 @@ class AuthRepository private constructor(
                     totalXp = authData.user.totalXp,
                     status = authData.user.status,
                     userImageUrl = authData.user.userImageUrl,
-                    accessToken = authData.token ?: authData.accessToken ?: "",
+                    accessToken = authData.accessToken ?: "",
                     databaseToken = authData.databaseToken ?: "",
                     fcmToken = authData.user.fcmToken,
                     isLogin = true
                 )
+                
+                android.util.Log.d("AUTH_REPO", "💾 Saving session after register with accessToken: ${userModel.accessToken.take(20)}...")
                 saveSession(userModel)
+                android.util.Log.d("AUTH_REPO", "✅ Session saved after register")
+                
+                // Verify session was saved
+                kotlinx.coroutines.delay(100)
+                val savedSession = userPreference.getSession().first()
+                android.util.Log.d("AUTH_REPO", "🔄 Verification - saved accessToken: ${savedSession.accessToken.take(20)}...")
+                android.util.Log.d("AUTH_REPO", "🔄 Verification - saved databaseToken: ${savedSession.databaseToken}")
             }
 
             emit(Resource.Success(response))
@@ -100,7 +116,7 @@ class AuthRepository private constructor(
         try {
             // Get FCM token if not provided (optional for now)
             val actualFcmToken = try {
-                fcmToken ?: FirebaseConfig.getFCMToken()
+                fcmToken ?: FirebaseHelper.generateFCMToken()
             } catch (e: Exception) {
                 null // Firebase might not be properly configured
             }
@@ -109,9 +125,6 @@ class AuthRepository private constructor(
             val response = apiService.login(request)
 
             response.data?.let { authData ->
-                val token = authData.token ?: authData.accessToken ?: ""
-                android.util.Log.d("AUTH_DEBUG", "🔑 Login Response - Token: ${token.take(20)}..., User: ${authData.user.email}")
-                
                 val userModel = UserModel(
                     id = authData.user.id,
                     fullName = authData.user.fullName,
@@ -119,14 +132,13 @@ class AuthRepository private constructor(
                     totalXp = authData.user.totalXp,
                     status = authData.user.status,
                     userImageUrl = authData.user.userImageUrl,
-                    accessToken = token,
+                    accessToken = authData.accessToken ?: "",
                     databaseToken = authData.databaseToken ?: "",
                     fcmToken = authData.user.fcmToken,
                     isLogin = true
                 )
-                android.util.Log.d("AUTH_DEBUG", "💾 Saving session - Token: ${userModel.accessToken.take(20)}..., Login: ${userModel.isLogin}")
+                
                 saveSession(userModel)
-                android.util.Log.d("AUTH_DEBUG", "✅ Session saved successfully")
             }
 
             emit(Resource.Success(response))
@@ -197,7 +209,9 @@ class AuthRepository private constructor(
     fun updateProfile(fullName: String): Flow<Resource<UpdateProfileResponse>> = flow {
         emit(Resource.Loading)
         try {
-            val request = UpdateProfileRequest(fullName)
+            // Get current user email from session
+            val currentUser = userPreference.getSession().first()
+            val request = UpdateProfileRequest(fullName, currentUser.email)
             val response = apiService.updateProfile(request)
 
             // Update session
@@ -243,7 +257,7 @@ class AuthRepository private constructor(
         }
     }
 
-    fun changePassword(oldPassword: String, newPassword: String): Flow<Resource<AuthResponse>> = flow {
+    fun changePassword(oldPassword: String, newPassword: String): Flow<Resource<ChangePasswordResponse>> = flow {
         emit(Resource.Loading)
         try {
             val request = ChangePasswordRequest(oldPassword, newPassword)
@@ -264,7 +278,7 @@ class AuthRepository private constructor(
         fun getInstance(
             apiService: ApiService,
             userPreference: UserPreference,
-            connectionMonitor: BackendConnectionMonitor
+            connectionMonitor: BackendConnectionMonitor?
         ): AuthRepository =
             instance ?: synchronized(this) {
                 instance ?: AuthRepository(apiService, userPreference, connectionMonitor)

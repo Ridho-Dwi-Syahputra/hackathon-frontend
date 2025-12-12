@@ -25,16 +25,16 @@ data class ProfileData(
 )
 
 data class UserStats(
-    @SerializedName("total_points")
+    @SerializedName("totalPoints")
     val totalPoints: Int,
 
-    @SerializedName("total_attempts")
+    @SerializedName("totalAttempts")
     val totalAttempts: Int,
 
-    @SerializedName("completed_levels")
+    @SerializedName("completedLevels")
     val completedLevels: Int,
 
-    @SerializedName("visited_places")
+    @SerializedName("visitedPlaces")
     val visitedPlaces: Int
 )
 
@@ -48,36 +48,59 @@ data class BadgeItem(
     @SerializedName("description")
     val description: String?,
 
-    @SerializedName("image_url")
+    @SerializedName("imageUrl")
     val imageUrl: String?,
 
-    @SerializedName("earned_at")
+    @SerializedName("earnedAt")
     val earnedAt: String
 )
 
 // Profile user data untuk menghindari konflik dengan AuthResponse.UserData
 data class ProfileUserData(
-    @SerializedName("users_id")
+    @SerializedName("id")
     val id: String,
 
-    @SerializedName("full_name")
+    @SerializedName("fullName")
     val fullName: String,
 
     @SerializedName("email")
     val email: String,
 
-    @SerializedName("total_xp")
+    @SerializedName("totalXp")
     val totalXp: Int = 0,
 
     @SerializedName("status")
     val status: String,
 
-    @SerializedName("user_image_url")
+    @SerializedName("userImageUrl")
     val userImageUrl: String?,
 
-    @SerializedName("fcm_token")
+    @SerializedName("fcmToken")
     val fcmToken: String? = null,
 
-    @SerializedName("created_at")
-    val createdAt: String
+    @SerializedName("createdAt")
+    val createdAt: String,
+    
+    @SerializedName("updatedAt")
+    val updatedAt: String? = null,
+    
+    @SerializedName("notification_preferences")
+    val notificationPreferences: String? = null
+)
+
+// Notification Preferences Response
+data class NotificationPreferencesResponse(
+    @SerializedName("success")
+    val success: Boolean,
+    
+    @SerializedName("message")
+    val message: String,
+    
+    @SerializedName("data")
+    val data: NotificationPreferencesData? = null
+)
+
+data class NotificationPreferencesData(
+    @SerializedName("notification_preferences")
+    val notificationPreferences: com.sako.data.remote.request.NotificationPreferences
 )

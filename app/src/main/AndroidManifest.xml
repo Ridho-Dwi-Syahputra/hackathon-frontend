@@ -47,6 +47,10 @@
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
 
+    <!-- ==================== Notification Permission ==================== -->
+    <!-- POST_NOTIFICATIONS: untuk Android 13+ (API 33+) -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
     <!-- ==================== Microphone Permission ==================== -->
     <!-- Record Audio: untuk voice search di modul video -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
@@ -116,7 +120,7 @@
 
         <!-- ==================== Firebase Cloud Messaging Service ==================== -->
         <service
-            android:name="com.sako.firebase.FCMService"
+            android:name="com.sako.firebase.SakoFirebaseMessagingService"
             android:exported="false">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
