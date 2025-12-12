@@ -15,12 +15,12 @@ object ApiConfig {
 
     // Konfigurasi Base URL
     // Gunakan salah satu sesuai kebutuhan:
-    // - Emulator: http://10.0.2.2:3000/api/
-    // - Physical Device (same WiFi): http://[IP_KOMPUTER]:3000/api/ (cek dengan ipconfig)
-    // - ngrok (bypass WiFi isolation): https://your-subdomain.ngrok-free.dev/api/
+    // - Emulator: http://10.0.2.2:5000/api/
+    // - Physical Device (same WiFi): http://[IP_KOMPUTER]:5000/api/ (cek dengan ipconfig)
+    // - ngrok (bypass WiFi isolation): https://your-subdomain.ngrok-free.app/api/
     // - Production: https://your-backend-domain.com/api/
     
-    private const val BASE_URL = "http://10.0.2.2:5000/api/"
+    private const val BASE_URL = "https://lowery-marcus-nonreputably.ngrok-free.dev/api/"
 
 
     fun getApiService(userPreference: UserPreference): ApiService {
