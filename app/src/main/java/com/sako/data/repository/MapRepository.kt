@@ -93,6 +93,19 @@ class MapRepository private constructor(
         }
     }
 
+    fun searchPlaces(query: String): Flow<Resource<TouristPlaceListResponse>> = flow {
+        emit(Resource.Loading)
+        try {
+            val response = apiService.searchTouristPlaces(query)
+            emit(Resource.Success(response))
+        } catch (e: HttpException) {
+            val errorBody = e.response()?.errorBody()?.string()
+            emit(Resource.Error(parseErrorMessage(errorBody, e.code())))
+        } catch (e: Exception) {
+            emit(Resource.Error(e.message ?: "Terjadi kesalahan"))
+        }
+    }
+
     // ========== QR Code Scanning ==========
 
     fun scanQRCode(

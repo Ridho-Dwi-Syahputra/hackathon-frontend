@@ -1,5 +1,10 @@
 package com.sako.ui.screen.map
 
+import android.app.Activity
+import android.content.Intent
+import android.speech.RecognizerIntent
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -13,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -24,9 +30,11 @@ import com.sako.data.remote.response.TouristPlaceItem
 import com.sako.data.remote.response.VisitedPlaceItem
 import com.sako.ui.components.BackgroundImage
 import com.sako.ui.components.SakoPrimaryButton
+import com.sako.ui.components.SakoTextInputField
 import com.sako.ui.theme.SakoPrimary
 import com.sako.utils.Resource
 import com.sako.viewmodel.MapViewModel
+import java.util.Locale
 
 @Composable
 fun MapScreen(
@@ -39,9 +47,25 @@ fun MapScreen(
     val visitedPlaces by viewModel.visitedPlaces.collectAsState()
     
     var showVisited by remember { mutableStateOf(false) }
+    var searchQuery by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
         viewModel.loadTouristPlaces()
+    }
+
+    // Speech-to-Text launcher
+    val context = LocalContext.current
+    val speechLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val spokenText = result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.get(0)
+            if (spokenText != null) {
+                searchQuery = spokenText
+                viewModel.searchPlaces(spokenText)
+                println("🎤 Voice search: $spokenText")
+            }
+        }
     }
 
     BackgroundImage {
@@ -51,30 +75,76 @@ fun MapScreen(
                 .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(60.dp))
+            Spacer(modifier = Modifier.height(16.dp))
             
-            // Header dengan Logo Sako
+            // Header dengan Logo Sako (diperkecil)
             Image(
                 painter = painterResource(id = R.drawable.sako),
                 contentDescription = "Logo Sako",
                 modifier = Modifier
-                    .height(80.dp)
-                    .fillMaxWidth(0.6f)
+                    .height(50.dp)
+                    .fillMaxWidth(0.4f)
             )
             
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             
-            // Subtitle text
+            // Subtitle text (diperkecil)
             Text(
                 text = "Temukan tempat wisata menarik di sekitar Anda",
-                style = MaterialTheme.typography.bodyLarge.copy(
+                style = MaterialTheme.typography.bodyMedium.copy(
                     color = MaterialTheme.colorScheme.onSurface,
                     textAlign = TextAlign.Center
                 ),
                 modifier = Modifier.fillMaxWidth()
             )
             
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(12.dp))
+            
+            // Search Bar dengan Voice Search
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                SakoTextInputField(
+                    value = searchQuery,
+                    onValueChange = { 
+                        searchQuery = it
+                        if (it.isNotBlank()) {
+                            viewModel.searchPlaces(it)
+                        } else {
+                            viewModel.loadTouristPlaces()
+                        }
+                    },
+                    label = "Cari tempat wisata...",
+                    leadingIcon = Icons.Default.Search,
+                    placeholder = "Cari berdasarkan nama atau lokasi",
+                    modifier = Modifier.weight(1f)
+                )
+                
+                // Voice search button
+                FloatingActionButton(
+                    onClick = {
+                        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+                            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                            putExtra(RecognizerIntent.EXTRA_LANGUAGE, "id-ID") // Bahasa Indonesia
+                            putExtra(RecognizerIntent.EXTRA_PROMPT, "Katakan nama tempat wisata...")
+                        }
+                        speechLauncher.launch(intent)
+                    },
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    modifier = Modifier.height(48.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.microphone),
+                        contentDescription = "Voice Search",
+                        modifier = Modifier.padding(12.dp)
+                    )
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(16.dp))
             
             // Filter buttons
             Row(
@@ -86,6 +156,7 @@ fun MapScreen(
                     isSelected = !showVisited,
                     onClick = {
                         showVisited = false
+                        searchQuery = ""
                         viewModel.loadTouristPlaces()
                     },
                     modifier = Modifier.weight(1f)
@@ -95,6 +166,7 @@ fun MapScreen(
                     isSelected = showVisited,
                     onClick = {
                         showVisited = true
+                        searchQuery = ""
                         viewModel.loadVisitedPlaces()
                     },
                     modifier = Modifier.weight(1f)

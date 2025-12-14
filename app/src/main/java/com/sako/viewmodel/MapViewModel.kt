@@ -100,6 +100,25 @@ class MapViewModel(
         }
     }
 
+    fun searchPlaces(query: String) {
+        viewModelScope.launch {
+            _touristPlaces.value = Resource.Loading
+            mapRepository.searchPlaces(query).collect { resource ->
+                when (resource) {
+                    is Resource.Success -> {
+                        _touristPlaces.value = Resource.Success(resource.data.data)
+                    }
+                    is Resource.Error -> {
+                        _touristPlaces.value = Resource.Error(resource.error)
+                    }
+                    is Resource.Loading -> {
+                        _touristPlaces.value = Resource.Loading
+                    }
+                }
+            }
+        }
+    }
+
     fun checkinLocation(qrToken: String, latitude: Double, longitude: Double) {
         // Delegate to scanQRCode with location coordinates
         scanQRCode(qrToken, latitude, longitude)

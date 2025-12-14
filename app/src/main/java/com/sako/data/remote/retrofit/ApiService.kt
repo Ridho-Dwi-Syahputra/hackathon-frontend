@@ -36,6 +36,11 @@ interface ApiService {
         @Query("page") page: Int = 1
     ): TouristPlaceListResponse
 
+    @GET("map/places/search")
+    suspend fun searchTouristPlaces(
+        @Query("query") query: String
+    ): TouristPlaceListResponse
+
     @GET("map/places/{id}")
     suspend fun getTouristPlaceDetail(
         @Path("id") placeId: String
