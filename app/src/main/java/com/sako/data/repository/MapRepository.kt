@@ -21,14 +21,34 @@ class MapRepository private constructor(
 
     // ========== Error Handling ==========
     
-    private fun parseErrorMessage(errorBody: String?): String {
+    private fun parseErrorMessage(errorBody: String?, statusCode: Int? = null): String {
         if (errorBody.isNullOrEmpty()) return "Terjadi kesalahan pada server"
         
         return try {
             val errorResponse = Gson().fromJson(errorBody, ErrorResponse::class.java)
-            errorResponse?.message ?: "Terjadi kesalahan pada server"
-        } catch (_: Exception) {
-            "Terjadi kesalahan pada server"
+            val message = errorResponse?.message ?: "Terjadi kesalahan pada server"
+            
+            // Log for debugging
+            android.util.Log.d("MAP_REPOSITORY", "Parsed error message: $message")
+            android.util.Log.d("MAP_REPOSITORY", "Status code: $statusCode")
+            
+            // Handle specific error codes for better user experience
+            when (statusCode) {
+                409 -> message // ALREADY_VISITED - show backend message directly
+                404 -> "QR Code tidak valid atau tempat wisata tidak ditemukan"
+                400 -> message // BAD_REQUEST - show validation message (including LOCATION_TOO_FAR)
+                403 -> "Akses ditolak. Anda tidak memiliki izin."
+                500 -> "Terjadi kesalahan pada server. Silakan coba lagi."
+                else -> message
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("MAP_REPOSITORY", "Error parsing error message: ${e.message}")
+            when (statusCode) {
+                409 -> "Anda sudah pernah mengunjungi tempat ini"
+                404 -> "QR Code tidak valid"
+                400 -> "Gagal memproses permintaan"
+                else -> "Terjadi kesalahan pada server"
+            }
         }
     }
 
@@ -41,7 +61,7 @@ class MapRepository private constructor(
             emit(Resource.Success(response))
         } catch (e: HttpException) {
             val errorBody = e.response()?.errorBody()?.string()
-            emit(Resource.Error(parseErrorMessage(errorBody)))
+            emit(Resource.Error(parseErrorMessage(errorBody, e.code())))
         } catch (e: Exception) {
             emit(Resource.Error(e.message ?: "Terjadi kesalahan"))
         }
@@ -54,7 +74,7 @@ class MapRepository private constructor(
             emit(Resource.Success(response))
         } catch (e: HttpException) {
             val errorBody = e.response()?.errorBody()?.string()
-            emit(Resource.Error(parseErrorMessage(errorBody)))
+            emit(Resource.Error(parseErrorMessage(errorBody, e.code())))
         } catch (e: Exception) {
             emit(Resource.Error(e.message ?: "Terjadi kesalahan"))
         }
@@ -67,7 +87,7 @@ class MapRepository private constructor(
             emit(Resource.Success(response))
         } catch (e: HttpException) {
             val errorBody = e.response()?.errorBody()?.string()
-            emit(Resource.Error(parseErrorMessage(errorBody)))
+            emit(Resource.Error(parseErrorMessage(errorBody, e.code())))
         } catch (e: Exception) {
             emit(Resource.Error(e.message ?: "Terjadi kesalahan"))
         }
@@ -75,25 +95,37 @@ class MapRepository private constructor(
 
     // ========== QR Code Scanning ==========
 
-    fun scanQRCode(qrCodeValue: String): Flow<Resource<ScanQRResponse>> = flow {
+    fun scanQRCode(
+        qrCodeValue: String,
+        userLatitude: Double,
+        userLongitude: Double
+    ): Flow<Resource<ScanQRResponse>> = flow {
         emit(Resource.Loading)
         try {
-            val request = ScanQRRequest(qrCodeValue)
+            val request = ScanQRRequest(
+                qrCodeValue = qrCodeValue,
+                userLatitude = userLatitude,
+                userLongitude = userLongitude
+            )
             val response = apiService.scanQRCode(request)
             
-            // CATATAN: Scan QR hanya mencatat kunjungan, tidak ada XP reward
-            // Sesuai dokumentasi: "❌ TIDAK memberikan XP (hanya mencatat kunjungan)"
+            // CATATAN: Scan QR sekarang memberikan XP reward (50 XP) jika berhasil
+            // Validasi lokasi dilakukan di backend dengan radius 200m
             
-            // Handle notification if scan was successful
-            if (response.success && response.data?.scan_success == true) {
-                val placeName = response.data.tourist_place?.name ?: "Unknown Place"
-                android.util.Log.d("MAP_REPOSITORY", "✅ Place visit successful: $placeName")
+            // Check if response indicates success or failure
+            if (response.success && response.data?.scanSuccess == true) {
+                val placeName = response.data.touristPlace?.name ?: "Unknown Place"
+                val xpEarned = response.data.rewardInfo?.xpEarned ?: 0
+                android.util.Log.d("MAP_REPOSITORY", "✅ Place visit successful: $placeName (+$xpEarned XP)")
+                emit(Resource.Success(response))
+            } else {
+                // Backend returned success=false (shouldn't happen with proper backend, but handle it)
+                val errorMessage = response.message ?: "Gagal scan QR"
+                emit(Resource.Error(errorMessage))
             }
-            
-            emit(Resource.Success(response))
         } catch (e: HttpException) {
             val errorBody = e.response()?.errorBody()?.string()
-            emit(Resource.Error(parseErrorMessage(errorBody)))
+            emit(Resource.Error(parseErrorMessage(errorBody, e.code())))
         } catch (e: Exception) {
             emit(Resource.Error(e.message ?: "Terjadi kesalahan"))
         }
@@ -108,7 +140,7 @@ class MapRepository private constructor(
             emit(Resource.Success(response))
         } catch (e: HttpException) {
             val errorBody = e.response()?.errorBody()?.string()
-            emit(Resource.Error(parseErrorMessage(errorBody)))
+            emit(Resource.Error(parseErrorMessage(errorBody, e.code())))
         } catch (e: Exception) {
             emit(Resource.Error(e.message ?: "Terjadi kesalahan"))
         }
@@ -129,7 +161,7 @@ class MapRepository private constructor(
             emit(Resource.Success(response))
         } catch (e: HttpException) {
             val errorBody = e.response()?.errorBody()?.string()
-            emit(Resource.Error(parseErrorMessage(errorBody)))
+            emit(Resource.Error(parseErrorMessage(errorBody, e.code())))
         } catch (e: Exception) {
             emit(Resource.Error(e.message ?: "Terjadi kesalahan"))
         }
@@ -143,7 +175,7 @@ class MapRepository private constructor(
             emit(Resource.Success(response))
         } catch (e: HttpException) {
             val errorBody = e.response()?.errorBody()?.string()
-            emit(Resource.Error(parseErrorMessage(errorBody)))
+            emit(Resource.Error(parseErrorMessage(errorBody, e.code())))
         } catch (e: Exception) {
             emit(Resource.Error(e.message ?: "Terjadi kesalahan"))
         }
@@ -156,7 +188,7 @@ class MapRepository private constructor(
             emit(Resource.Success(response))
         } catch (e: HttpException) {
             val errorBody = e.response()?.errorBody()?.string()
-            emit(Resource.Error(parseErrorMessage(errorBody)))
+            emit(Resource.Error(parseErrorMessage(errorBody, e.code())))
         } catch (e: Exception) {
             emit(Resource.Error(e.message ?: "Terjadi kesalahan"))
         }
@@ -169,7 +201,7 @@ class MapRepository private constructor(
             emit(Resource.Success(response))
         } catch (e: HttpException) {
             val errorBody = e.response()?.errorBody()?.string()
-            emit(Resource.Error(parseErrorMessage(errorBody)))
+            emit(Resource.Error(parseErrorMessage(errorBody, e.code())))
         } catch (e: Exception) {
             emit(Resource.Error(e.message ?: "Terjadi kesalahan"))
         }

@@ -34,10 +34,10 @@ data class TouristPlaceItem(
     val averageRating: Double = 0.0,
     
     @SerializedName("is_active")
-    val isActive: Boolean,
+    val isActive: Boolean = true,
 
     @SerializedName("is_visited")
-    val isVisited: Boolean,
+    val isVisited: Boolean = false,
 
     @SerializedName("visited_at")
     val visitedAt: String?
@@ -112,10 +112,10 @@ data class ReviewItem(
     val id: String,
 
     @SerializedName("user_id")
-    val userId: String,
+    val userId: String? = null,
 
     @SerializedName("tourist_place_id")
-    val touristPlaceId: String,
+    val touristPlaceId: String? = null,
 
     @SerializedName("rating")
     val rating: Int,
@@ -279,13 +279,49 @@ data class ScanQRResponse(
 
 data class ScanQRData(
     @SerializedName("scan_success")
-    val scan_success: Boolean,
+    val scanSuccess: Boolean,
 
     @SerializedName("tourist_place")
-    val tourist_place: TouristPlaceItem?,
+    val touristPlace: TouristPlaceItem?,
 
     @SerializedName("visited_at")
-    val visited_at: String?
+    val visitedAt: String?,
+    
+    @SerializedName("location_validation")
+    val locationValidation: LocationValidation?,
+    
+    @SerializedName("reward_info")
+    val rewardInfo: RewardInfo?
+)
+
+data class LocationValidation(
+    @SerializedName("distance_meters")
+    val distanceMeters: Double,
+    
+    @SerializedName("user_coordinates")
+    val userCoordinates: Coordinates,
+    
+    @SerializedName("place_coordinates")
+    val placeCoordinates: Coordinates,
+    
+    @SerializedName("within_radius")
+    val withinRadius: Boolean
+)
+
+data class Coordinates(
+    @SerializedName("latitude")
+    val latitude: Double,
+    
+    @SerializedName("longitude")
+    val longitude: Double
+)
+
+data class RewardInfo(
+    @SerializedName("xp_earned")
+    val xpEarned: Int,
+    
+    @SerializedName("total_xp")
+    val totalXp: Int
 )
 
 // Toggle Like Response
@@ -297,7 +333,7 @@ data class ToggleLikeResponse(
     val message: String,
 
     @SerializedName("data")
-    val data: LikeData
+    val data: LikeData?
 )
 
 data class LikeData(

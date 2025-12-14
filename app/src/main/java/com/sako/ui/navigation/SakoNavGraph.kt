@@ -52,14 +52,23 @@ fun SakoNavGraph(
     modifier: Modifier = Modifier,
     startDestination: String = Screen.Splash.route // Start dari Splash Screen
 ) {
-    // Create a single shared VideoViewModel for all video-related screens so favorites
-    // are consistent across navigation destinations.
-    val sharedVideoViewModel: VideoViewModel = viewModel(factory = viewModelFactory)
-    
-    // Create AuthViewModel using dedicated AuthViewModelFactory
+    // Create single shared ViewModels at NavGraph level to prevent recreation on navigation
+    // This ensures data persistence and prevents redundant API calls
     val context = LocalContext.current
+    
+    // Auth ViewModels
     val authViewModelFactory = remember { AuthViewModelFactory(context) }
     val authViewModel: AuthViewModel = viewModel(factory = authViewModelFactory)
+    
+    // Profile ViewModels
+    val profileViewModelFactory = remember { ProfileViewModelFactory(userPreference) }
+    val sharedProfileViewModel: ProfileViewModel = viewModel(factory = profileViewModelFactory)
+    
+    // Shared ViewModels for modules
+    val sharedVideoViewModel: VideoViewModel = viewModel(factory = viewModelFactory)
+    val sharedKuisViewModel: KuisViewModel = viewModel(factory = viewModelFactory)
+    val sharedVideoCollectionViewModel: VideoCollectionViewModel = viewModel(factory = viewModelFactory)
+    val sharedMapViewModel: com.sako.viewmodel.MapViewModel = viewModel(factory = viewModelFactory)
 
     NavHost(
         navController = navController,
@@ -140,8 +149,6 @@ fun SakoNavGraph(
         // Quiz Module - Category List
         // ============================================
         composable(route = Screen.KuisList.route) {
-            val kuisViewModel: KuisViewModel = viewModel(factory = viewModelFactory)
-
             QuizCategoryChooseScreen(
                 onNavigateBack = {
                     navController.popBackStack()
@@ -149,7 +156,7 @@ fun SakoNavGraph(
                 onNavigateToLevelList = { categoryId ->
                     navController.navigate(Screen.KuisDetail.createRoute(categoryId))
                 },
-                viewModel = kuisViewModel
+                viewModel = sharedKuisViewModel
             )
         }
 
@@ -163,7 +170,6 @@ fun SakoNavGraph(
             )
         ) { backStackEntry ->
             val categoryId = backStackEntry.arguments?.getString(NavArgs.CATEGORY_ID) ?: ""
-            val kuisViewModel: KuisViewModel = viewModel(factory = viewModelFactory)
 
             QuizLevelChooseScreen(
                 categoryId = categoryId,
@@ -173,7 +179,7 @@ fun SakoNavGraph(
                 onNavigateToQuiz = { levelId ->
                     navController.navigate(Screen.QuizAttempt.createRoute(levelId))
                 },
-                viewModel = kuisViewModel
+                viewModel = sharedKuisViewModel
             )
         }
 
@@ -249,10 +255,8 @@ fun SakoNavGraph(
         // Map Module Screens
         // ============================================
         composable(route = Screen.Map.route) {
-            val mapViewModel: com.sako.viewmodel.MapViewModel = viewModel(factory = viewModelFactory)
-
             com.sako.ui.screen.map.MapScreen(
-                viewModel = mapViewModel,
+                viewModel = sharedMapViewModel,
                 onNavigateToDetail = { placeId ->
                     navController.navigate(Screen.MapDetail.createRoute(placeId))
                 },
@@ -269,11 +273,10 @@ fun SakoNavGraph(
             )
         ) { backStackEntry ->
             val placeId = backStackEntry.arguments?.getString(NavArgs.LOCATION_ID) ?: ""
-            val mapViewModel: com.sako.viewmodel.MapViewModel = viewModel(factory = viewModelFactory)
 
             com.sako.ui.screen.map.DetailMapScreen(
                 placeId = placeId,
-                viewModel = mapViewModel,
+                viewModel = sharedMapViewModel,
                 onNavigateBack = {
                     navController.popBackStack()
                 },
@@ -282,7 +285,7 @@ fun SakoNavGraph(
                 },
                 onNavigateToAddReview = { locationId ->
                     // Get place name from detail
-                    val placeDetail = mapViewModel.touristPlaceDetail.value
+                    val placeDetail = sharedMapViewModel.touristPlaceDetail.value
                     val placeName = (placeDetail as? com.sako.utils.Resource.Success)?.data?.name ?: "Tempat Wisata"
                     navController.navigate(Screen.TambahUlasan.createRoute(locationId, placeName))
                 },
@@ -293,10 +296,8 @@ fun SakoNavGraph(
         }
 
         composable(route = Screen.ScanMap.route) {
-            val mapViewModel: com.sako.viewmodel.MapViewModel = viewModel(factory = viewModelFactory)
-
             com.sako.ui.screen.map.ScanMapScreen(
-                viewModel = mapViewModel,
+                viewModel = sharedMapViewModel,
                 onNavigateBack = {
                     navController.popBackStack()
                 },
@@ -317,12 +318,11 @@ fun SakoNavGraph(
         ) { backStackEntry ->
             val placeId = backStackEntry.arguments?.getString(NavArgs.LOCATION_ID) ?: ""
             val placeName = backStackEntry.arguments?.getString(NavArgs.PLACE_NAME) ?: ""
-            val mapViewModel: com.sako.viewmodel.MapViewModel = viewModel(factory = viewModelFactory)
 
             com.sako.ui.screen.map.TambahUlasanScreen(
                 placeId = placeId,
                 placeName = placeName,
-                viewModel = mapViewModel,
+                viewModel = sharedMapViewModel,
                 onNavigateBack = {
                     navController.popBackStack()
                 }
@@ -348,7 +348,6 @@ fun SakoNavGraph(
             val rating = backStackEntry.arguments?.getInt(NavArgs.RATING) ?: 0
             val reviewText = backStackEntry.arguments?.getString(NavArgs.REVIEW_TEXT)
                 ?.let { if (it == "null") null else it }
-            val mapViewModel: com.sako.viewmodel.MapViewModel = viewModel(factory = viewModelFactory)
 
             com.sako.ui.screen.map.EditUlasanScreen(
                 reviewId = reviewId,
@@ -356,7 +355,7 @@ fun SakoNavGraph(
                 placeName = placeName,
                 initialRating = rating,
                 initialReviewText = reviewText,
-                viewModel = mapViewModel,
+                viewModel = sharedMapViewModel,
                 onNavigateBack = {
                     navController.popBackStack()
                 }
@@ -435,19 +434,9 @@ fun SakoNavGraph(
         }
 
         composable(route = Screen.VideoCollectionList.route) {
-            // Use shared ViewModel scoped to Home route
-            val collectionViewModel: VideoCollectionViewModel = viewModel(
-                factory = viewModelFactory,
-                viewModelStoreOwner = navController.getBackStackEntry(Screen.Home.route)
-            )
-            val collections by collectionViewModel.collections.collectAsState()
-            val isLoading by collectionViewModel.isLoading.collectAsState()
+            val collections by sharedVideoCollectionViewModel.collections.collectAsState()
+            val isLoading by sharedVideoCollectionViewModel.isLoading.collectAsState()
             var showCreateDialog by remember { mutableStateOf(false) }
-            
-            // Reload collections when entering screen
-            LaunchedEffect(Unit) {
-                collectionViewModel.loadCollections()
-            }
 
             VideoCollectionListScreen(
                 collections = collections,
@@ -464,7 +453,7 @@ fun SakoNavGraph(
                 CreateCollectionDialog(
                     onDismiss = { showCreateDialog = false },
                     onCreate = { nama, deskripsi ->
-                        collectionViewModel.createCollection(nama, deskripsi)
+                        sharedVideoCollectionViewModel.createCollection(nama, deskripsi)
                         showCreateDialog = false
                     },
                     isLoading = isLoading
@@ -476,20 +465,14 @@ fun SakoNavGraph(
             route = Screen.VideoCollectionDetail.route,
             arguments = listOf(navArgument("collectionId") { type = NavType.StringType })
         ) { backStackEntry ->
-            // Use shared ViewModel scoped to Home route
-            val collectionViewModel: VideoCollectionViewModel = viewModel(
-                factory = viewModelFactory,
-                viewModelStoreOwner = navController.getBackStackEntry(Screen.Home.route)
-            )
             val collectionId = backStackEntry.arguments?.getString("collectionId") ?: ""
-            val selectedCollection by collectionViewModel.selectedCollection.collectAsState()
-            val collectionVideos by collectionViewModel.collectionVideos.collectAsState()
-            val isLoading by collectionViewModel.isLoading.collectAsState()
+            val selectedCollection by sharedVideoCollectionViewModel.selectedCollection.collectAsState()
+            val collectionVideos by sharedVideoCollectionViewModel.collectionVideos.collectAsState()
+            val isLoading by sharedVideoCollectionViewModel.isLoading.collectAsState()
 
-            // Load collection detail when screen opens
-            remember(collectionId) {
-                collectionViewModel.loadCollectionDetail(collectionId)
-                true
+            // Load collection detail when collectionId changes
+            LaunchedEffect(collectionId) {
+                sharedVideoCollectionViewModel.loadCollectionDetail(collectionId)
             }
 
             VideoCollectionDetailScreen(
@@ -505,10 +488,10 @@ fun SakoNavGraph(
                     navController.navigate(Screen.VideoDetail.createRoute(videoId))
                 },
                 onRemoveVideo = { videoId ->
-                    collectionViewModel.removeVideoFromCollection(collectionId, videoId)
+                    sharedVideoCollectionViewModel.removeVideoFromCollection(collectionId, videoId)
                 },
                 onDeleteCollection = {
-                    collectionViewModel.deleteCollection(collectionId)
+                    sharedVideoCollectionViewModel.deleteCollection(collectionId)
                     // Wait a bit before navigating back to let the state update
                     navController.popBackStack()
                 }
@@ -519,18 +502,12 @@ fun SakoNavGraph(
             route = Screen.VideoDetail.route,
             arguments = listOf(navArgument(NavArgs.VIDEO_ID) { type = NavType.StringType })
         ) { backStackEntry ->
-            val homeBackStackEntry = remember(navController) {
-                navController.getBackStackEntry(Screen.Home.route)
-            }
-            val sharedVideoViewModel: VideoViewModel = viewModel(
-                factory = viewModelFactory,
-                viewModelStoreOwner = homeBackStackEntry
-            )
-            
             val videoId = backStackEntry.arguments?.getString(NavArgs.VIDEO_ID) ?: ""
 
             // Set selected video when entering detail screen
-            sharedVideoViewModel.setSelectedVideo(videoId)
+            LaunchedEffect(videoId) {
+                sharedVideoViewModel.setSelectedVideo(videoId)
+            }
 
             VideoDetailScreen(
                 videoId = videoId,
@@ -553,15 +530,9 @@ fun SakoNavGraph(
         // ============================================
         
         composable(route = Screen.Profile.route) {
-            // ProfileViewModel menggunakan ProfileViewModelFactory dengan UserPreference
-            val profileViewModelFactory = remember { 
-                ProfileViewModelFactory(userPreference) 
-            }
-            val profileViewModel: ProfileViewModel = viewModel(factory = profileViewModelFactory)
-
             ProfileScreen(
                 navController = navController,
-                viewModel = profileViewModel
+                viewModel = sharedProfileViewModel
             )
         }
 
@@ -581,14 +552,8 @@ fun SakoNavGraph(
         }
 
         composable(route = Screen.Setting.route) {
-            val context = LocalContext.current
-            val profileViewModelFactory = remember { 
-                ProfileViewModelFactory(userPreference) 
-            }
-            val profileViewModel: ProfileViewModel = viewModel(factory = profileViewModelFactory)
-            
             SettingScreen(
-                viewModel = profileViewModel,
+                viewModel = sharedProfileViewModel,
                 onNavigateBack = {
                     navController.popBackStack()
                 },

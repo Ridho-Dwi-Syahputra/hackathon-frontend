@@ -5,7 +5,13 @@ import com.google.gson.annotations.SerializedName
 // Scan QR Code Request
 data class ScanQRRequest(
     @SerializedName("qr_code_value")
-    val qrCodeValue: String
+    val qrCodeValue: String,
+    
+    @SerializedName("user_latitude")
+    val userLatitude: Double,
+    
+    @SerializedName("user_longitude")
+    val userLongitude: Double
 )
 
 // Checkin Location Request - Scan QR Code

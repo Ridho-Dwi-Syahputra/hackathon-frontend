@@ -29,7 +29,10 @@ import com.google.mlkit.vision.common.InputImage
 import com.sako.data.remote.response.ScanQRData
 import com.sako.ui.components.BackgroundImage
 import com.sako.utils.Resource
+import com.sako.utils.LocationHelper
+import com.sako.utils.LocationException
 import com.sako.viewmodel.MapViewModel
+import kotlinx.coroutines.launch
 import java.util.concurrent.Executors
 
 @OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3Api::class)
@@ -51,6 +54,8 @@ fun ScanMapScreen(
     var showSuccessDialog by remember { mutableStateOf(false) }
     var showErrorDialog by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf("") }
+    var errorTitle by remember { mutableStateOf("Gagal Scan QR") }
+    var errorIcon by remember { mutableStateOf(Icons.Default.Error) }
     
     val scanResult by viewModel.scanResult.collectAsState()
 
@@ -73,7 +78,41 @@ fun ScanMapScreen(
             }
             is Resource.Error -> {
                 isProcessing = false
-                errorMessage = result.error
+                
+                // Log error for debugging
+                android.util.Log.d("SCAN_QR", "❌ Error received: ${result.error}")
+                
+                // Customize error dialog based on error message
+                when {
+                    result.error.contains("sudah pernah dikunjungi", ignoreCase = true) ||
+                    result.error.contains("sudah berkunjung", ignoreCase = true) ||
+                    result.error.contains("telah berkunjung", ignoreCase = true) ||
+                    result.error.contains("already visited", ignoreCase = true) -> {
+                        errorTitle = "Sudah Pernah Dikunjungi"
+                        errorIcon = Icons.Default.CheckCircle
+                        errorMessage = result.error
+                    }
+                    result.error.contains("tidak ditemukan", ignoreCase = true) ||
+                    result.error.contains("not found", ignoreCase = true) ||
+                    result.error.contains("tidak valid", ignoreCase = true) ||
+                    result.error.contains("invalid", ignoreCase = true) -> {
+                        errorTitle = "QR Code Tidak Valid"
+                        errorIcon = Icons.Default.Warning
+                        errorMessage = "QR Code yang Anda scan tidak terdaftar dalam sistem. Pastikan Anda scan QR Code resmi dari tempat wisata SAKO."
+                    }
+                    result.error.contains("terlalu jauh", ignoreCase = true) ||
+                    result.error.contains("jarak", ignoreCase = true) -> {
+                        errorTitle = "Lokasi Terlalu Jauh"
+                        errorIcon = Icons.Default.LocationOff
+                        errorMessage = result.error
+                    }
+                    else -> {
+                        errorTitle = "Gagal Scan QR"
+                        errorIcon = Icons.Default.Error
+                        errorMessage = result.error
+                    }
+                }
+                
                 showErrorDialog = true
             }
             is Resource.Loading -> {
@@ -180,23 +219,33 @@ fun ScanMapScreen(
                                     scannedCode = code
                                     isProcessing = true
                                     
-                                    // Get current location and checkin
-                                    val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
-                                    try {
-                                        fusedLocationClient.lastLocation.addOnSuccessListener { location ->
-                                            if (location != null) {
-                                                // Location verification passed, scan QR code
-                                                viewModel.scanQRCode(code)
-                                            } else {
-                                                errorMessage = "Tidak dapat mendapatkan lokasi"
-                                                showErrorDialog = true
-                                                isProcessing = false
-                                            }
+                                    android.util.Log.d("SCAN_QR", "🔍 QR Code detected: $code")
+                                    
+                                    // Get current location and scan QR code with location validation
+                                    kotlinx.coroutines.MainScope().launch {
+                                        try {
+                                            android.util.Log.d("SCAN_QR", "📍 Getting current location...")
+                                            val location = LocationHelper.getCurrentLocation(context)
+                                            
+                                            android.util.Log.d("SCAN_QR", "✅ Location obtained: ${location.latitude}, ${location.longitude}")
+                                            
+                                            // Scan QR code with user coordinates
+                                            viewModel.scanQRCode(
+                                                qrToken = code,
+                                                userLatitude = location.latitude,
+                                                userLongitude = location.longitude
+                                            )
+                                        } catch (e: LocationException) {
+                                            errorMessage = "Tidak dapat mendapatkan lokasi: ${e.message}"
+                                            showErrorDialog = true
+                                            isProcessing = false
+                                            scannedCode = null
+                                        } catch (e: Exception) {
+                                            errorMessage = "Terjadi kesalahan: ${e.message}"
+                                            showErrorDialog = true
+                                            isProcessing = false
+                                            scannedCode = null
                                         }
-                                    } catch (e: SecurityException) {
-                                        errorMessage = "Izin lokasi tidak diberikan"
-                                        showErrorDialog = true
-                                        isProcessing = false
                                     }
                                 }
                             },
@@ -251,16 +300,61 @@ fun ScanMapScreen(
                         tint = MaterialTheme.colorScheme.primary
                     )
                 },
-                title = { Text("Check-in Berhasil!") },
+                title = { Text("Check-in Berhasil! 🎉") },
                 text = {
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         (scanResult as? Resource.Success)?.data?.let { data ->
-                            Text("Selamat! Anda telah berhasil scan lokasi")
-                            data.tourist_place?.let { place ->
-                                Text("Lokasi: ${place.name}")
+                            // XP Reward Info (Prominent)
+                            data.rewardInfo?.let { reward ->
+                                Card(
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                                    ),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Column(
+                                        modifier = Modifier.padding(16.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                                    ) {
+                                        Text(
+                                            text = "+${reward.xpEarned} XP",
+                                            style = MaterialTheme.typography.headlineMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+                                        Text(
+                                            text = "Total XP: ${reward.totalXp}",
+                                            style = MaterialTheme.typography.bodyMedium
+                                        )
+                                    }
+                                }
                             }
-                            data.visited_at?.let { visitTime ->
-                                Text("Waktu kunjungan: $visitTime")
+                            
+                            // Place Info
+                            data.touristPlace?.let { place ->
+                                Text(
+                                    text = "Lokasi: ${place.name}",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+                            
+                            // Visit Time
+                            data.visitedAt?.let { visitTime ->
+                                Text(
+                                    text = "Waktu kunjungan: $visitTime",
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
+                            
+                            // Location Validation Info
+                            data.locationValidation?.let { validation ->
+                                Text(
+                                    text = "Jarak: ${LocationHelper.formatDistance(validation.distanceMeters)}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
                             }
                         }
                     }
@@ -270,7 +364,8 @@ fun ScanMapScreen(
                         onClick = {
                             viewModel.resetScanResult()
                             showSuccessDialog = false
-                            (scanResult as? Resource.Success)?.data?.tourist_place?.id?.let { placeId ->
+                            scannedCode = null
+                            (scanResult as? Resource.Success)?.data?.touristPlace?.id?.let { placeId ->
                                 onNavigateToDetail(placeId)
                             } ?: onNavigateBack()
                         }
@@ -283,6 +378,7 @@ fun ScanMapScreen(
                         onClick = {
                             viewModel.resetScanResult()
                             showSuccessDialog = false
+                            scannedCode = null
                             onNavigateBack()
                         }
                     ) {
@@ -301,13 +397,22 @@ fun ScanMapScreen(
                 },
                 icon = {
                     Icon(
-                        imageVector = Icons.Default.Error,
+                        imageVector = errorIcon,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.error
+                        tint = when (errorIcon) {
+                            Icons.Default.CheckCircle -> MaterialTheme.colorScheme.primary
+                            Icons.Default.Warning -> MaterialTheme.colorScheme.tertiary
+                            else -> MaterialTheme.colorScheme.error
+                        }
                     )
                 },
-                title = { Text("Gagal Scan QR") },
-                text = { Text(errorMessage) },
+                title = { Text(errorTitle) },
+                text = { 
+                    Text(
+                        text = errorMessage,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                },
                 confirmButton = {
                     TextButton(
                         onClick = {
@@ -316,7 +421,7 @@ fun ScanMapScreen(
                             scannedCode = null
                         }
                     ) {
-                        Text("Coba Lagi")
+                        Text("Tutup")
                     }
                 }
             )

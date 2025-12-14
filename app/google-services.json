@@ -1,13 +1,13 @@
 {
     "project_info": {
-        "project_number": "531209229300",
-        "project_id": "sako-app",
-        "storage_bucket": "sako-app.firebasestorage.app"
+        "project_number": "24983268260",
+        "project_id": "sako-cultural-app",
+        "storage_bucket": "sako-cultural-app.firebasestorage.app"
     },
     "client": [
         {
             "client_info": {
-                "mobilesdk_app_id": "1:531209229300:android:31f90995dccf4afcda1fa1",
+                "mobilesdk_app_id": "1:24983268260:android:ad0cf4fcebc0448300af31",
                 "android_client_info": {
                     "package_name": "com.sako"
                 }
@@ -15,7 +15,7 @@
             "oauth_client": [],
             "api_key": [
                 {
-                    "current_key": "AIzaSyCoYLbPPg16DcozvoWdpXZX7VUgq5lbcXA"
+                    "current_key": "AIzaSyBOZ495XWH3eNWdKHzJv95vdXPBm9s7QtY"
                 }
             ],
             "services": {

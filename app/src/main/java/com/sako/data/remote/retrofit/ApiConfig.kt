@@ -20,7 +20,8 @@ object ApiConfig {
     // - ngrok (bypass WiFi isolation): https://your-subdomain.ngrok-free.app/api/
     // - Production: https://your-backend-domain.com/api/
     
-    private const val BASE_URL = "https://lowery-marcus-nonreputably.ngrok-free.dev/api/"
+    // ✅ Using ngrok for real device testing
+    private const val BASE_URL = "https://cheryll-unintelligent-fuzzily.ngrok-free.dev/api/"
 
 
     fun getApiService(userPreference: UserPreference): ApiService {

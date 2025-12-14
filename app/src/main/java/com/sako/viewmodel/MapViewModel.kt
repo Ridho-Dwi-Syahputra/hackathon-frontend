@@ -101,8 +101,8 @@ class MapViewModel(
     }
 
     fun checkinLocation(qrToken: String, latitude: Double, longitude: Double) {
-        // For now, delegate to scanQRCode since checkinLocation doesn't exist in MapRepository
-        scanQRCode(qrToken)
+        // Delegate to scanQRCode with location coordinates
+        scanQRCode(qrToken, latitude, longitude)
     }
 
     fun addReview(touristPlaceId: String, rating: Int, reviewText: String?) {
@@ -112,8 +112,13 @@ class MapViewModel(
                     is Resource.Success -> {
                         resource.data.data?.review?.let { reviewItem ->
                             _reviewResult.value = Resource.Success(reviewItem)
-                            // Reload detail to show new review
+                            // Reload reviews and detail to show new review
+                            loadPlaceReviews(touristPlaceId)
                             loadTouristPlaceDetail(touristPlaceId)
+                            
+                            // Reset review result after brief delay to allow UI to show success
+                            kotlinx.coroutines.delay(1500)
+                            _reviewResult.value = null
                         } ?: run {
                             _reviewResult.value = Resource.Error("Data ulasan tidak valid")
                         }
@@ -136,31 +141,16 @@ class MapViewModel(
                     is Resource.Success -> {
                         resource.data.data?.review?.let { reviewItem ->
                             _reviewResult.value = Resource.Success(reviewItem)
-                            // Reload detail to show updated review
+                            // Reload reviews and detail to show updated review
+                            loadPlaceReviews(touristPlaceId)
                             loadTouristPlaceDetail(touristPlaceId)
+                            
+                            // Reset review result after brief delay
+                            kotlinx.coroutines.delay(1500)
+                            _reviewResult.value = null
                         } ?: run {
                             _reviewResult.value = Resource.Error("Data ulasan tidak valid")
                         }
-                    }
-                    is Resource.Error -> {
-                        _reviewResult.value = Resource.Error(resource.error)
-                    }
-                    is Resource.Loading -> {
-                        _reviewResult.value = Resource.Loading
-                    }
-                }
-            }
-        }
-    }
-
-    fun deleteReview(reviewId: String, touristPlaceId: String) {
-        viewModelScope.launch {
-            mapRepository.deleteReview(reviewId).collect { resource ->
-                when (resource) {
-                    is Resource.Success -> {
-                        _reviewResult.value = resource.data.data?.review?.let { Resource.Success(it) }
-                        // Reload detail to remove deleted review
-                        loadTouristPlaceDetail(touristPlaceId)
                     }
                     is Resource.Error -> {
                         _reviewResult.value = Resource.Error(resource.error)
@@ -204,22 +194,68 @@ class MapViewModel(
 
     fun toggleReviewLike(reviewId: String) {
         viewModelScope.launch {
-            mapRepository.toggleReviewLike(reviewId).collect { resource ->
-                when (resource) {
-                    is Resource.Success -> {
-                        // Refresh reviews to update like status
-                        val currentDetailResource = _touristPlaceDetail.value
-                        if (currentDetailResource is Resource.Success) {
-                            loadPlaceReviews(currentDetailResource.data.id)
+            try {
+                mapRepository.toggleReviewLike(reviewId).collect { resource ->
+                    when (resource) {
+                        is Resource.Success -> {
+                            // Update local state without reloading
+                            val currentReviewsResource = _reviewsList.value
+                            if (currentReviewsResource is Resource.Success) {
+                                val likeData = resource.data.data
+                                if (likeData != null) {
+                                    val updatedData = currentReviewsResource.data.copy(
+                                        userReview = currentReviewsResource.data.userReview?.let { userReview ->
+                                            if (userReview.id == reviewId) {
+                                                // Create new instance with updated values
+                                                ReviewItem(
+                                                    id = userReview.id,
+                                                    userId = userReview.userId,
+                                                    touristPlaceId = userReview.touristPlaceId,
+                                                    rating = userReview.rating,
+                                                    reviewText = userReview.reviewText,
+                                                    totalLikes = likeData.totalLikes,
+                                                    createdAt = userReview.createdAt,
+                                                    updatedAt = userReview.updatedAt,
+                                                    userName = userReview.userName,
+                                                    userImageUrl = userReview.userImageUrl,
+                                                    isLikedByMe = likeData.isLikedByMe
+                                                )
+                                            } else userReview
+                                        },
+                                        otherReviews = currentReviewsResource.data.otherReviews.map { review ->
+                                            if (review.id == reviewId) {
+                                                // Create new instance with updated values
+                                                ReviewItem(
+                                                    id = review.id,
+                                                    userId = review.userId,
+                                                    touristPlaceId = review.touristPlaceId,
+                                                    rating = review.rating,
+                                                    reviewText = review.reviewText,
+                                                    totalLikes = likeData.totalLikes,
+                                                    createdAt = review.createdAt,
+                                                    updatedAt = review.updatedAt,
+                                                    userName = review.userName,
+                                                    userImageUrl = review.userImageUrl,
+                                                    isLikedByMe = likeData.isLikedByMe
+                                                )
+                                            } else review
+                                        }
+                                    )
+                                    _reviewsList.value = Resource.Success(updatedData)
+                                }
+                            }
+                        }
+                        is Resource.Error -> {
+                            // Handle error silently or show snackbar
+                        }
+                        is Resource.Loading -> {
+                            // No need to show loading for like toggle
                         }
                     }
-                    is Resource.Error -> {
-                        // Handle error if needed
-                    }
-                    is Resource.Loading -> {
-                        // Handle loading if needed
-                    }
                 }
+            } catch (e: Exception) {
+                // Catch any unexpected errors
+                android.util.Log.e("MapViewModel", "Error toggling like: ${e.message}", e)
             }
         }
     }
@@ -228,12 +264,29 @@ class MapViewModel(
         viewModelScope.launch {
             val currentDetailResource = _touristPlaceDetail.value
             if (currentDetailResource is Resource.Success) {
+                val touristPlaceId = currentDetailResource.data.id
                 mapRepository.deleteReview(reviewId).collect { resource ->
                     when (resource) {
                         is Resource.Success -> {
-                            // Reload both detail and reviews after deletion
-                            loadTouristPlaceDetail(currentDetailResource.data.id)
-                            loadPlaceReviews(currentDetailResource.data.id)
+                            // Update local state to remove deleted review
+                            val currentReviewsResource = _reviewsList.value
+                            if (currentReviewsResource is Resource.Success) {
+                                val updatedData = currentReviewsResource.data.copy(
+                                    userReview = if (currentReviewsResource.data.userReview?.id == reviewId) {
+                                        null
+                                    } else currentReviewsResource.data.userReview,
+                                    otherReviews = currentReviewsResource.data.otherReviews.filter { 
+                                        it.id != reviewId 
+                                    }
+                                )
+                                _reviewsList.value = Resource.Success(updatedData)
+                            }
+                            
+                            // Reload place detail to update average rating
+                            loadTouristPlaceDetail(touristPlaceId)
+                            
+                            // Clear review result state
+                            _reviewResult.value = null
                         }
                         is Resource.Error -> {
                             _reviewResult.value = Resource.Error(resource.error)
@@ -259,15 +312,17 @@ class MapViewModel(
         _reviewResult.value = null
     }
 
-    fun scanQRCode(qrToken: String) {
+    fun scanQRCode(qrToken: String, userLatitude: Double, userLongitude: Double) {
         viewModelScope.launch {
-            mapRepository.scanQRCode(qrToken).collect { resource ->
+            mapRepository.scanQRCode(qrToken, userLatitude, userLongitude).collect { resource ->
                 when (resource) {
                     is Resource.Success -> {
                         _scanResult.value = Resource.Success(resource.data.data ?: ScanQRData(
-                            scan_success = false,
-                            tourist_place = null,
-                            visited_at = null
+                            scanSuccess = false,
+                            touristPlace = null,
+                            visitedAt = null,
+                            locationValidation = null,
+                            rewardInfo = null
                         ))
                     }
                     is Resource.Error -> {
