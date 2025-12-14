@@ -21,6 +21,7 @@ object ApiConfig {
     // - Production: https://your-backend-domain.com/api/
     
     // ✅ Using ngrok for real device testing
+    // IMPORTANT: Must end with /api/ (with trailing slash)
     private const val BASE_URL = "https://cheryll-unintelligent-fuzzily.ngrok-free.dev/api/"
 
 

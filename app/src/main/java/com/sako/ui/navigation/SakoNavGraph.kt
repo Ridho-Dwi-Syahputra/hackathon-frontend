@@ -20,6 +20,8 @@ import com.sako.ui.screen.kuis.QuizResultScreen
 import com.sako.ui.screen.welcome.SplashScreen
 import com.sako.ui.screen.profile.ProfileScreen
 import com.sako.ui.screen.profile.SettingScreen
+import com.sako.ui.screen.profile.EditProfileScreen
+import com.sako.ui.screen.profile.ChangePasswordScreen
 import com.sako.viewmodel.AuthViewModel
 import com.sako.viewmodel.KuisViewModel
 import com.sako.viewmodel.QuizAttemptViewModel
@@ -367,7 +369,7 @@ fun SakoNavGraph(
         // ============================================
         
         composable(route = Screen.VideoList.route) {
-            val backStackEntry = remember(navController) {
+            val backStackEntry = remember(it) {
                 navController.getBackStackEntry(Screen.Home.route)
             }
             val sharedVideoViewModel: VideoViewModel = viewModel(
@@ -389,27 +391,28 @@ fun SakoNavGraph(
         }
 
         composable(route = Screen.VideoFavorite.route) {
-            // Check if Home route exists in back stack for shared ViewModel
-            val homeEntry = remember {
-                navController.currentBackStack.value.find { 
-                    it.destination.route == Screen.Home.route 
+            // Use shared ViewModel from Home route
+            val backStackEntry = remember(it) {
+                try {
+                    navController.getBackStackEntry(Screen.Home.route)
+                } catch (e: Exception) {
+                    null
                 }
             }
             
-            val sharedVideoViewModel: VideoViewModel = if (homeEntry != null) {
+            val sharedVideoViewModel: VideoViewModel = if (backStackEntry != null) {
                 viewModel(
                     factory = viewModelFactory,
-                    viewModelStoreOwner = navController.getBackStackEntry(Screen.Home.route)
+                    viewModelStoreOwner = backStackEntry
                 )
             } else {
-                // Home route not in back stack (e.g., opened from notification)
                 viewModel(factory = viewModelFactory)
             }
             
-            val collectionViewModel: VideoCollectionViewModel = if (homeEntry != null) {
+            val collectionViewModel: VideoCollectionViewModel = if (backStackEntry != null) {
                 viewModel(
                     factory = viewModelFactory,
-                    viewModelStoreOwner = navController.getBackStackEntry(Screen.Home.route)
+                    viewModelStoreOwner = backStackEntry
                 )
             } else {
                 viewModel(factory = viewModelFactory)
@@ -537,13 +540,21 @@ fun SakoNavGraph(
         }
 
         composable(route = Screen.EditProfile.route) {
-            // TODO: Implement EditProfileScreen
-            // Placeholder for now
+            EditProfileScreen(
+                viewModel = sharedProfileViewModel,
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
         }
 
         composable(route = Screen.ChangePassword.route) {
-            // TODO: Implement ChangePasswordScreen
-            // Placeholder for now
+            ChangePasswordScreen(
+                viewModel = sharedProfileViewModel,
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
         }
 
         composable(route = Screen.BadgeList.route) {

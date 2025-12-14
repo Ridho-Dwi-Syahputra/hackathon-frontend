@@ -1,5 +1,6 @@
 package com.sako.ui.screen.profile
 
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -17,7 +18,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
@@ -28,9 +31,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
 import com.sako.R
-import com.sako.ui.components.BackgroundImage
+import com.sako.ui.theme.*
 import com.sako.viewmodel.ProfileViewModel
 import kotlinx.coroutines.launch
+import kotlin.math.min
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -75,266 +79,317 @@ fun SettingScreen(
         }
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { 
-                    Text(
-                        "Setting",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
-                    ) 
-                },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFFFFF8E1),
-                    titleContentColor = Color(0xFF6D4C41),
-                    navigationIconContentColor = Color(0xFF6D4C41)
-                )
-            )
-        },
-        containerColor = Color.Transparent
-    ) { paddingValues ->
-        BackgroundImage(alpha = 0.3f) {
-            Column(
+    // Scroll state for collapsing effect
+    val scrollState = rememberScrollState()
+    val headerHeight = 200.dp
+    val minHeaderHeight = 80.dp
+    val scrollProgress = min(1f, scrollState.value / (headerHeight.value - minHeaderHeight.value))
+    
+    val animatedHeaderHeight by animateFloatAsState(
+        targetValue = headerHeight.value - (scrollProgress * (headerHeight.value - minHeaderHeight.value)),
+        label = "headerHeight"
+    )
+    
+    val animatedTitleSize by animateFloatAsState(
+        targetValue = 24f - (scrollProgress * 4f),
+        label = "titleSize"
+    )
+    
+    val animatedAlpha by animateFloatAsState(
+        targetValue = 1f - scrollProgress,
+        label = "alpha"
+    )
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            // Collapsing Header
+            Box(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-                    .verticalScroll(rememberScrollState())
-                    .padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .fillMaxWidth()
+                    .height(animatedHeaderHeight.dp)
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                MaterialTheme.colorScheme.primary,
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+                            )
+                        )
+                    )
             ) {
-                    // Profile Section - Centered
-                    uiState.userData?.let { profile ->
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
+                // Back button
+                IconButton(
+                    onClick = onNavigateBack,
+                    modifier = Modifier
+                        .padding(top = 8.dp, start = 4.dp)
+                        .align(Alignment.TopStart)
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back",
+                        tint = MaterialTheme.colorScheme.onPrimary
+                    )
+                }
+                
+                // Profile info in header
+                uiState.userData?.let { profile ->
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .align(Alignment.Center)
+                            .alpha(animatedAlpha)
+                            .padding(horizontal = 16.dp)
+                    ) {
+                        // Profile Image - scales with scroll
+                        val imageSize by animateFloatAsState(
+                            targetValue = 80f - (scrollProgress * 30f),
+                            label = "imageSize"
+                        )
+                        
+                        Box(
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 24.dp)
+                                .size(imageSize.dp)
+                                .clip(CircleShape)
+                                .background(Color.White.copy(alpha = 0.2f))
                         ) {
-                            // Profile Image
-                            Box(
-                                modifier = Modifier
-                                    .size(120.dp)
-                                    .clip(CircleShape)
-                                    .background(Color(0xFFE0E0E0))
-                            ) {
-                                if (!profile.userImageUrl.isNullOrEmpty()) {
-                                    Image(
-                                        painter = rememberAsyncImagePainter(profile.userImageUrl),
-                                        contentDescription = "Profile Picture",
-                                        modifier = Modifier.fillMaxSize(),
-                                        contentScale = ContentScale.Crop
-                                    )
-                                } else {
-                                    Image(
-                                        painter = painterResource(id = R.drawable.profile),
-                                        contentDescription = "Default Profile",
-                                        modifier = Modifier.fillMaxSize(),
-                                        contentScale = ContentScale.Crop
-                                    )
-                                }
+                            if (!profile.userImageUrl.isNullOrEmpty()) {
+                                Image(
+                                    painter = rememberAsyncImagePainter(profile.userImageUrl),
+                                    contentDescription = "Profile Picture",
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Crop
+                                )
+                            } else {
+                                Image(
+                                    painter = painterResource(id = R.drawable.profile),
+                                    contentDescription = "Default Profile",
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Crop
+                                )
                             }
+                        }
+                        
+                        if (scrollProgress < 0.7f) {
+                            Spacer(modifier = Modifier.height(12.dp))
                             
-                            Spacer(modifier = Modifier.height(16.dp))
-                            
-                            // Full Name
                             Text(
                                 text = profile.fullName.uppercase(),
-                                fontSize = 24.sp,
+                                fontSize = animatedTitleSize.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFF6D4C41),
+                                color = MaterialTheme.colorScheme.onPrimary,
                                 textAlign = TextAlign.Center
                             )
                             
                             Spacer(modifier = Modifier.height(4.dp))
                             
-                            // Email
                             Text(
                                 text = profile.email,
                                 fontSize = 14.sp,
-                                color = Color.Gray,
+                                color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f),
                                 textAlign = TextAlign.Center
                             )
                         }
                     }
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    // Notification Preferences Section
-                    SettingSection(
-                        title = "Izinkan Notifikasi"
-                    ) {
-                        NotificationToggleItem(
-                            iconRes = R.drawable.map,
-                            title = "Modul Map",
-                            isEnabled = mapNotificationsEnabled,
-                            onToggle = { 
-                                mapNotificationsEnabled = it
-                                // Update backend
-                                val updatedPrefs = (notificationPreferences ?: com.sako.data.remote.request.NotificationPreferences()).copy(
-                                    mapNotifications = com.sako.data.remote.request.MapNotifications(
-                                        reviewAdded = it,
-                                        placeVisited = it
-                                    )
-                                )
-                                viewModel.updateNotificationPreferences(updatedPrefs)
-                            }
-                        )
-                        
-                        NotificationToggleItem(
-                            iconRes = R.drawable.video,
-                            title = "Modul Video",
-                            isEnabled = videoNotificationsEnabled,
-                            onToggle = { 
-                                videoNotificationsEnabled = it
-                                // Update backend
-                                val updatedPrefs = (notificationPreferences ?: com.sako.data.remote.request.NotificationPreferences()).copy(
-                                    videoNotifications = it
-                                )
-                                viewModel.updateNotificationPreferences(updatedPrefs)
-                            }
-                        )
-                        
-                        NotificationToggleItem(
-                            icon = Icons.Default.Quiz,
-                            title = "Modul Kuis",
-                            isEnabled = quizNotificationsEnabled,
-                            onToggle = { 
-                                quizNotificationsEnabled = it
-                                // Update backend
-                                val updatedPrefs = (notificationPreferences ?: com.sako.data.remote.request.NotificationPreferences()).copy(
-                                    quizNotifications = it
-                                )
-                                viewModel.updateNotificationPreferences(updatedPrefs)
-                            }
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // Keamanan Section
-                    SettingSection(
-                        title = "Keamanan"
-                    ) {
-                        SettingMenuItem(
-                            iconRes = R.drawable.key,
-                            title = "Ganti Kata Sandi",
-                            onClick = onNavigateToChangePassword
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // Tentang Aplikasi Section
-                    SettingSection(
-                        title = "Tentang Aplikasi"
-                    ) {
-                        SettingMenuItem(
-                            icon = Icons.Default.Info,
-                            title = "Tentang Aplikasi",
-                            onClick = onNavigateToAbout
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                    // Logout Button
-                    Button(
-                        onClick = { showLogoutDialog = true },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(56.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFD32F2F)
-                        ),
-                        shape = RoundedCornerShape(12.dp),
-                        enabled = !uiState.isLoading
-                    ) {
-                        if (uiState.isLoading) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(24.dp),
-                                color = Color.White,
-                                strokeWidth = 2.dp
-                            )
-                        } else {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.Logout,
-                                contentDescription = null,
-                                modifier = Modifier.size(24.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "Keluar",
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(32.dp))
                 }
+                
+                // Title when collapsed
+                if (scrollProgress > 0.5f) {
+                    Text(
+                        text = "Setting",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier
+                            .align(Alignment.CenterStart)
+                            .padding(start = 56.dp)
+                            .alpha((scrollProgress - 0.5f) * 2f)
+                    )
+                }
+            }
+            
+            // Content
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(scrollState)
+                    .padding(16.dp)
+            ) {
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Notification Preferences Section
+                SettingSection(
+                    title = "Izinkan Notifikasi"
+                ) {
+                    NotificationToggleItem(
+                        iconRes = R.drawable.map,
+                        title = "Modul Map",
+                        isEnabled = mapNotificationsEnabled,
+                        onToggle = { 
+                            mapNotificationsEnabled = it
+                            // Update backend
+                            val updatedPrefs = (notificationPreferences ?: com.sako.data.remote.request.NotificationPreferences()).copy(
+                                mapNotifications = com.sako.data.remote.request.MapNotifications(
+                                    reviewAdded = it,
+                                    placeVisited = it
+                                )
+                            )
+                            viewModel.updateNotificationPreferences(updatedPrefs)
+                        }
+                    )
+                    
+                    NotificationToggleItem(
+                        iconRes = R.drawable.video,
+                        title = "Modul Video",
+                        isEnabled = videoNotificationsEnabled,
+                        onToggle = { 
+                            videoNotificationsEnabled = it
+                            // Update backend
+                            val updatedPrefs = (notificationPreferences ?: com.sako.data.remote.request.NotificationPreferences()).copy(
+                                videoNotifications = it
+                            )
+                            viewModel.updateNotificationPreferences(updatedPrefs)
+                        }
+                    )
+                    
+                    NotificationToggleItem(
+                        icon = Icons.Default.Quiz,
+                        title = "Modul Kuis",
+                        isEnabled = quizNotificationsEnabled,
+                        onToggle = { 
+                            quizNotificationsEnabled = it
+                            // Update backend
+                            val updatedPrefs = (notificationPreferences ?: com.sako.data.remote.request.NotificationPreferences()).copy(
+                                quizNotifications = it
+                            )
+                            viewModel.updateNotificationPreferences(updatedPrefs)
+                        }
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Keamanan Section
+                SettingSection(
+                    title = "Keamanan"
+                ) {
+                    SettingMenuItem(
+                        iconRes = R.drawable.key,
+                        title = "Ganti Kata Sandi",
+                        onClick = onNavigateToChangePassword
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Tentang Aplikasi Section
+                SettingSection(
+                    title = "Tentang Aplikasi"
+                ) {
+                    SettingMenuItem(
+                        icon = Icons.Default.Info,
+                        title = "Tentang Aplikasi",
+                        onClick = onNavigateToAbout
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Logout Button
+                Button(
+                    onClick = { showLogoutDialog = true },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    ),
+                    shape = RoundedCornerShape(12.dp),
+                    enabled = !uiState.isLoading
+                ) {
+                    if (uiState.isLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = White,
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.Logout,
+                            contentDescription = null,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Keluar",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(32.dp))
             }
         }
 
-    // Logout Confirmation Dialog
-    if (showLogoutDialog) {
-        AlertDialog(
-            onDismissRequest = { showLogoutDialog = false },
-            icon = {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.Logout,
-                    contentDescription = null,
-                    tint = Color(0xFFD32F2F),
-                    modifier = Modifier.size(48.dp)
-                )
-            },
-            title = {
-                Text(
-                    text = "Konfirmasi Keluar",
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center
-                )
-            },
-            text = {
-                Text(
-                    text = "Apakah Anda yakin ingin keluar dari aplikasi?",
-                    textAlign = TextAlign.Center
-                )
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        showLogoutDialog = false
-                        scope.launch {
-                            viewModel.logout()
-                            onLogoutSuccess()
-                        }
-                    },
-                    enabled = !uiState.isLoading,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFD32F2F)
+        // Logout Confirmation Dialog
+        if (showLogoutDialog) {
+            AlertDialog(
+                onDismissRequest = { showLogoutDialog = false },
+                icon = {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.Logout,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(48.dp)
                     )
-                ) {
-                    Text("Keluar")
+                },
+                title = {
+                    Text(
+                        text = "Konfirmasi Keluar",
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center
+                    )
+                },
+                text = {
+                    Text(
+                        text = "Apakah Anda yakin ingin keluar dari aplikasi?",
+                        textAlign = TextAlign.Center
+                    )
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            showLogoutDialog = false
+                            scope.launch {
+                                viewModel.logout()
+                                onLogoutSuccess()
+                            }
+                        },
+                        enabled = !uiState.isLoading,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        )
+                    ) {
+                        Text("Keluar")
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = { showLogoutDialog = false },
+                        enabled = !uiState.isLoading
+                    ) {
+                        Text("Batal", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
                 }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = { showLogoutDialog = false },
-                    enabled = !uiState.isLoading
-                ) {
-                    Text("Batal", color = Color.Gray)
-                }
-            }
-        )
+            )
+        }
     }
 }
 
@@ -351,7 +406,7 @@ fun SettingSection(
             text = title,
             fontSize = 14.sp,
             fontWeight = FontWeight.SemiBold,
-            color = Color.Gray,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(bottom = 8.dp, start = 4.dp)
         )
         
@@ -359,7 +414,7 @@ fun SettingSection(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),
             colors = CardDefaults.cardColors(
-                containerColor = Color.White
+                containerColor = MaterialTheme.colorScheme.surface
             ),
             elevation = CardDefaults.cardElevation(
                 defaultElevation = 2.dp
@@ -382,6 +437,10 @@ fun NotificationToggleItem(
     isEnabled: Boolean,
     onToggle: (Boolean) -> Unit
 ) {
+    val primaryColor = MaterialTheme.colorScheme.primary
+    val secondaryColor = MaterialTheme.colorScheme.secondary
+    val onSurface = MaterialTheme.colorScheme.onSurface
+    
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -392,7 +451,7 @@ fun NotificationToggleItem(
             modifier = Modifier
                 .size(40.dp)
                 .clip(CircleShape)
-                .background(Color(0xFFE8F5E9)),
+                .background(primaryColor.copy(alpha = 0.1f)),
             contentAlignment = Alignment.Center
         ) {
             when {
@@ -400,7 +459,7 @@ fun NotificationToggleItem(
                     Icon(
                         imageVector = icon,
                         contentDescription = null,
-                        tint = Color(0xFF4CAF50),
+                        tint = primaryColor,
                         modifier = Modifier.size(24.dp)
                     )
                 }
@@ -419,7 +478,7 @@ fun NotificationToggleItem(
         Text(
             text = title,
             fontSize = 16.sp,
-            color = Color(0xFF212121),
+            color = onSurface,
             modifier = Modifier.weight(1f)
         )
         
@@ -427,10 +486,10 @@ fun NotificationToggleItem(
             checked = isEnabled,
             onCheckedChange = onToggle,
             colors = SwitchDefaults.colors(
-                checkedThumbColor = Color.White,
-                checkedTrackColor = Color(0xFF4CAF50),
-                uncheckedThumbColor = Color.White,
-                uncheckedTrackColor = Color(0xFFBDBDBD)
+                checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
+                checkedTrackColor = primaryColor,
+                uncheckedThumbColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                uncheckedTrackColor = MaterialTheme.colorScheme.outline
             )
         )
     }
@@ -454,7 +513,7 @@ fun SettingMenuItem(
             modifier = Modifier
                 .size(40.dp)
                 .clip(CircleShape)
-                .background(Color(0xFFE3F2FD)),
+                .background(MaterialTheme.colorScheme.secondary.copy(alpha = 0.3f)),
             contentAlignment = Alignment.Center
         ) {
             when {
@@ -462,7 +521,7 @@ fun SettingMenuItem(
                     Icon(
                         imageVector = icon,
                         contentDescription = null,
-                        tint = Color(0xFF2196F3),
+                        tint = MaterialTheme.colorScheme.onSecondaryContainer,
                         modifier = Modifier.size(24.dp)
                     )
                 }
@@ -481,14 +540,14 @@ fun SettingMenuItem(
         Text(
             text = title,
             fontSize = 16.sp,
-            color = Color(0xFF212121),
+            color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.weight(1f)
         )
         
         Icon(
             imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
             contentDescription = null,
-            tint = Color.Gray
+            tint = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }

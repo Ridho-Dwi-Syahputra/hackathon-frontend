@@ -52,13 +52,20 @@ fun ProfileScreen(
                     navController.navigate(Screen.Setting.route)
                 }
             )
-        }
+        },
+        containerColor = Color.Transparent
     ) { paddingValues ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
+                .background(Color.Transparent)
         ) {
+            BackgroundImage(alpha = 0.3f) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues)
+                ) {
             when {
                 uiState.isLoading -> {
                     SakoLoadingScreen(
@@ -90,6 +97,8 @@ fun ProfileScreen(
                     )
                 }
             }
+                }
+            }
         }
     }
 }
@@ -99,40 +108,50 @@ fun ProfileScreen(
 private fun ProfileTopBar(
     onSettingsClick: () -> Unit
 ) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(100.dp)
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        PrimaryRed,
-                        PrimaryRed.copy(alpha = 0.8f)
+    val primaryColor = MaterialTheme.colorScheme.primary
+    val onPrimaryColor = MaterialTheme.colorScheme.onPrimary
+    
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        tonalElevation = 0.dp,
+        shadowElevation = 0.dp,
+        color = Color.Transparent
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(64.dp)
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            primaryColor,
+                            primaryColor.copy(alpha = 0.8f)
+                        )
                     )
                 )
-            )
-    ) {
+        ) {
         Row(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = SakoSpacing.Medium),
+                .padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
                 text = "Detail Profil",
-                color = White,
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold
+                color = onPrimaryColor,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.SemiBold
             )
             IconButton(onClick = onSettingsClick) {
                 Icon(
                     imageVector = Icons.Default.Settings,
                     contentDescription = "Settings",
-                    tint = White,
-                    modifier = Modifier.size(28.dp)
+                    tint = onPrimaryColor,
+                    modifier = Modifier.size(24.dp)
                 )
             }
+        }
         }
     }
 }
@@ -146,12 +165,12 @@ private fun ProfileContent(
     onBadgesClick: () -> Unit,
     onChangePasswordClick: () -> Unit
 ) {
-    BackgroundImage(alpha = 0.3f) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-        ) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Transparent)
+            .verticalScroll(rememberScrollState())
+    ) {
         // Profile Image Section
         ProfileImageSection(
             imageUrl = userData.userImageUrl,
@@ -193,7 +212,6 @@ private fun ProfileContent(
         
         // Bottom padding
         VerticalSpacer(height = SakoSpacing.ExtraLarge)
-        }
     }
 }
 
@@ -202,28 +220,24 @@ private fun ProfileImageSection(
     imageUrl: String?,
     onImageClick: () -> Unit
 ) {
+    val primaryColor = MaterialTheme.colorScheme.primary
+    val backgroundColor = MaterialTheme.colorScheme.background
+    val surfaceColor = MaterialTheme.colorScheme.surface
+    val onPrimaryColor = MaterialTheme.colorScheme.onPrimary
+    
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(220.dp)
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        PrimaryRed,
-                        PrimaryRed.copy(alpha = 0.85f),
-                        Color(0xFF424242)
-                    )
-                )
-            ),
+            .height(220.dp),
         contentAlignment = Alignment.Center
     ) {
         Box(
             modifier = Modifier
                 .size(160.dp)
                 .clip(CircleShape)
-                .border(5.dp, White, CircleShape)
+                .border(5.dp, onPrimaryColor, CircleShape)
                 .clickable { onImageClick() }
-                .background(White, CircleShape)
+                .background(surfaceColor, CircleShape)
         ) {
             if (imageUrl.isNullOrEmpty()) {
                 Box(
@@ -232,8 +246,8 @@ private fun ProfileImageSection(
                         .background(
                             brush = Brush.radialGradient(
                                 colors = listOf(
-                                    Color(0xFF9E9E9E),
-                                    Color(0xFF757575)
+                                    MaterialTheme.colorScheme.surfaceVariant,
+                                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f)
                                 )
                             ),
                             CircleShape
@@ -243,7 +257,7 @@ private fun ProfileImageSection(
                     Icon(
                         imageVector = Icons.Default.Person,
                         contentDescription = "Profile Image",
-                        tint = White,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(80.dp)
                     )
                 }
@@ -261,20 +275,20 @@ private fun ProfileImageSection(
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .size(48.dp)
-                    .background(White, CircleShape)
+                    .background(onPrimaryColor, CircleShape)
                     .padding(2.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(PrimaryRed, CircleShape),
+                        .background(primaryColor, CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Default.Edit,
                         contentDescription = "Edit",
-                        tint = White,
+                        tint = onPrimaryColor,
                         modifier = Modifier.size(22.dp)
                     )
                 }

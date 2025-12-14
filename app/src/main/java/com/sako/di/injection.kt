@@ -5,6 +5,7 @@ import com.sako.data.pref.UserPreference
 import com.sako.data.pref.dataStore
 import com.sako.data.remote.retrofit.ApiConfig
 import com.sako.data.repository.AuthRepository
+import com.sako.data.repository.HomeRepository
 import com.sako.data.repository.MapRepository
 import com.sako.data.repository.ProfileRepository
 import com.sako.data.repository.SakoRepository
@@ -46,5 +47,11 @@ object Injection {
         val pref = UserPreference.getInstance(context.dataStore)
         val apiService = ApiConfig.getApiService(pref)
         return SakoRepository.getInstance(apiService, pref)
+    }
+    
+    fun provideHomeRepository(context: Context): HomeRepository {
+        val pref = UserPreference.getInstance(context.dataStore)
+        val apiService = ApiConfig.getApiService(pref)
+        return HomeRepository.getInstance(apiService)
     }
 }

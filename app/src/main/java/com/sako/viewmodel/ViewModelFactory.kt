@@ -23,8 +23,8 @@ class ViewModelFactory(
                 QuizAttemptViewModel(repository) as T
             }
             modelClass.isAssignableFrom(HomeViewModel::class.java) -> {
-                val repository = Injection.provideRepository(context)
-                HomeViewModel(repository) as T
+                val homeRepository = Injection.provideHomeRepository(context)
+                HomeViewModel(homeRepository) as T
             }
             // ProfileViewModel menggunakan ProfileViewModelFactory sendiri
             modelClass.isAssignableFrom(VideoViewModel::class.java) -> {

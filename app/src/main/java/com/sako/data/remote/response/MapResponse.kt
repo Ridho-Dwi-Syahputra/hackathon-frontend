@@ -133,7 +133,7 @@ data class ReviewItem(
     val updatedAt: String? = null,
 
     // Data user dari JOIN
-    @SerializedName("user_name")
+    @SerializedName("user_full_name")
     val userName: String? = null,
 
     @SerializedName("user_image_url")

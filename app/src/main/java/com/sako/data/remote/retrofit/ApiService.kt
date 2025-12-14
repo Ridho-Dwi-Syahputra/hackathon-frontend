@@ -211,4 +211,22 @@ interface ApiService {
         @Path("videoId") videoId: String
     ): VideoCollectionsForVideoResponse
 
+    // ========== Home Dashboard Endpoints ==========
+
+    @GET("home/dashboard")
+    suspend fun getDashboard(): DashboardResponse
+
+    @GET("home/stats")
+    suspend fun getUserStats(): UserStatsResponse
+
+    @GET("home/activities")
+    suspend fun getRecentActivities(
+        @Query("limit") limit: Int = 5
+    ): RecentActivitiesResponse
+
+    @GET("home/popular")
+    suspend fun getPopularContent(
+        @Query("limit") limit: Int = 10
+    ): PopularContentResponse
+
 }
