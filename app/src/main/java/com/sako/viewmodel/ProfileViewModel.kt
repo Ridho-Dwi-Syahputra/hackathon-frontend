@@ -13,10 +13,12 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 import java.io.File
 
 data class ProfileUiState(
     val isLoading: Boolean = false,
+    val isUploadingImage: Boolean = false,  // State khusus untuk upload foto
     val userData: ProfileUserData? = null,
     val stats: UserStats? = null,
     val badges: List<BadgeItem>? = null,
@@ -24,7 +26,8 @@ data class ProfileUiState(
     val error: String? = null,
     val updateSuccess: Boolean = false,
     val updateMessage: String? = null,
-    val notificationPreferences: com.sako.data.remote.request.NotificationPreferences? = null
+    val notificationPreferences: com.sako.data.remote.request.NotificationPreferences? = null,
+    val localImageFile: File? = null  // Track local file untuk preview instant
 )
 
 class ProfileViewModel(
@@ -123,11 +126,14 @@ class ProfileViewModel(
 
     fun updateProfileImage(imageFile: File) {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(
-                isLoading = true,
+            // Set local file dulu untuk preview instant
+            val currentState = _uiState.value
+            _uiState.value = currentState.copy(
+                isUploadingImage = true,
                 error = null,
                 updateSuccess = false,
-                updateMessage = null
+                updateMessage = null,
+                localImageFile = imageFile  // Set local file untuk preview
             )
             
             profileRepository.updateProfileImage(imageFile).collect { resource ->
@@ -135,28 +141,48 @@ class ProfileViewModel(
                     is Resource.Success -> {
                         val imageUrl = resource.data?.data?.user?.userImageUrl
                         val currentState = _uiState.value
+                        
+                        // Update URL dulu dengan timestamp untuk force cache refresh
+                        val urlWithCacheBuster = imageUrl?.let { url ->
+                            if (url.contains("?")) {
+                                "$url&t=${System.currentTimeMillis()}"
+                            } else {
+                                "$url?t=${System.currentTimeMillis()}"
+                            }
+                        }
+                        
                         _uiState.value = currentState.copy(
-                            isLoading = false,
+                            isUploadingImage = false,
                             updateSuccess = true,
                             updateMessage = resource.data?.message ?: "Foto profil berhasil diperbarui",
+                            // Update userData dengan URL baru (dengan cache buster)
                             userData = currentState.userData?.copy(
-                                userImageUrl = imageUrl
+                                userImageUrl = urlWithCacheBuster
                             )
+                            // JANGAN clear localImageFile di sini!
+                            // Biar UI yang handle: tampilkan local file sampai URL ter-load
                         )
                     }
                     is Resource.Error -> {
-                        _uiState.value = _uiState.value.copy(
-                            isLoading = false,
+                        // Rollback - clear local file jika error
+                        _uiState.value = currentState.copy(
+                            isUploadingImage = false,
                             updateSuccess = false,
-                            error = resource.error
+                            error = resource.error,
+                            localImageFile = null
                         )
                     }
                     is Resource.Loading -> {
-                        _uiState.value = _uiState.value.copy(isLoading = true)
+                        _uiState.value = _uiState.value.copy(isUploadingImage = true)
                     }
                 }
             }
         }
+    }
+
+    fun clearLocalImageFile() {
+        // Clear local file setelah URL dari Cloudinary berhasil dimuat
+        _uiState.value = _uiState.value.copy(localImageFile = null)
     }
 
     fun changePassword(currentPassword: String, newPassword: String) {
