@@ -68,6 +68,15 @@ fun VideoDetailScreen(
     video: VideoItem? = null,
     videos: State<List<VideoItem>> = remember { mutableStateOf(emptyList()) }
 ) {
+    // Debug: Log video state changes
+    androidx.compose.runtime.LaunchedEffect(video?.isFavorited) {
+        println("VideoDetailScreen - 🎬 Video state changed:")
+        println("  - Video ID: ${video?.id}")
+        println("  - Title: ${video?.judul}")
+        println("  - Favorite Status: ${video?.isFavorited} (1=favorited, 0=not)")
+        println("  - Icon will be: ${if (video?.isFavorited == 1) "Filled Heart ❤️" else "Empty Heart 🤍"}")
+    }
+    
     BackgroundImage {
         Scaffold(
             topBar = {
@@ -83,22 +92,23 @@ fun VideoDetailScreen(
                     },
                     actions = {
                         // Favorite button
+                        val isFavorited = video?.isFavorited == 1
                         IconButton(
                             onClick = {
-                                println("VideoDetailScreen - Favorite button clicked!")
+                                println("VideoDetailScreen - 👆 Favorite button clicked!")
                                 println("VideoDetailScreen - Video ID: ${video?.id}")
                                 println("VideoDetailScreen - Current favorite state: ${video?.isFavorited}")
                                 video?.id?.let { id ->
-                                    println("VideoDetailScreen - Calling onToggleFavorite with ID: $id")
+                                    println("VideoDetailScreen - 🚀 Calling onToggleFavorite with ID: $id")
                                     onToggleFavorite(id)
                                 }
                             },
                             enabled = video != null
                         ) {
                             Icon(
-                                imageVector = if (video?.isFavorited == 1) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                                contentDescription = if (video?.isFavorited == 1) "Remove from favorites" else "Add to favorites",
-                                tint = if (video?.isFavorited == 1) VideoFavoriteActive else VideoFavoriteInactive
+                                imageVector = if (isFavorited) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                                contentDescription = if (isFavorited) "Remove from favorites" else "Add to favorites",
+                                tint = if (isFavorited) VideoFavoriteActive else VideoFavoriteInactive
                             )
                         }
                     }
@@ -160,58 +170,29 @@ fun VideoDetailScreen(
                                                         ViewGroup.LayoutParams.MATCH_PARENT
                                                     )
                                                     
-                                                    // WebView settings untuk YouTube
+                                                    // WebView settings seperti referensi + tambahan untuk video playback
                                                     settings.apply {
                                                         javaScriptEnabled = true
                                                         domStorageEnabled = true
-                                                        databaseEnabled = true
                                                         mediaPlaybackRequiresUserGesture = false
-                                                        allowFileAccess = true
-                                                        allowContentAccess = true
-                                                        setSupportZoom(true)
-                                                        builtInZoomControls = false
-                                                        displayZoomControls = false
-                                                        loadWithOverviewMode = true
-                                                        useWideViewPort = true
-                                                        javaScriptCanOpenWindowsAutomatically = true
-                                                        mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
-                                                        cacheMode = WebSettings.LOAD_DEFAULT
-                                                        
-                                                        // User agent (penting untuk YouTube)
-                                                        userAgentString = userAgentString + " SakoApp/1.0"
                                                     }
                                                     
-                                                    // Custom WebViewClient dengan error handling
-                                                    webViewClient = object : WebViewClient() {
-                                                        override fun onPageFinished(view: WebView?, url: String?) {
-                                                            super.onPageFinished(view, url)
-                                                            println("WebView Page Finished: $url")
-                                                        }
-                                                        
-                                                        override fun onReceivedError(
-                                                            view: WebView?,
-                                                            errorCode: Int,
-                                                            description: String?,
-                                                            failingUrl: String?
-                                                        ) {
-                                                            println("WebView Error: Code=$errorCode, Description=$description, URL=$failingUrl")
-                                                            super.onReceivedError(view, errorCode, description, failingUrl)
-                                                        }
-                                                        
-                                                        override fun shouldOverrideUrlLoading(view: WebView?, url: String?): Boolean {
-                                                            return false
-                                                        }
-                                                    }
-                                                    
+                                                    // WebChromeClient untuk fullscreen
                                                     webChromeClient = WebChromeClient()
                                                     
-                                                    // Langsung load YouTube URL tanpa autoplay dulu
-                                                    val embedUrl = "https://www.youtube.com/embed/$youtubeVideoId?playsinline=1&rel=0&modestbranding=1&enablejsapi=1"
+                                                    // PENTING: WebViewClient mencegah redirect ke YouTube app
+                                                    webViewClient = object : WebViewClient() {
+                                                        override fun shouldOverrideUrlLoading(view: WebView?, url: String?): Boolean {
+                                                            return false // Jangan redirect, tetap di WebView
+                                                        }
+                                                    }
                                                     
-                                                    println("VideoDetailScreen - Loading embed URL: $embedUrl")
+                                                    // Iframe string seperti referensi
+                                                    val video = "<iframe width=\"100%\" height=\"100%\" src=\"https://www.youtube.com/embed/$youtubeVideoId\" title=\"YouTube video player\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" allowfullscreen></iframe>"
                                                     
-                                                    // Load URL langsung (lebih simple)
-                                                    loadUrl(embedUrl)
+                                                    println("VideoDetailScreen - Loading video: $youtubeVideoId")
+                                                    
+                                                    loadData(video, "text/html", "utf-8")
                                                 }
                                             },
                                             update = { webView ->

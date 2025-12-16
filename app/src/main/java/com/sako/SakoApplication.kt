@@ -7,6 +7,8 @@ import android.os.Build
 import android.util.Log
 import com.sako.firebase.FirebaseHelper
 import com.sako.firebase.notifications.map.MapNotificationManager
+import com.sako.firebase.notifications.quiz.QuizNotificationManager
+import com.sako.firebase.notifications.video.VideoNotificationManager
 
 class SakoApplication : Application() {
 
@@ -22,11 +24,22 @@ class SakoApplication : Application() {
         // Create notification channel for FCM
         createNotificationChannel()
         
+        // Initialize Module Notification Managers
+        Log.d("SakoApplication", "🔔 Initializing notification managers...")
+        
         // Initialize Map Notifications
         val mapNotificationManager = MapNotificationManager.getInstance(this)
         mapNotificationManager.initializeMapNotifications()
         
-        Log.d("SakoApplication", "Firebase, notifications, and map notifications initialized")
+        // Initialize Quiz Notifications
+        val quizNotificationManager = QuizNotificationManager.getInstance(this)
+        quizNotificationManager.initializeQuizNotifications()
+        
+        // Initialize Video Notifications
+        val videoNotificationManager = VideoNotificationManager.getInstance(this)
+        videoNotificationManager.initializeVideoNotifications()
+        
+        Log.d("SakoApplication", "✅ Firebase, notifications (Map, Quiz, Video) initialized")
 
         // TODO: Initialize Timber for logging (optional)
         // if (BuildConfig.DEBUG) {

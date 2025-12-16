@@ -31,6 +31,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
 import com.sako.R
+import com.sako.firebase.notifications.map.MapNotificationManager
+import com.sako.firebase.notifications.quiz.QuizNotificationManager
+import com.sako.firebase.notifications.video.VideoNotificationManager
 import com.sako.ui.theme.*
 import com.sako.viewmodel.ProfileViewModel
 import kotlinx.coroutines.launch
@@ -47,6 +50,7 @@ fun SettingScreen(
 ) {
     val scope = rememberCoroutineScope()
     val uiState by viewModel.uiState.collectAsState()
+    val context = androidx.compose.ui.platform.LocalContext.current
     
     // Notification preferences state from ViewModel
     val notificationPreferences = uiState.notificationPreferences
@@ -233,6 +237,8 @@ fun SettingScreen(
                         isEnabled = mapNotificationsEnabled,
                         onToggle = { 
                             mapNotificationsEnabled = it
+                            // Update local preferences and FCM subscriptions
+                            MapNotificationManager.getInstance(context).setMapNotificationsEnabled(it)
                             // Update backend
                             val updatedPrefs = (notificationPreferences ?: com.sako.data.remote.request.NotificationPreferences()).copy(
                                 mapNotifications = com.sako.data.remote.request.MapNotifications(
@@ -250,6 +256,8 @@ fun SettingScreen(
                         isEnabled = videoNotificationsEnabled,
                         onToggle = { 
                             videoNotificationsEnabled = it
+                            // Update local preferences and FCM subscriptions
+                            VideoNotificationManager.getInstance(context).setVideoNotificationsEnabled(it)
                             // Update backend
                             val updatedPrefs = (notificationPreferences ?: com.sako.data.remote.request.NotificationPreferences()).copy(
                                 videoNotifications = it
@@ -264,6 +272,8 @@ fun SettingScreen(
                         isEnabled = quizNotificationsEnabled,
                         onToggle = { 
                             quizNotificationsEnabled = it
+                            // Update local preferences and FCM subscriptions
+                            QuizNotificationManager.getInstance(context).updateNotificationPreferences(it)
                             // Update backend
                             val updatedPrefs = (notificationPreferences ?: com.sako.data.remote.request.NotificationPreferences()).copy(
                                 quizNotifications = it

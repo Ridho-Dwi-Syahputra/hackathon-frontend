@@ -15,6 +15,8 @@ import com.sako.firebase.notifications.map.MapNotificationHandler
 import com.sako.firebase.notifications.map.MapNotificationManager
 import com.sako.firebase.notifications.quiz.QuizNotificationHandler
 import com.sako.firebase.notifications.quiz.QuizNotificationManager
+import com.sako.firebase.notifications.video.VideoNotificationHandler
+import com.sako.firebase.notifications.video.VideoNotificationManager
 
 /**
  * Firebase Cloud Messaging Service
@@ -101,7 +103,7 @@ class SakoFirebaseMessagingService : FirebaseMessagingService() {
     }
     
     /**
-     * Handle video-specific notifications
+     * Handle video-specific notifications with preferences check
      */
     private fun handleVideoNotification(
         data: Map<String, String>,
@@ -112,24 +114,37 @@ class SakoFirebaseMessagingService : FirebaseMessagingService() {
             
             Log.d(TAG, "🎬 Video notification type: $notificationType")
             
-            // Create notification content
+            // Check user preferences first
+            val notificationManager = VideoNotificationManager.getInstance(this)
+            if (!notificationManager.shouldProcessNotification(notificationType)) {
+                Log.d(TAG, "🔕 Video notification blocked by user preferences: $notificationType")
+                return
+            }
+            
+            // Process the notification through video handler
+            val processed = VideoNotificationHandler.processVideoNotification(this, data)
+            if (!processed) {
+                Log.w(TAG, "⚠️ Failed to process video notification")
+                return
+            }
+            
+            // Create and show notification
             val (title, body) = if (notification != null) {
                 Pair(
                     notification.title ?: "Sako Video",
                     notification.body ?: "Ada aktivitas di video"
                 )
             } else {
-                // Fallback titles based on type
-                when (notificationType) {
-                    "video_favorited" -> Pair(
-                        "Video Ditambahkan ke Favorit",
-                        data["title"] ?: "Video berhasil ditambahkan ke favorit"
-                    )
-                    else -> Pair("Sako Video", "Ada notifikasi video untuk Anda")
-                }
+                VideoNotificationHandler.createNotificationContent(notificationType, data)
             }
             
-            showNotification(title, body, data)
+            // Add navigation data for video notifications
+            val navigationData = VideoNotificationHandler.getNavigationData(notificationType, data)
+            val enhancedData = data.toMutableMap().apply {
+                putAll(navigationData)
+            }
+            
+            showNotification(title, body, enhancedData)
             Log.d(TAG, "✅ Video notification shown: $title")
             
         } catch (e: Exception) {

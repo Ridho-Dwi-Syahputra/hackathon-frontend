@@ -78,7 +78,7 @@ fun SakoTextInputField(
         maxLines = if (singleLine) 1 else maxLines,
         colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = MaterialTheme.colorScheme.primary,
-            unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+            unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
             errorBorderColor = MaterialTheme.colorScheme.error,
             focusedLabelColor = MaterialTheme.colorScheme.primary,
             unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,

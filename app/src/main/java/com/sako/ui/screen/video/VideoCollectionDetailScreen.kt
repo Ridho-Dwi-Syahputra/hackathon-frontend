@@ -7,7 +7,11 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.PlayCircleOutline
 import androidx.compose.material3.*
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -218,60 +222,90 @@ fun CollectionVideoCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(120.dp)
+            .padding(horizontal = 4.dp, vertical = 6.dp)
             .clickable { onClick() },
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
     ) {
-        Row(modifier = Modifier.fillMaxSize()) {
-            // Thumbnail (40% width)
+        Row(modifier = Modifier
+            .fillMaxWidth()
+            .height(110.dp)
+        ) {
+            // Thumbnail dengan play icon overlay (seperti VideoListItem)
             Box(
                 modifier = Modifier
+                    .width(160.dp)
                     .fillMaxHeight()
-                    .weight(0.4f)
             ) {
                 if (video.thumbnailUrl != null) {
                     AsyncImage(
                         model = video.thumbnailUrl,
                         contentDescription = video.judul,
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(androidx.compose.foundation.shape.RoundedCornerShape(topStart = 12.dp, bottomStart = 12.dp)),
                         contentScale = ContentScale.Crop
                     )
+                    
+                    // Play icon overlay
+                    Surface(
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .size(48.dp),
+                        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.8f),
+                        shape = androidx.compose.foundation.shape.RoundedCornerShape(24.dp)
+                    ) {
+                        Icon(
+                            imageVector = androidx.compose.material.icons.Icons.Default.PlayCircleOutline,
+                            contentDescription = "Play",
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(8.dp),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
                 } else {
                     Icon(
                         painter = painterResource(R.drawable.video),
                         contentDescription = video.judul,
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(24.dp),
-                        tint = MaterialTheme.colorScheme.primary
+                            .padding(32.dp),
+                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
                     )
                 }
             }
 
-            // Info (50% width)
+            // Info dengan spacing yang lebih baik
             Column(
                 modifier = Modifier
-                    .fillMaxHeight()
-                    .weight(0.5f)
+                    .fillMaxSize()
                     .padding(12.dp),
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
-                Column {
-                    Text(
-                        text = video.judul,
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
+                // Title
+                Text(
+                    text = video.judul,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                
+                // Category badge
+                Surface(
+                    color = MaterialTheme.colorScheme.primaryContainer,
+                    shape = RoundedCornerShape(6.dp)
+                ) {
                     Text(
                         text = video.kategori,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.primary
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
                     )
                 }
             }

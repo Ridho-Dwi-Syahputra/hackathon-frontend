@@ -10,21 +10,31 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.PlayCircleOutline
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material3.Card
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -134,25 +144,36 @@ fun VideoListScreen(
 					modifier = Modifier
 						.padding(top = 12.dp, bottom = 12.dp)
 						.fillMaxWidth(),
-					horizontalArrangement = Arrangement.spacedBy(8.dp)
+					horizontalArrangement = Arrangement.spacedBy(6.dp)
 				) {
 					items(categories) { cat ->
 						val isSelected = cat == selectedCategory
-						Surface(
-							shape = MaterialTheme.shapes.small,
-							tonalElevation = if (isSelected) 4.dp else 0.dp,
-							color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface,
-							modifier = Modifier
-								.clickable { selectedCategory = cat }
-								.padding(vertical = 4.dp)
-						) {
-							Text(
-								text = cat,
-								style = MaterialTheme.typography.labelLarge,
-								modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-								color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
-							)
-						}
+						FilterChip(
+							selected = isSelected,
+							onClick = { selectedCategory = cat },
+							label = {
+								Text(
+									text = cat,
+									fontWeight = if (isSelected) androidx.compose.ui.text.font.FontWeight.SemiBold else androidx.compose.ui.text.font.FontWeight.Normal
+								)
+							},
+							colors = FilterChipDefaults.filterChipColors(
+								selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+								selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
+								containerColor = MaterialTheme.colorScheme.surface,
+								labelColor = MaterialTheme.colorScheme.onSurface
+							),
+							border = FilterChipDefaults.filterChipBorder(
+								enabled = true,
+								selected = isSelected,
+							borderColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+								selectedBorderColor = MaterialTheme.colorScheme.primary,
+								borderWidth = 1.dp,
+								selectedBorderWidth = 1.dp
+							),
+							shape = RoundedCornerShape(20.dp),
+							modifier = Modifier.padding(end = 2.dp)
+						)
 					}
 				}
 
@@ -173,65 +194,120 @@ fun VideoListScreen(
 
 				val listState = rememberLazyListState()
 
-				LazyColumn(state = listState, modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-					items(filtered) { video ->
-						Card(
-							modifier = Modifier
-								.fillMaxWidth()
-								.aspectRatio(4f/3f) // Set rasio tinggi:lebar = 3:4
-								.clickable { onNavigateToDetail(video.id) },
-							elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-						) {
-							Column(modifier = Modifier.fillMaxSize()) {
-								// Thumbnail 2/3 (gunakan placeholder jika thumbnail tidak tersedia)
-								if (video.thumbnailUrl.isNullOrBlank()) {
-									// Placeholder box
+				// Video List dengan layout vertikal (seperti YouTube)
+				LazyColumn(
+					state = listState, 
+					modifier = Modifier.fillMaxWidth(),
+					contentPadding = PaddingValues(bottom = 80.dp), // Space untuk FAB
+					verticalArrangement = Arrangement.spacedBy(12.dp)
+				) {
+					if (filtered.isEmpty()) {
+						// Empty state
+						item {
+							Column(
+								modifier = Modifier
+									.fillMaxWidth()
+									.padding(32.dp),
+								horizontalAlignment = Alignment.CenterHorizontally,
+								verticalArrangement = Arrangement.Center
+							) {
+								Icon(
+									imageVector = Icons.Default.Search,
+									contentDescription = "No results",
+									modifier = Modifier.size(64.dp),
+									tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+								)
+								Spacer(modifier = Modifier.height(16.dp))
+								Text(
+									text = if (query.isNotBlank()) "Tidak ada hasil untuk \"$query\"" else "Tidak ada video di kategori ini",
+									style = MaterialTheme.typography.titleMedium,
+									color = MaterialTheme.colorScheme.onSurface,
+									textAlign = androidx.compose.ui.text.style.TextAlign.Center
+								)
+							}
+						}
+					} else {
+						items(
+							items = filtered,
+							key = { it.id }
+						) { video ->
+							// YouTube-style vertical card
+							Card(
+								modifier = Modifier
+									.fillMaxWidth()
+									.clickable { onNavigateToDetail(video.id) },
+								colors = CardDefaults.cardColors(
+									containerColor = MaterialTheme.colorScheme.surface
+								),
+								elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+								shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
+							) {
+								Column(modifier = Modifier.fillMaxWidth()) {
+									// Thumbnail dengan play icon (16:9 ratio)
 									Box(
 										modifier = Modifier
-										.fillMaxWidth()
-										.weight(3f)
-											.padding(4.dp),
-										contentAlignment = Alignment.Center
+											.fillMaxWidth()
+											.aspectRatio(16f/9f)
 									) {
-										Surface(
-											shape = MaterialTheme.shapes.small,
-											color = MaterialTheme.colorScheme.surfaceVariant,
+										AsyncImage(
+											model = video.thumbnailUrl ?: "https://img.youtube.com/vi/${extractVideoId(video.youtubeUrl)}/maxresdefault.jpg",
+											contentDescription = video.judul,
 											modifier = Modifier
-												.fillMaxHeight()
-												.fillMaxWidth()
+												.fillMaxSize()
+											.clip(androidx.compose.foundation.shape.RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)),
+											contentScale = androidx.compose.ui.layout.ContentScale.Crop
+										)
+										
+										// Play icon overlay
+										Surface(
+											modifier = Modifier
+												.align(Alignment.Center)
+												.size(56.dp),
+											color = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
+											shape = androidx.compose.foundation.shape.RoundedCornerShape(28.dp)
 										) {
-											Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-												Icon(
-													imageVector = Icons.Default.Image,
-													contentDescription = "placeholder",
-													tint = MaterialTheme.colorScheme.onSurfaceVariant,
-													modifier = Modifier
-														.align(Alignment.Center)
-												)
-											}
+											Icon(
+												imageVector = androidx.compose.material.icons.Icons.Default.PlayCircleOutline,
+												contentDescription = "Play",
+												modifier = Modifier
+													.fillMaxSize()
+													.padding(12.dp),
+												tint = MaterialTheme.colorScheme.primary
+											)
 										}
 									}
-								} else {
-									AsyncImage(
-										model = video.thumbnailUrl,
-										contentDescription = video.judul,
+									
+									// Info section
+									Column(
 										modifier = Modifier
-											.weight(2f)
-											.fillMaxHeight()
-									)
-								}
-
-								// Info section (1/4 height)
-								Column(
-									modifier = Modifier
-										.fillMaxWidth()
-										.weight(1f)
-										.padding(8.dp),
-									verticalArrangement = Arrangement.Center
-								) {
-									Text(text = video.judul, style = SakoCustomTypography.videoTitle, maxLines = 2)
-									Spacer(modifier = Modifier.height(8.dp))
-									Text(text = video.kategori, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+											.fillMaxWidth()
+											.padding(12.dp)
+									) {
+										// Title
+										Text(
+											text = video.judul,
+											style = MaterialTheme.typography.titleMedium,
+											fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
+											maxLines = 2,
+											overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+											color = MaterialTheme.colorScheme.onSurface
+										)
+										
+										Spacer(modifier = Modifier.height(8.dp))
+										
+										// Category badge
+										Surface(
+											color = MaterialTheme.colorScheme.primaryContainer,
+											shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
+										) {
+											Text(
+												text = video.kategori,
+												style = MaterialTheme.typography.labelMedium,
+												color = MaterialTheme.colorScheme.onPrimaryContainer,
+												modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+											)
+										}
+									}
 								}
 							}
 						}
@@ -293,3 +369,18 @@ private fun sampleVideos(): List<VideoItem> = listOf(
 		createdAt = "2025-03-01"
 	)
 )
+
+// Helper function untuk extract video ID
+private fun extractVideoId(url: String?): String {
+	if (url.isNullOrBlank()) return ""
+	return try {
+		when {
+			url.contains("youtu.be/") -> url.substringAfter("youtu.be/").substringBefore("?")
+			url.contains("watch?v=") -> url.substringAfter("v=").substringBefore("&")
+			url.contains("/embed/") -> url.substringAfter("/embed/").substringBefore("?")
+			else -> url.substringAfterLast("/").substringBefore("?")
+		}
+	} catch (e: Exception) {
+		""
+	}
+}
