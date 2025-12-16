@@ -13,6 +13,8 @@ import com.sako.MainActivity
 import com.sako.R
 import com.sako.firebase.notifications.map.MapNotificationHandler
 import com.sako.firebase.notifications.map.MapNotificationManager
+import com.sako.firebase.notifications.quiz.QuizNotificationHandler
+import com.sako.firebase.notifications.quiz.QuizNotificationManager
 
 /**
  * Firebase Cloud Messaging Service
@@ -27,6 +29,10 @@ class SakoFirebaseMessagingService : FirebaseMessagingService() {
         private const val CHANNEL_ID = "sako_notifications"
         private const val CHANNEL_NAME = "Sako Notifications"
         private const val NOTIFICATION_ID = 1001
+        
+        // Quiz notification channels
+        private const val QUIZ_SUCCESS_CHANNEL_ID = "sako_quiz_success"
+        private const val QUIZ_GENERAL_CHANNEL_ID = "sako_quiz_general"
     }
 
     override fun onCreate() {
@@ -72,6 +78,10 @@ class SakoFirebaseMessagingService : FirebaseMessagingService() {
                 handleVideoNotification(notificationData, remoteMessage.notification)
                 return
             }
+            "quiz" -> {
+                handleQuizNotification(notificationData, remoteMessage.notification)
+                return
+            }
         }
 
         // Handle regular notifications
@@ -84,8 +94,8 @@ class SakoFirebaseMessagingService : FirebaseMessagingService() {
             )
         }
         
-        // Handle data-only messages for non-map/video modules
-        if (notificationData.isNotEmpty() && module !in listOf("map", "video")) {
+        // Handle data-only messages for non-map/video/quiz modules
+        if (notificationData.isNotEmpty() && module !in listOf("map", "video", "quiz")) {
             handleDataMessage(notificationData)
         }
     }
@@ -173,11 +183,59 @@ class SakoFirebaseMessagingService : FirebaseMessagingService() {
     }
 
     /**
+     * Handle quiz-specific notifications with preferences check
+     */
+    private fun handleQuizNotification(
+        data: Map<String, String>,
+        notification: RemoteMessage.Notification?
+    ) {
+        try {
+            val notificationType = data["type"] ?: return
+            
+            // Check user preferences first
+            val notificationManager = QuizNotificationManager.getInstance(this)
+            if (!notificationManager.shouldProcessNotification(notificationType)) {
+                Log.d(TAG, "🔕 Quiz notification blocked by user preferences: $notificationType")
+                return
+            }
+            
+            // Process the notification through quiz handler
+            val processed = QuizNotificationHandler.processQuizNotification(this, data)
+            if (!processed) {
+                Log.w(TAG, "⚠️ Failed to process quiz notification")
+                return
+            }
+            
+            // Create and show notification
+            val (title, body) = if (notification != null) {
+                Pair(notification.title ?: "Sako Quiz", notification.body ?: "Ada aktivitas di kuis")
+            } else {
+                QuizNotificationHandler.createNotificationContent(notificationType, data)
+            }
+            
+            // Add navigation data for quiz notifications
+            val navigationData = QuizNotificationHandler.getNavigationData(notificationType, data)
+            val enhancedData = data.toMutableMap().apply {
+                putAll(navigationData)
+            }
+            
+            showNotification(title, body, enhancedData)
+            Log.d(TAG, "✅ Quiz notification shown: $title")
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Error handling quiz notification: ${e.message}")
+        }
+    }
+
+    /**
      * Create notification channel for Android 8.0+
      */
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
+            val notificationManager = getSystemService(NotificationManager::class.java)
+            
+            // Main channel
+            val mainChannel = NotificationChannel(
                 CHANNEL_ID,
                 CHANNEL_NAME,
                 NotificationManager.IMPORTANCE_DEFAULT
@@ -186,11 +244,34 @@ class SakoFirebaseMessagingService : FirebaseMessagingService() {
                 enableLights(true)
                 enableVibration(true)
             }
+            notificationManager?.createNotificationChannel(mainChannel)
             
-            val notificationManager = getSystemService(NotificationManager::class.java)
-            notificationManager?.createNotificationChannel(channel)
+            // Quiz success channel (for passed and perfect score)
+            val quizSuccessChannel = NotificationChannel(
+                QUIZ_SUCCESS_CHANNEL_ID,
+                "Quiz Success Notifications",
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                description = "Notifications when you pass a quiz"
+                enableLights(true)
+                enableVibration(true)
+                lightColor = android.graphics.Color.GREEN
+            }
+            notificationManager?.createNotificationChannel(quizSuccessChannel)
             
-            Log.d(TAG, "📱 Notification channel created: $CHANNEL_ID")
+            // Quiz general channel (for failed quizzes)
+            val quizGeneralChannel = NotificationChannel(
+                QUIZ_GENERAL_CHANNEL_ID,
+                "Quiz Notifications",
+                NotificationManager.IMPORTANCE_DEFAULT
+            ).apply {
+                description = "General quiz notifications"
+                enableLights(true)
+                enableVibration(true)
+            }
+            notificationManager?.createNotificationChannel(quizGeneralChannel)
+            
+            Log.d(TAG, "📱 Notification channels created: main, quiz_success, quiz_general")
         }
     }
 
@@ -211,18 +292,43 @@ class SakoFirebaseMessagingService : FirebaseMessagingService() {
             PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        val notificationBuilder = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_notification) // Make sure this icon exists
+        // Determine channel and priority based on notification type
+        val channelId = when (data["module"]) {
+            "quiz" -> {
+                when (data["type"]) {
+                    "quiz_perfect_score", "quiz_passed" -> QUIZ_SUCCESS_CHANNEL_ID
+                    "quiz_failed", "quiz_completed" -> QUIZ_GENERAL_CHANNEL_ID
+                    else -> CHANNEL_ID
+                }
+            }
+            else -> CHANNEL_ID
+        }
+        
+        val priority = when (data["module"]) {
+            "quiz" -> NotificationCompat.PRIORITY_HIGH
+            else -> NotificationCompat.PRIORITY_DEFAULT
+        }
+
+        val notificationBuilder = NotificationCompat.Builder(this, channelId)
+            .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle(title)
             .setContentText(body)
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setPriority(priority)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(body))
 
         val notificationManager = getSystemService(NotificationManager::class.java)
-        notificationManager?.notify(NOTIFICATION_ID, notificationBuilder.build())
+        // Use unique notification ID based on module to allow multiple notifications
+        val notificationId = when (data["module"]) {
+            "quiz" -> NOTIFICATION_ID + 1
+            "map" -> NOTIFICATION_ID + 2
+            "video" -> NOTIFICATION_ID + 3
+            else -> NOTIFICATION_ID
+        }
+        notificationManager?.notify(notificationId, notificationBuilder.build())
         
-        Log.d(TAG, "🔔 Notification shown: $title - $body")
+        Log.d(TAG, "🔔 Notification shown on channel $channelId: $title - $body")
     }
 
     /**
