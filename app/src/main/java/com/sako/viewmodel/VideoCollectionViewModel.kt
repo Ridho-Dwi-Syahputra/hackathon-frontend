@@ -44,27 +44,33 @@ class VideoCollectionViewModel(private val repository: SakoRepository) : ViewMod
         viewModelScope.launch {
             _isLoading.value = true
             _errorMessage.value = null
+            android.util.Log.d("VIDEO_COLLECTION_VM", "🚀 Starting to load collections...")
             try {
                 repository.getVideoCollections().collect { resource ->
                     when (resource) {
                         is com.sako.utils.Resource.Success -> {
                             _collections.value = resource.data?.data ?: emptyList()
-                            println("VideoCollectionViewModel - Collections loaded: ${_collections.value.size}")
+                            android.util.Log.d("VIDEO_COLLECTION_VM", "✅ Collections loaded: ${_collections.value.size} items")
+                            _collections.value.forEachIndexed { index, item ->
+                                android.util.Log.d("VIDEO_COLLECTION_VM", "   ${index + 1}. ${item.namaKoleksi} (${item.jumlahVideo} videos)")
+                            }
                         }
                         is com.sako.utils.Resource.Error -> {
                             _errorMessage.value = resource.error
-                            println("VideoCollectionViewModel - Error loading collections: ${resource.error}")
+                            android.util.Log.e("VIDEO_COLLECTION_VM", "❌ Error loading collections: ${resource.error}")
                         }
                         is com.sako.utils.Resource.Loading -> {
                             _isLoading.value = true
+                            android.util.Log.d("VIDEO_COLLECTION_VM", "⏳ Loading...")
                         }
                     }
                 }
             } catch (e: Exception) {
                 _errorMessage.value = e.message ?: "Terjadi kesalahan"
-                println("VideoCollectionViewModel - Exception: ${e.message}")
+                android.util.Log.e("VIDEO_COLLECTION_VM", "❌ Exception: ${e.message}", e)
             } finally {
                 _isLoading.value = false
+                android.util.Log.d("VIDEO_COLLECTION_VM", "✋ Loading finished. isLoading = false")
             }
         }
     }

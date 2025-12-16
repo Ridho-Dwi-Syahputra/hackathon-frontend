@@ -196,12 +196,17 @@ class SakoRepository private constructor(
     fun getVideoCollections(): Flow<Resource<VideoCollectionListResponse>> = flow {
         emit(Resource.Loading)
         try {
+            android.util.Log.d("REPO_VIDEO_COLLECTION", "🔄 Fetching video collections...")
             val response = apiService.getVideoCollections()
+            android.util.Log.d("REPO_VIDEO_COLLECTION", "✅ Success: ${response.success}, Data size: ${response.data.size}")
+            android.util.Log.d("REPO_VIDEO_COLLECTION", "📦 Response data: ${response.data}")
             emit(Resource.Success(response))
         } catch (e: HttpException) {
             val errorBody = e.response()?.errorBody()?.string()
+            android.util.Log.e("REPO_VIDEO_COLLECTION", "❌ HTTP Error ${e.code()}: $errorBody")
             emit(Resource.Error(parseErrorMessage(errorBody)))
         } catch (e: Exception) {
+            android.util.Log.e("REPO_VIDEO_COLLECTION", "❌ Exception: ${e.message}", e)
             emit(Resource.Error(e.message ?: "Terjadi kesalahan"))
         }
     }

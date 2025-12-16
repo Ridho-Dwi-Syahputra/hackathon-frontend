@@ -147,8 +147,13 @@ fun VideoFavoriteScreen(
                         },
                         onAddToCollection = { collectionId: String ->
                             collectionViewModel.addVideoToCollection(collectionId, selectedVideoId!!)
-                            showBottomSheet = false
-                            selectedVideoId = null
+                            // Reload collections untuk update status centang
+                            collectionViewModel.loadCollectionsForVideo(selectedVideoId!!)
+                        },
+                        onRemoveFromCollection = { collectionId: String ->
+                            collectionViewModel.removeVideoFromCollection(collectionId, selectedVideoId!!)
+                            // Reload collections untuk update status centang
+                            collectionViewModel.loadCollectionsForVideo(selectedVideoId!!)
                         },
                         onCreateNewCollection = {
                             showCreateDialog = true

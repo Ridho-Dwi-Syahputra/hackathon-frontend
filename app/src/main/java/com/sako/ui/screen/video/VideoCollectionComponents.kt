@@ -35,6 +35,7 @@ fun AddToCollectionBottomSheet(
     isLoading: Boolean = false,
     onDismiss: () -> Unit,
     onAddToCollection: (String) -> Unit,
+    onRemoveFromCollection: (String) -> Unit,
     onCreateNewCollection: () -> Unit
 ) {
     ModalBottomSheet(
@@ -102,7 +103,9 @@ fun AddToCollectionBottomSheet(
                         CollectionItem(
                             collection = collection,
                             onClick = {
-                                if (!collection.isVideoInCollection) {
+                                if (collection.isVideoInCollection) {
+                                    onRemoveFromCollection(collection.id)
+                                } else {
                                     onAddToCollection(collection.id)
                                 }
                             }
@@ -143,7 +146,7 @@ fun CollectionItem(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(enabled = !collection.isVideoInCollection) { onClick() },
+            .clickable { onClick() },
         colors = CardDefaults.cardColors(
             containerColor = if (collection.isVideoInCollection)
                 MaterialTheme.colorScheme.surfaceVariant

@@ -433,6 +433,11 @@ fun SakoNavGraph(
             val isLoading by sharedVideoCollectionViewModel.isLoading.collectAsState()
             var showCreateDialog by remember { mutableStateOf(false) }
 
+            // Reload collections when this screen appears
+            LaunchedEffect(Unit) {
+                sharedVideoCollectionViewModel.loadCollections()
+            }
+
             VideoCollectionListScreen(
                 collections = collections,
                 isLoading = isLoading,
