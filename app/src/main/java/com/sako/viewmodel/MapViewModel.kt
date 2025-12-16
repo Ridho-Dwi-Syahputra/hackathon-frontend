@@ -284,30 +284,35 @@ class MapViewModel(
             val currentDetailResource = _touristPlaceDetail.value
             if (currentDetailResource is Resource.Success) {
                 val touristPlaceId = currentDetailResource.data.id
+                
+                // Instant UI update - remove review from list immediately
+                val currentReviewsResource = _reviewsList.value
+                if (currentReviewsResource is Resource.Success) {
+                    val updatedData = currentReviewsResource.data.copy(
+                        userReview = if (currentReviewsResource.data.userReview?.id == reviewId) {
+                            null
+                        } else currentReviewsResource.data.userReview,
+                        otherReviews = currentReviewsResource.data.otherReviews.filter { 
+                            it.id != reviewId 
+                        }
+                    )
+                    _reviewsList.value = Resource.Success(updatedData)
+                }
+                
+                // Call delete API
                 mapRepository.deleteReview(reviewId).collect { resource ->
                     when (resource) {
                         is Resource.Success -> {
-                            // Update local state to remove deleted review
-                            val currentReviewsResource = _reviewsList.value
-                            if (currentReviewsResource is Resource.Success) {
-                                val updatedData = currentReviewsResource.data.copy(
-                                    userReview = if (currentReviewsResource.data.userReview?.id == reviewId) {
-                                        null
-                                    } else currentReviewsResource.data.userReview,
-                                    otherReviews = currentReviewsResource.data.otherReviews.filter { 
-                                        it.id != reviewId 
-                                    }
-                                )
-                                _reviewsList.value = Resource.Success(updatedData)
-                            }
-                            
-                            // Reload place detail to update average rating
+                            // Reload data from server to get updated rating and review counts
                             loadTouristPlaceDetail(touristPlaceId)
+                            loadPlaceReviews(touristPlaceId)
                             
                             // Clear review result state
                             _reviewResult.value = null
                         }
                         is Resource.Error -> {
+                            // If delete failed, reload to restore correct state
+                            loadPlaceReviews(touristPlaceId)
                             _reviewResult.value = Resource.Error(resource.error)
                         }
                         is Resource.Loading -> {

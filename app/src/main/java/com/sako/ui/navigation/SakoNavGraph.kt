@@ -28,9 +28,7 @@ import com.sako.viewmodel.QuizAttemptViewModel
 import com.sako.viewmodel.VideoViewModel
 import com.sako.viewmodel.VideoCollectionViewModel
 import com.sako.viewmodel.ProfileViewModel
-import com.sako.viewmodel.ProfileViewModelFactory
 import com.sako.viewmodel.ViewModelFactory
-import com.sako.viewmodel.AuthViewModelFactory
 import com.sako.ui.screen.video.VideoListScreen
 import com.sako.ui.screen.video.VideoDetailScreen
 import com.sako.ui.screen.video.VideoFavoriteScreen
@@ -56,17 +54,11 @@ fun SakoNavGraph(
 ) {
     // Create single shared ViewModels at NavGraph level to prevent recreation on navigation
     // This ensures data persistence and prevents redundant API calls
-    val context = LocalContext.current
+    // Using unified ViewModelFactory for all modules
     
-    // Auth ViewModels
-    val authViewModelFactory = remember { AuthViewModelFactory(context) }
-    val authViewModel: AuthViewModel = viewModel(factory = authViewModelFactory)
-    
-    // Profile ViewModels
-    val profileViewModelFactory = remember { ProfileViewModelFactory(userPreference) }
-    val sharedProfileViewModel: ProfileViewModel = viewModel(factory = profileViewModelFactory)
-    
-    // Shared ViewModels for modules
+    // Shared ViewModels for all modules using single factory
+    val authViewModel: AuthViewModel = viewModel(factory = viewModelFactory)
+    val sharedProfileViewModel: ProfileViewModel = viewModel(factory = viewModelFactory)
     val sharedVideoViewModel: VideoViewModel = viewModel(factory = viewModelFactory)
     val sharedKuisViewModel: KuisViewModel = viewModel(factory = viewModelFactory)
     val sharedVideoCollectionViewModel: VideoCollectionViewModel = viewModel(factory = viewModelFactory)

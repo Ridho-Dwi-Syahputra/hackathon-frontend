@@ -142,9 +142,9 @@ fun SakoApp() {
     val context = LocalContext.current
     val navController = rememberNavController()
 
-    // Setup UserPreference dan ViewModelFactory
+    // Setup UserPreference dan ViewModelFactory (using singleton pattern)
     val userPreference = UserPreference.getInstance(context.dataStore)
-    val viewModelFactory = ViewModelFactory(context)
+    val viewModelFactory = ViewModelFactory.getInstance(context)
 
     android.util.Log.d("SakoApp", "📱 UserPreference dan ViewModelFactory created")
 

@@ -105,9 +105,6 @@ fun DetailMapScreen(
             onConfirm = {
                 viewModel.deleteReview(reviewId)
                 showDeleteDialog = null
-                // Reload data after deletion
-                viewModel.loadTouristPlaceDetail(placeId)
-                viewModel.loadPlaceReviews(placeId)
             },
             cancelButtonText = "Batal"
         )
