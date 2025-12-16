@@ -94,13 +94,17 @@ class ProfileViewModel(
             profileRepository.updateProfile(fullName, email).collect { resource ->
                 when (resource) {
                     is Resource.Success -> {
-                        _uiState.value = _uiState.value.copy(
+                        // Update local state with new data
+                        val currentState = _uiState.value
+                        _uiState.value = currentState.copy(
                             isLoading = false,
                             updateSuccess = true,
-                            updateMessage = resource.data?.message ?: "Profil berhasil diperbarui"
+                            updateMessage = resource.data?.message ?: "Profil berhasil diperbarui",
+                            userData = currentState.userData?.copy(
+                                fullName = fullName,
+                                email = email
+                            )
                         )
-                        // Reload profile to get updated data
-                        loadUserProfile()
                     }
                     is Resource.Error -> {
                         _uiState.value = _uiState.value.copy(
@@ -129,13 +133,16 @@ class ProfileViewModel(
             profileRepository.updateProfileImage(imageFile).collect { resource ->
                 when (resource) {
                     is Resource.Success -> {
-                        _uiState.value = _uiState.value.copy(
+                        val imageUrl = resource.data?.data?.user?.userImageUrl
+                        val currentState = _uiState.value
+                        _uiState.value = currentState.copy(
                             isLoading = false,
                             updateSuccess = true,
-                            updateMessage = resource.data?.message ?: "Foto profil berhasil diperbarui"
+                            updateMessage = resource.data?.message ?: "Foto profil berhasil diperbarui",
+                            userData = currentState.userData?.copy(
+                                userImageUrl = imageUrl
+                            )
                         )
-                        // Reload profile to get updated image
-                        loadUserProfile()
                     }
                     is Resource.Error -> {
                         _uiState.value = _uiState.value.copy(

@@ -42,7 +42,7 @@ fun HomeScreen(
     onNavigateToVideo: () -> Unit = {},
     onNavigateToMap: () -> Unit = {},
     viewModel: HomeViewModel = viewModel(
-        factory = ViewModelFactory(LocalContext.current)
+        factory = ViewModelFactory.getInstance(LocalContext.current)
     )
 ) {
     val dashboardState by viewModel.dashboardState.collectAsStateWithLifecycle()

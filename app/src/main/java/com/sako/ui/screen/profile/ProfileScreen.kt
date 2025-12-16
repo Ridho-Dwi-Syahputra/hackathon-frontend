@@ -45,6 +45,11 @@ fun ProfileScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
+    // Reload profile data when returning from edit screens
+    LaunchedEffect(Unit) {
+        viewModel.loadUserProfile()
+    }
+
     Scaffold(
         topBar = {
             ProfileTopBar(
