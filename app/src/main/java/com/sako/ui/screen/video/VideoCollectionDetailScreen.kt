@@ -52,121 +52,112 @@ fun VideoCollectionDetailScreen(
 
     SakoTheme {
         BackgroundImage {
-            Scaffold(
-                topBar = {
-                    TopAppBar(
-                        title = {
-                            Column {
-                                Text(
-                                    text = collectionName,
-                                    style = MaterialTheme.typography.titleLarge,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                                Text(
-                                    text = "$videoCount video",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        },
-                        navigationIcon = {
-                            IconButton(onClick = onNavigateBack) {
-                                Icon(
-                                    imageVector = Icons.Default.ArrowBack,
-                                    contentDescription = "Kembali"
-                                )
-                            }
-                        },
-                        actions = {
-                            IconButton(onClick = { showDeleteDialog = true }) {
-                                Icon(
-                                    imageVector = Icons.Default.Delete,
-                                    contentDescription = "Hapus Koleksi",
-                                    tint = MaterialTheme.colorScheme.error
-                                )
-                            }
-                        },
-                        colors = TopAppBarDefaults.topAppBarColors(
-                            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f)
-                        )
-                    )
-                },
-                containerColor = MaterialTheme.colorScheme.background.copy(alpha = 0f)
-            ) { paddingValues ->
-                Column(
-                    modifier = modifier
-                        .fillMaxSize()
-                        .padding(paddingValues)
-                        .padding(16.dp)
+            Column(modifier = Modifier.fillMaxSize()) {
+                // Custom Top Bar dengan back button transparan
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Description
-                    if (!collectionDescription.isNullOrEmpty()) {
-                        Text(
-                            text = collectionDescription,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(bottom = 16.dp)
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Kembali"
                         )
                     }
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = collectionName,
+                            style = MaterialTheme.typography.titleLarge,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Text(
+                            text = "$videoCount video",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    IconButton(onClick = { showDeleteDialog = true }) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "Hapus Koleksi",
+                            tint = MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
 
-                    // Loading
-                    if (isLoading) {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
+            // Content area
+            Column(
+                modifier = modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp)
+            ) {
+                // Description
+                if (!collectionDescription.isNullOrEmpty()) {
+                    Text(
+                        text = collectionDescription,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+                }
+
+                // Loading
+                if (isLoading) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+                // Empty
+                else if (videos.isEmpty()) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            CircularProgressIndicator(
-                                color = MaterialTheme.colorScheme.primary
+                            Icon(
+                                painter = painterResource(R.drawable.video),
+                                contentDescription = "Empty",
+                                modifier = Modifier.size(64.dp),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = "Belum ada video di koleksi ini",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
-                    // Empty
-                    else if (videos.isEmpty()) {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Icon(
-                                    painter = painterResource(R.drawable.video),
-                                    contentDescription = "Empty",
-                                    modifier = Modifier.size(64.dp),
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                                Text(
-                                    text = "Belum ada video di koleksi ini",
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
-                    }
-                    // Video list
-                    else {
-                        LazyColumn(
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            items(videos) { video ->
-                                CollectionVideoCard(
-                                    video = video,
-                                    onClick = { onNavigateToVideoDetail(video.id) },
-                                    onRemove = { showRemoveDialog = video.id }
-                                )
-                            }
+                }
+                // Video list
+                else {
+                    LazyColumn(
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        items(videos) { video ->
+                            CollectionVideoCard(
+                                video = video,
+                                onClick = { onNavigateToVideoDetail(video.id) },
+                                onRemove = { showRemoveDialog = video.id }
+                            )
                         }
                     }
                 }
-            }
-        }
-    }
-
-    // Delete Collection Dialog
-    if (showDeleteDialog) {
-        AlertDialog(
+            } // Column
+            
+            // Delete Collection Dialog
+            if (showDeleteDialog) {
+                AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
             title = { Text("Hapus Koleksi?") },
             text = { Text("Koleksi akan dihapus, tapi video tetap ada di favorit.") },
@@ -185,12 +176,12 @@ fun VideoCollectionDetailScreen(
                     Text("Batal")
                 }
             }
-        )
-    }
+                )
+            }
 
-    // Remove Video Dialog
-    showRemoveDialog?.let { videoId ->
-        AlertDialog(
+            // Remove Video Dialog
+            showRemoveDialog?.let { videoId ->
+                AlertDialog(
             onDismissRequest = { showRemoveDialog = null },
             title = { Text("Hapus dari Koleksi?") },
             text = { Text("Video akan dihapus dari koleksi ini, tapi tetap ada di favorit.") },
@@ -209,8 +200,11 @@ fun VideoCollectionDetailScreen(
                     Text("Batal")
                 }
             }
-        )
-    }
+                )
+            }
+        } // Column
+        } // BackgroundImage
+    } // SakoTheme
 }
 
 @Composable

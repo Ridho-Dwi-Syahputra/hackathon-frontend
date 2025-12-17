@@ -50,37 +50,31 @@ fun VideoFavoriteScreen(
     }
 
     BackgroundImage {
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    title = { Text("Video Favorit") },
-                    navigationIcon = {
-                        IconButton(onClick = onNavigateBack) {
-                            Icon(
-                                imageVector = Icons.Default.ArrowBack,
-                                contentDescription = "Back"
-                            )
-                        }
-                    }
-                )
-            },
-            floatingActionButton = {
-                FloatingActionButton(
-                    onClick = onNavigateToCollections,
-                    containerColor = MaterialTheme.colorScheme.primary
-                ) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            // Custom Top Bar dengan back button transparan
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = onNavigateBack) {
                     Icon(
-                        imageVector = Icons.Default.Folder,
-                        contentDescription = "Koleksi",
-                        tint = MaterialTheme.colorScheme.onPrimary
+                        imageVector = Icons.Default.ArrowBack,
+                        contentDescription = "Back"
                     )
                 }
+                Text(
+                    text = "Video Favorit",
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.weight(1f)
+                )
             }
-        ) { innerPadding ->
+
+            // Content area
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(innerPadding)
             ) {
                 if (isLoading) {
                     CircularProgressIndicator(
@@ -175,7 +169,22 @@ fun VideoFavoriteScreen(
                         }
                     )
                 }
-            }
-        }
-    }
+                
+                // Floating Action Button
+                FloatingActionButton(
+                    onClick = onNavigateToCollections,
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(16.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Folder,
+                        contentDescription = "Koleksi",
+                        tint = MaterialTheme.colorScheme.onPrimary
+                    )
+                }
+            } // Box
+        } // Column
+    } // BackgroundImage
 }

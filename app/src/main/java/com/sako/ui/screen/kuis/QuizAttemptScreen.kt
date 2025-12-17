@@ -83,28 +83,15 @@ fun QuizAttemptScreen(
     }
 
     BackgroundImage {
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                title = {
-                    quizAttemptData?.let { data ->
-                        Box(
-                            modifier = Modifier
-                                .fillMaxHeight()
-                                .offset(y = (-2).dp),
-                            contentAlignment = Alignment.CenterStart
-                        ) {
-                            Text(
-                                text = data.level.name,
-                                fontWeight = FontWeight.Bold,
-                                color = SakoPrimary,
-                                fontSize = 20.sp,
-                                maxLines = 1
-                            )
-                        }
-                    }
-                },
-                navigationIcon = {
+        Column(modifier = Modifier.fillMaxSize()) {
+            // Custom Top Bar dengan back button transparan
+            quizAttemptData?.let { data ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     IconButton(onClick = { showExitDialog = true }) {
                         Icon(
                             imageVector = Icons.Default.Close,
@@ -112,15 +99,17 @@ fun QuizAttemptScreen(
                             tint = SakoPrimary
                         )
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.White
-                ),
-                modifier = Modifier.height(56.dp)
-            )
-        },
-        containerColor = Color.Transparent
-    ) { paddingValues ->
+                    Text(
+                        text = data.level.name,
+                        fontWeight = FontWeight.Bold,
+                        color = SakoPrimary,
+                        fontSize = 20.sp,
+                        maxLines = 1,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+
         when (quizState) {
             is Resource.Loading -> {
                 LoadingScreen()
@@ -131,9 +120,7 @@ fun QuizAttemptScreen(
                     val totalQuestions = attemptData.questions.size
 
                     Column(
-                        modifier = modifier
-                            .fillMaxSize()
-                            .padding(paddingValues)
+                        modifier = modifier.fillMaxSize()
                     ) {
                         // Enhanced Timer Card
                         EnhancedTimerCard(
@@ -145,7 +132,7 @@ fun QuizAttemptScreen(
                             currentQuestion = currentQuestionIndex + 1,
                             totalQuestions = totalQuestions,
                             answeredCount = viewModel.getAnsweredCount(),
-                            modifier = Modifier.padding(16.dp)
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
                         )
 
                         // Quiz Content
@@ -154,7 +141,7 @@ fun QuizAttemptScreen(
                                 .weight(1f)
                                 .verticalScroll(rememberScrollState())
                                 .padding(horizontal = 16.dp),
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
                         )
                         {
 
@@ -181,8 +168,6 @@ fun QuizAttemptScreen(
                                     )
                                 }
                             }
-
-                            Spacer(modifier = Modifier.height(16.dp))
                         }
 
                         // Bottom Navigation
@@ -207,7 +192,8 @@ fun QuizAttemptScreen(
                 )
             }
         }
-    }
+    } // Column
+    } // BackgroundImage
     
         // Submit Confirmation Dialog
         if (showSubmitDialog) {
@@ -290,7 +276,6 @@ fun QuizAttemptScreen(
                 }
             }
         )
-        }
     }
 }
 

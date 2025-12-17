@@ -43,42 +43,31 @@ fun QuizCategoryChooseScreen(
         viewModel.getCategories()
     }
     BackgroundImage {
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    title = {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxHeight()
-                                .offset(y = (-2).dp),
-                            contentAlignment = Alignment.CenterStart
-                        ) {
-                            Text(
-                                text = "Pilih Kategori Kuis",
-                                fontWeight = FontWeight.Bold,
-                                color = SakoPrimary,
-                                fontSize = 20.sp,
-                                maxLines = 1
-                            )
-                        }
-                    },
-                    navigationIcon = {
-                        IconButton(onClick = onNavigateBack) {
-                            Icon(
-                                imageVector = Icons.Default.ArrowBack,
-                                contentDescription = "Kembali",
-                                tint = SakoPrimary
-                            )
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color.White
-                    ),
-                    modifier = Modifier.height(56.dp)
+        Column(modifier = Modifier.fillMaxSize()) {
+            // Custom Top Bar dengan back button transparan
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = onNavigateBack) {
+                    Icon(
+                        imageVector = Icons.Default.ArrowBack,
+                        contentDescription = "Kembali",
+                        tint = SakoPrimary
+                    )
+                }
+                Text(
+                    text = "Pilih Kategori Kuis",
+                    fontWeight = FontWeight.Bold,
+                    color = SakoPrimary,
+                    fontSize = 20.sp,
+                    maxLines = 1,
+                    modifier = Modifier.weight(1f)
                 )
-            },
-            containerColor = Color.Transparent
-        ) { paddingValues ->
+            }
+
         when (categoriesState) {
             is Resource.Loading -> {
                 LoadingScreen()
@@ -90,18 +79,15 @@ fun QuizCategoryChooseScreen(
                     EmptyStateScreen()
                 } else {
                     LazyColumn(
-                        modifier = modifier
-                            .fillMaxSize()
-                            .padding(paddingValues),
-                        contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                        modifier = modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         item {
                             Text(
                                 text = "Pilih kategori untuk memulai quiz dan tingkatkan pengetahuanmu!",
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = Color.Gray,
-                                modifier = Modifier.padding(bottom = 8.dp)
+                                color = SakoPrimary
                             )
                         }
 
@@ -119,10 +105,6 @@ fun QuizCategoryChooseScreen(
                                 }
                             )
                         }
-
-                        item {
-                            Spacer(modifier = Modifier.height(16.dp))
-                        }
                     }
                 }
             }
@@ -133,9 +115,10 @@ fun QuizCategoryChooseScreen(
                     onRetry = { viewModel.refreshCategories() }
                 )
             }
-        }
-    }
-    }
+        } 
+    } 
+    }  
+}
 
 @Composable
 fun EmptyStateScreen() {
@@ -163,11 +146,5 @@ fun EmptyStateScreen() {
                 color = Color.Gray
             )
         }
-        }
     }
-}
-
-@Composable
-fun EmptyStateScreen() {
-    TODO("Not yet implemented")
 }
