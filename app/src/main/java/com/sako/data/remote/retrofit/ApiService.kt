@@ -92,7 +92,7 @@ interface ApiService {
     ): UpdateProfileResponse
 
     @Multipart
-    @POST("auth/upload-profile-image")
+    @PUT("auth/profile/image")
     suspend fun updateProfileImage(
         @Part image: MultipartBody.Part
     ): UpdateProfileResponse

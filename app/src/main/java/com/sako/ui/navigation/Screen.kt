@@ -57,6 +57,7 @@ sealed class Screen(val route: String) {
     object Setting : Screen("setting")
     object EditProfile : Screen("edit_profile")
     object ChangePassword : Screen("change_password")
+    object AboutSystem : Screen("about_system")
     object BadgeList : Screen("badge_list")
     object BadgeDetail : Screen("badge_detail/{badgeId}") {
         fun createRoute(badgeId: String) = "badge_detail/$badgeId"
