@@ -22,6 +22,7 @@ import com.sako.ui.screen.profile.ProfileScreen
 import com.sako.ui.screen.profile.SettingScreen
 import com.sako.ui.screen.profile.EditProfileScreen
 import com.sako.ui.screen.profile.ChangePasswordScreen
+import com.sako.ui.screen.profile.AboutSystemScreen
 import com.sako.viewmodel.AuthViewModel
 import com.sako.viewmodel.KuisViewModel
 import com.sako.viewmodel.QuizAttemptViewModel
@@ -554,6 +555,14 @@ fun SakoNavGraph(
             )
         }
 
+        composable(route = Screen.AboutSystem.route) {
+            AboutSystemScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
         composable(route = Screen.BadgeList.route) {
             // TODO: Implement BadgeListScreen
             // Placeholder for now
@@ -569,7 +578,7 @@ fun SakoNavGraph(
                     navController.navigate(Screen.ChangePassword.route)
                 },
                 onNavigateToAbout = {
-                    // TODO: Navigate to About screen when implemented
+                    navController.navigate(Screen.AboutSystem.route)
                 },
                 onLogoutSuccess = {
                     navController.navigate(Screen.Login.route) {

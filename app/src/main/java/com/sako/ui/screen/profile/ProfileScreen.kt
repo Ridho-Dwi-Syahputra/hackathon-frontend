@@ -7,7 +7,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -20,19 +19,15 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
-import coil.request.ImageRequest
 import com.sako.R
 import com.sako.data.model.LevelInfo
 import com.sako.ui.components.BackgroundImage
-import com.sako.ui.components.FullscreenImageViewer
 import com.sako.ui.components.SakoLoadingScreen
 import com.sako.ui.components.SakoSpacing
 import com.sako.ui.components.VerticalSpacer
@@ -49,57 +44,6 @@ fun ProfileScreen(
     viewModel: ProfileViewModel
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    var showImagePicker by remember { mutableStateOf(false) }
-    var showImageOptions by remember { mutableStateOf(false) }
-    var showFullscreenImage by remember { mutableStateOf(false) }
-    var showSnackbar by remember { mutableStateOf(false) }
-    var snackbarMessage by remember { mutableStateOf("") }
-
-    // Show fullscreen image viewer
-    if (showFullscreenImage && !uiState.userData?.userImageUrl.isNullOrEmpty()) {
-        FullscreenImageViewer(
-            imageUrl = uiState.userData?.userImageUrl,
-            onDismiss = { showFullscreenImage = false }
-        )
-    }
-
-    // Show image options dialog (untuk saat sudah ada foto)
-    if (showImageOptions) {
-        ImageOptionsDialog(
-            imageUrl = uiState.userData?.userImageUrl,
-            onDismiss = { showImageOptions = false },
-            onViewPhoto = {
-                showImageOptions = false
-                showFullscreenImage = true
-            },
-            onChangePhoto = {
-                showImageOptions = false
-                showImagePicker = true
-            }
-        )
-    }
-
-    // Show image picker dialog
-    if (showImagePicker) {
-        ImageSourcePickerDialog(
-            onDismiss = { showImagePicker = false },
-            onImageSelected = { imageFile ->
-                viewModel.updateProfileImage(imageFile)
-                showImagePicker = false
-            }
-        )
-    }
-
-    // Show snackbar when update is successful dengan auto-dismiss 4 detik
-    LaunchedEffect(uiState.updateSuccess) {
-        if (uiState.updateSuccess && !uiState.updateMessage.isNullOrEmpty()) {
-            snackbarMessage = uiState.updateMessage ?: ""
-            showSnackbar = true
-            // Auto dismiss setelah 4 detik
-            kotlinx.coroutines.delay(4000)
-            showSnackbar = false
-        }
-    }
 
     // Reload profile data when returning from edit screens
     LaunchedEffect(Unit) {
@@ -114,21 +58,7 @@ fun ProfileScreen(
                 }
             )
         },
-        containerColor = Color.Transparent,
-        snackbarHost = {
-            if (showSnackbar) {
-                Snackbar(
-                    modifier = Modifier.padding(16.dp),
-                    action = {
-                        TextButton(onClick = { showSnackbar = false }) {
-                            Text("OK")
-                        }
-                    }
-                ) {
-                    Text(snackbarMessage)
-                }
-            }
-        }
+        containerColor = Color.Transparent
     ) { paddingValues ->
         Box(
             modifier = Modifier
@@ -160,18 +90,6 @@ fun ProfileScreen(
                         userData = uiState.userData!!,
                         stats = uiState.stats,
                         levelInfo = uiState.levelInfo,
-                        isUploadingImage = uiState.isUploadingImage,
-                        localImageFile = uiState.localImageFile,  // Pass local file untuk preview
-                        onEditProfileImageClick = {
-                            showImagePicker = true
-                        },
-                        onViewPhotoClick = {
-                            showImageOptions = true
-                        },
-                        onImageLoaded = {
-                            // Clear local file setelah URL berhasil dimuat
-                            viewModel.clearLocalImageFile()
-                        },
                         onEditProfileClick = {
                             navController.navigate(Screen.EditProfile.route)
                         },
@@ -248,11 +166,6 @@ private fun ProfileContent(
     userData: com.sako.data.remote.response.ProfileUserData,
     stats: com.sako.data.remote.response.UserStats?,
     levelInfo: LevelInfo?,
-    isUploadingImage: Boolean,
-    localImageFile: java.io.File?,  // Local file untuk preview instant
-    onEditProfileImageClick: () -> Unit,
-    onViewPhotoClick: () -> Unit,
-    onImageLoaded: () -> Unit,  // Callback saat URL loaded
     onEditProfileClick: () -> Unit,
     onBadgesClick: () -> Unit,
     onChangePasswordClick: () -> Unit
@@ -266,11 +179,7 @@ private fun ProfileContent(
         // Profile Image Section
         ProfileImageSection(
             imageUrl = userData.userImageUrl,
-            localImageFile = localImageFile,  // Pass local file
-            isUploading = isUploadingImage,
-            onImageClick = onEditProfileImageClick,
-            onViewPhotoClick = if (!userData.userImageUrl.isNullOrEmpty()) onViewPhotoClick else null,
-            onImageLoaded = onImageLoaded  // Pass callback untuk clear local file
+            onImageClick = onEditProfileClick
         )
 
         VerticalSpacer(height = SakoSpacing.ExtraLarge)
@@ -314,26 +223,12 @@ private fun ProfileContent(
 @Composable
 private fun ProfileImageSection(
     imageUrl: String?,
-    localImageFile: java.io.File?,  // Local file untuk preview instant
-    isUploading: Boolean = false,
-    onImageClick: () -> Unit,
-    onViewPhotoClick: (() -> Unit)? = null,
-    onImageLoaded: (() -> Unit)? = null  // Callback saat URL berhasil dimuat
+    onImageClick: () -> Unit
 ) {
-    val context = LocalContext.current
     val primaryColor = MaterialTheme.colorScheme.primary
     val backgroundColor = MaterialTheme.colorScheme.background
     val surfaceColor = MaterialTheme.colorScheme.surface
     val onPrimaryColor = MaterialTheme.colorScheme.onPrimary
-    
-    // Tentukan model untuk AsyncImage: prioritas local file > URL
-    val imageModel = remember(localImageFile, imageUrl) {
-        when {
-            localImageFile != null -> localImageFile  // Preview dari local file
-            !imageUrl.isNullOrEmpty() -> imageUrl     // URL dari Cloudinary
-            else -> null
-        }
-    }
     
     Box(
         modifier = Modifier
@@ -346,20 +241,10 @@ private fun ProfileImageSection(
                 .size(160.dp)
                 .clip(CircleShape)
                 .border(5.dp, onPrimaryColor, CircleShape)
-                .clickable { 
-                    if (!isUploading) {
-                        // Jika ada foto dan onViewPhotoClick tersedia, panggil itu
-                        // Jika tidak, panggil onImageClick untuk upload/edit
-                        if (imageModel != null && onViewPhotoClick != null) {
-                            onViewPhotoClick()
-                        } else {
-                            onImageClick()
-                        }
-                    }
-                }
+                .clickable { onImageClick() }
                 .background(surfaceColor, CircleShape)
         ) {
-            if (imageModel == null) {
+            if (imageUrl.isNullOrEmpty()) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -382,64 +267,35 @@ private fun ProfileImageSection(
                     )
                 }
             } else {
-                // AsyncImage dengan ImageRequest untuk force refresh cache
                 AsyncImage(
-                    model = ImageRequest.Builder(context)
-                        .data(imageModel)
-                        .crossfade(true)
-                        .build(),
+                    model = imageUrl,
                     contentDescription = "Profile Image",
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize(),
-                    onSuccess = { 
-                        // Callback saat image dari URL berhasil dimuat
-                        // Ini trigger untuk clear localImageFile
-                        if (imageModel is String && localImageFile != null) {
-                            onImageLoaded?.invoke()
-                        }
-                    }
+                    modifier = Modifier.fillMaxSize()
                 )
             }
             
-            // Loading overlay saat upload
-            if (isUploading) {
+            // Edit icon overlay with shadow effect
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .size(48.dp)
+                    .background(onPrimaryColor, CircleShape)
+                    .padding(2.dp),
+                contentAlignment = Alignment.Center
+            ) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(Color.Black.copy(alpha = 0.5f), CircleShape),
+                        .background(primaryColor, CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(48.dp),
-                        color = onPrimaryColor,
-                        strokeWidth = 4.dp
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = "Edit",
+                        tint = onPrimaryColor,
+                        modifier = Modifier.size(22.dp)
                     )
-                }
-            }
-            
-            // Edit icon overlay with shadow effect
-            if (!isUploading) {
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .size(48.dp)
-                        .background(onPrimaryColor, CircleShape)
-                        .padding(2.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(primaryColor, CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Edit,
-                            contentDescription = "Edit",
-                            tint = onPrimaryColor,
-                            modifier = Modifier.size(22.dp)
-                        )
-                    }
                 }
             }
         }
@@ -864,91 +720,6 @@ private fun ActionButton(
             color = Color(0xFF1A1A1A),
             modifier = Modifier.weight(1f)
         )
-    }
-}
-
-/**
- * Dialog untuk opsi foto profil yang sudah ada
- */
-@Composable
-private fun ImageOptionsDialog(
-    imageUrl: String?,
-    onDismiss: () -> Unit,
-    onViewPhoto: () -> Unit,
-    onChangePhoto: () -> Unit
-) {
-    Dialog(onDismissRequest = onDismiss) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surface
-            )
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = "Foto Profil",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-
-                Spacer(modifier = Modifier.height(SakoSpacing.Large))
-
-                // View Photo Option
-                Button(
-                    onClick = onViewPhoto,
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary
-                    )
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Visibility,
-                        contentDescription = null,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Lihat Foto")
-                }
-
-                Spacer(modifier = Modifier.height(SakoSpacing.Medium))
-
-                // Change Photo Option
-                Button(
-                    onClick = onChangePhoto,
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.secondary
-                    )
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Edit,
-                        contentDescription = null,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Ganti Foto")
-                }
-
-                Spacer(modifier = Modifier.height(SakoSpacing.Medium))
-
-                // Cancel Button
-                TextButton(
-                    onClick = onDismiss,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Batal")
-                }
-            }
-        }
         
         Icon(
             imageVector = Icons.Default.KeyboardArrowRight,
