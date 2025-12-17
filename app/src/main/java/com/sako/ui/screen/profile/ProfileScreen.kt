@@ -19,15 +19,18 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.sako.R
 import com.sako.data.model.LevelInfo
 import com.sako.ui.components.BackgroundImage
+import com.sako.ui.components.FullscreenImageViewer
 import com.sako.ui.components.SakoLoadingScreen
 import com.sako.ui.components.SakoSpacing
 import com.sako.ui.components.VerticalSpacer
@@ -44,6 +47,57 @@ fun ProfileScreen(
     viewModel: ProfileViewModel
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    var showImagePicker by remember { mutableStateOf(false) }
+    var showImageOptions by remember { mutableStateOf(false) }
+    var showPhotoOptionsDialog by remember { mutableStateOf(false) }  // Dialog pilihan upload/view
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    // Auto-dismiss snackbar setelah 4 detik
+    LaunchedEffect(uiState.updateSuccess, uiState.updateMessage) {
+        if (uiState.updateSuccess && !uiState.updateMessage.isNullOrEmpty()) {
+            snackbarHostState.showSnackbar(
+                message = uiState.updateMessage!!,
+                duration = SnackbarDuration.Short
+            )
+            kotlinx.coroutines.delay(4000)  // Auto dismiss setelah 4 detik
+            viewModel.clearUpdateMessage()
+        }
+    }
+
+    // Image picker dialog
+    if (showImagePicker) {
+        ImageSourcePickerDialog(
+            onDismiss = { showImagePicker = false },
+            onImageSelected = { file ->
+                viewModel.updateProfileImage(file)
+                showImagePicker = false
+            }
+        )
+    }
+
+    // Photo options dialog (Upload atau Lihat)
+    if (showPhotoOptionsDialog) {
+        PhotoOptionsDialog(
+            hasPhoto = !uiState.userData?.userImageUrl.isNullOrEmpty(),
+            onDismiss = { showPhotoOptionsDialog = false },
+            onUploadClick = {
+                showPhotoOptionsDialog = false
+                showImagePicker = true
+            },
+            onViewClick = {
+                showPhotoOptionsDialog = false
+                showImageOptions = true
+            }
+        )
+    }
+
+    // Fullscreen image viewer
+    if (showImageOptions) {
+        FullscreenImageViewer(
+            imageUrl = uiState.userData?.userImageUrl,
+            onDismiss = { showImageOptions = false }
+        )
+    }
 
     // Reload profile data when returning from edit screens
     LaunchedEffect(Unit) {
@@ -58,6 +112,7 @@ fun ProfileScreen(
                 }
             )
         },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         containerColor = Color.Transparent
     ) { paddingValues ->
         Box(
@@ -90,6 +145,16 @@ fun ProfileScreen(
                         userData = uiState.userData!!,
                         stats = uiState.stats,
                         levelInfo = uiState.levelInfo,
+                        isUploadingImage = uiState.isUploadingImage,
+                        localImageFile = uiState.localImageFile,  // Pass local file untuk preview
+                        onProfileImageClick = {
+                            // Tampilkan dialog pilihan upload/view
+                            showPhotoOptionsDialog = true
+                        },
+                        onImageLoaded = {
+                            // Clear local file setelah URL berhasil dimuat
+                            viewModel.clearLocalImageFile()
+                        },
                         onEditProfileClick = {
                             navController.navigate(Screen.EditProfile.route)
                         },
@@ -166,6 +231,10 @@ private fun ProfileContent(
     userData: com.sako.data.remote.response.ProfileUserData,
     stats: com.sako.data.remote.response.UserStats?,
     levelInfo: LevelInfo?,
+    isUploadingImage: Boolean,
+    localImageFile: java.io.File?,  // Local file untuk preview instant
+    onProfileImageClick: () -> Unit,  // Single callback untuk klik foto
+    onImageLoaded: () -> Unit,  // Callback saat URL loaded
     onEditProfileClick: () -> Unit,
     onBadgesClick: () -> Unit,
     onChangePasswordClick: () -> Unit
@@ -179,7 +248,10 @@ private fun ProfileContent(
         // Profile Image Section
         ProfileImageSection(
             imageUrl = userData.userImageUrl,
-            onImageClick = onEditProfileClick
+            localImageFile = localImageFile,
+            isUploading = isUploadingImage,
+            onImageClick = onProfileImageClick,  // Selalu panggil dialog pilihan
+            onImageLoaded = onImageLoaded
         )
 
         VerticalSpacer(height = SakoSpacing.ExtraLarge)
@@ -223,12 +295,23 @@ private fun ProfileContent(
 @Composable
 private fun ProfileImageSection(
     imageUrl: String?,
-    onImageClick: () -> Unit
+    localImageFile: java.io.File?,
+    isUploading: Boolean = false,
+    onImageClick: () -> Unit,
+    onImageLoaded: (() -> Unit)? = null
 ) {
+    val context = LocalContext.current
     val primaryColor = MaterialTheme.colorScheme.primary
-    val backgroundColor = MaterialTheme.colorScheme.background
     val surfaceColor = MaterialTheme.colorScheme.surface
-    val onPrimaryColor = MaterialTheme.colorScheme.onPrimary
+    
+    // Tentukan model untuk AsyncImage: prioritas local file > URL
+    val imageModel = remember(localImageFile, imageUrl) {
+        when {
+            localImageFile != null -> localImageFile
+            !imageUrl.isNullOrEmpty() -> imageUrl
+            else -> null
+        }
+    }
     
     Box(
         modifier = Modifier
@@ -240,11 +323,19 @@ private fun ProfileImageSection(
             modifier = Modifier
                 .size(160.dp)
                 .clip(CircleShape)
-                .border(5.dp, onPrimaryColor, CircleShape)
-                .clickable { onImageClick() }
+                .border(
+                    width = 3.dp,
+                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.5f),  // Border subtle
+                    shape = CircleShape
+                )
+                .clickable { 
+                    if (!isUploading) {
+                        onImageClick()  // Selalu panggil callback untuk dialog pilihan
+                    }
+                }
                 .background(surfaceColor, CircleShape)
         ) {
-            if (imageUrl.isNullOrEmpty()) {
+            if (imageModel == null) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -267,35 +358,63 @@ private fun ProfileImageSection(
                     )
                 }
             } else {
+                // AsyncImage dengan ImageRequest untuk force refresh cache
                 AsyncImage(
-                    model = imageUrl,
+                    model = ImageRequest.Builder(context)
+                        .data(imageModel)
+                        .crossfade(true)
+                        .build(),
                     contentDescription = "Profile Image",
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize(),
+                    onSuccess = { 
+                        // Callback saat image dari URL berhasil dimuat
+                        // Ini trigger untuk clear localImageFile
+                        if (imageModel is String && localImageFile != null) {
+                            onImageLoaded?.invoke()
+                        }
+                    }
                 )
             }
             
-            // Edit icon overlay with shadow effect
-            Box(
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .size(48.dp)
-                    .background(onPrimaryColor, CircleShape)
-                    .padding(2.dp),
-                contentAlignment = Alignment.Center
-            ) {
+            // Loading indicator saat upload
+            if (isUploading) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(primaryColor, CircleShape),
+                        .background(Color.Black.copy(alpha = 0.5f), CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Edit,
-                        contentDescription = "Edit",
-                        tint = onPrimaryColor,
-                        modifier = Modifier.size(22.dp)
+                    CircularProgressIndicator(
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.size(40.dp)
                     )
+                }
+            }
+            
+            // Edit icon overlay
+            if (!isUploading) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .size(48.dp)
+                        .background(MaterialTheme.colorScheme.surface, CircleShape)
+                        .padding(2.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(primaryColor, CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = "Edit",
+                            tint = MaterialTheme.colorScheme.onPrimary,
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
                 }
             }
         }
@@ -763,6 +882,95 @@ private fun ErrorContent(
             Text("Coba Lagi")
         }
     }
+}
+
+@Composable
+private fun PhotoOptionsDialog(
+    hasPhoto: Boolean,
+    onDismiss: () -> Unit,
+    onUploadClick: () -> Unit,
+    onViewClick: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = "Foto Profil",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+        },
+        text = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                // Upload/Ganti Foto button
+                Card(
+                    onClick = onUploadClick,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = if (hasPhoto) Icons.Default.Edit else Icons.Default.CameraAlt,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = if (hasPhoto) "Ganti Foto" else "Upload Foto",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
+                }
+
+                // Lihat Foto button (hanya jika ada foto)
+                if (hasPhoto) {
+                    Card(
+                        onClick = onViewClick,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer
+                        )
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Visibility,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSecondaryContainer
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text(
+                                text = "Lihat Foto",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {},
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Batal")
+            }
+        }
+    )
 }
 
 // Helper Functions

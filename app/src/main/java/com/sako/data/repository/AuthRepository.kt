@@ -231,7 +231,15 @@ class AuthRepository private constructor(
     fun updateProfileImage(imageFile: File): Flow<Resource<UpdateProfileResponse>> = flow {
         emit(Resource.Loading)
         try {
-            val requestImageFile = imageFile.asRequestBody("image/jpeg".toMediaType())
+            // Tentukan MIME type berdasarkan extension
+            val mimeType = when (imageFile.extension.lowercase()) {
+                "jpg", "jpeg" -> "image/jpeg"
+                "png" -> "image/png"
+                "webp" -> "image/webp"
+                else -> "image/jpeg"  // Default ke JPEG
+            }
+            
+            val requestImageFile = imageFile.asRequestBody(mimeType.toMediaType())
             val multipartBody = MultipartBody.Part.createFormData(
                 "image",
                 imageFile.name,
