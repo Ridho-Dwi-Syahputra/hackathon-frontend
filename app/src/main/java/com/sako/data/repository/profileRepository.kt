@@ -238,4 +238,115 @@ class ProfileRepository(
             emit(Resource.Error(e.message ?: "Terjadi kesalahan koneksi"))
         }
     }.flowOn(Dispatchers.IO)
+
+    // ============================================================================
+    // BADGE FUNCTIONS
+    // ============================================================================
+
+    /**
+     * Get all badges dengan status (owned/locked) dan progress
+     * Endpoint: GET /api/badges
+     */
+    fun getAllBadges(): Flow<Resource<com.sako.data.remote.response.BadgeListData>> = flow {
+        emit(Resource.Loading)
+        
+        try {
+            val response = apiService.getAllBadges()
+            
+            if (response.success) {
+                emit(Resource.Success(response.data))
+            } else {
+                emit(Resource.Error(response.message ?: "Gagal memuat badge"))
+            }
+        } catch (e: retrofit2.HttpException) {
+            val errorMessage = when (e.code()) {
+                401 -> "Sesi Anda telah berakhir"
+                500 -> "Terjadi kesalahan pada server"
+                else -> e.message() ?: "Terjadi kesalahan"
+            }
+            emit(Resource.Error(errorMessage))
+        } catch (e: Exception) {
+            emit(Resource.Error(e.message ?: "Terjadi kesalahan koneksi"))
+        }
+    }.flowOn(Dispatchers.IO)
+
+    /**
+     * Get user's earned badges
+     * Endpoint: GET /api/badges/user
+     */
+    fun getUserBadges(): Flow<Resource<List<com.sako.data.remote.response.Badge>>> = flow {
+        emit(Resource.Loading)
+        
+        try {
+            val response = apiService.getUserBadges()
+            
+            if (response.success) {
+                emit(Resource.Success(response.data))
+            } else {
+                emit(Resource.Error(response.message ?: "Gagal memuat badge"))
+            }
+        } catch (e: Exception) {
+            emit(Resource.Error(e.message ?: "Terjadi kesalahan"))
+        }
+    }.flowOn(Dispatchers.IO)
+
+    /**
+     * Get unviewed badges (untuk popup)
+     * Endpoint: GET /api/badges/unviewed
+     */
+    fun getUnviewedBadges(): Flow<Resource<List<com.sako.data.remote.response.Badge>>> = flow {
+        emit(Resource.Loading)
+        
+        try {
+            val response = apiService.getUnviewedBadges()
+            
+            if (response.success) {
+                emit(Resource.Success(response.data))
+            } else {
+                emit(Resource.Error(response.message ?: "Gagal memuat badge"))
+            }
+        } catch (e: Exception) {
+            emit(Resource.Error(e.message ?: "Terjadi kesalahan"))
+        }
+    }.flowOn(Dispatchers.IO)
+
+    /**
+     * Mark badge as viewed
+     * Endpoint: POST /api/badges/:badgeId/view
+     */
+    fun markBadgeAsViewed(badgeId: String): Flow<Resource<Boolean>> = flow {
+        emit(Resource.Loading)
+        
+        try {
+            val response = apiService.markBadgeAsViewed(badgeId)
+            
+            if (response.success) {
+                emit(Resource.Success(true))
+            } else {
+                emit(Resource.Error(response.message))
+            }
+        } catch (e: Exception) {
+            emit(Resource.Error(e.message ?: "Terjadi kesalahan"))
+        }
+    }.flowOn(Dispatchers.IO)
+
+    /**
+     * Mark all badges as viewed
+     * Endpoint: POST /api/badges/view-all
+     */
+    fun markAllBadgesAsViewed(): Flow<Resource<Boolean>> = flow {
+        emit(Resource.Loading)
+        
+        try {
+            val response = apiService.markAllBadgesAsViewed()
+            
+            if (response.success) {
+                emit(Resource.Success(true))
+            } else {
+                emit(Resource.Error(response.message))
+            }
+        } catch (e: Exception) {
+            emit(Resource.Error(e.message ?: "Terjadi kesalahan"))
+        }
+    }.flowOn(Dispatchers.IO)
 }

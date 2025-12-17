@@ -35,7 +35,8 @@ fun QuizResultScreen(
 ) {
     val submitState by viewModel.submitState.collectAsState()
     val quizResult by viewModel.quizResult.collectAsState()
-    var showBadgeDialog by remember { mutableStateOf<Pair<String, String>?>(null) }
+    var showBadgeDialog by remember { mutableStateOf(false) }
+    var currentBadgeIndex by remember { mutableStateOf(0) }
 
     // Debug logging
     LaunchedEffect(attemptId, quizResult, submitState) {
@@ -44,13 +45,17 @@ fun QuizResultScreen(
         println("🔍 QuizResultScreen - submitState: ${submitState?.javaClass?.simpleName}")
         quizResult?.let {
             println("🔍 QuizResultScreen - Result data: isPassed=${it.isPassed}, score=${it.scorePoints}, xp=${it.xpEarned}")
+            println("🏆 QuizResultScreen - Badges earned: ${it.badgesEarned?.size ?: 0}")
         }
     }
 
-    // Show badges earned dialog
+    // Show badges earned dialog - tampilkan semua badge satu per satu
     LaunchedEffect(quizResult) {
-        quizResult?.badgesEarned?.firstOrNull()?.let { badge ->
-            showBadgeDialog = Pair(badge.name, badge.description ?: "")
+        quizResult?.badgesEarned?.let { badges ->
+            if (badges.isNotEmpty()) {
+                currentBadgeIndex = 0
+                showBadgeDialog = true
+            }
         }
     }
 
@@ -175,14 +180,22 @@ fun QuizResultScreen(
         }
     }
 
-    // Badge Earned Dialog
-    showBadgeDialog?.let { (name, description) ->
+    // Badge Earned Dialogs - tampilkan semua badge satu per satu
+    val badges = quizResult?.badgesEarned
+    if (showBadgeDialog && badges != null && badges.isNotEmpty() && currentBadgeIndex < badges.size) {
+        val currentBadge = badges[currentBadgeIndex]
         BadgeEarnedDialog(
-            badgeName = name,
-            badgeDescription = description,
-            badgeImageUrl = null,
+            badgeName = currentBadge.name,
+            badgeDescription = currentBadge.description ?: "Selamat! Anda mendapatkan badge baru!",
+            badgeImageUrl = currentBadge.imageUrl,
             onDismiss = {
-                showBadgeDialog = null
+                // Next badge atau close
+                if (currentBadgeIndex < badges.size - 1) {
+                    currentBadgeIndex++
+                } else {
+                    showBadgeDialog = false
+                    currentBadgeIndex = 0
+                }
             }
         )
     }

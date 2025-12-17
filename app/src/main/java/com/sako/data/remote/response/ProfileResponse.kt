@@ -104,3 +104,106 @@ data class NotificationPreferencesData(
     @SerializedName("notification_preferences")
     val notificationPreferences: com.sako.data.remote.request.NotificationPreferences
 )
+
+// ============================================================================
+// BADGE SYSTEM RESPONSES
+// ============================================================================
+
+// Response untuk GET /api/badges (All badges dengan status)
+data class AllBadgesResponse(
+    @SerializedName("success")
+    val success: Boolean,
+    
+    @SerializedName("message")
+    val message: String? = null,
+    
+    @SerializedName("data")
+    val data: BadgeListData
+)
+
+data class BadgeListData(
+    @SerializedName("owned")
+    val owned: List<Badge>,
+    
+    @SerializedName("locked")
+    val locked: List<Badge>,
+    
+    @SerializedName("progress")
+    val progress: Map<String, BadgeProgress>? = null,
+    
+    @SerializedName("totalBadges")
+    val totalBadges: Int,
+    
+    @SerializedName("earnedCount")
+    val earnedCount: Int
+)
+
+data class Badge(
+    @SerializedName("id")
+    val id: String,
+    
+    @SerializedName("name")
+    val name: String,
+    
+    @SerializedName("description")
+    val description: String?,
+    
+    @SerializedName("image_url")
+    val imageUrl: String?,
+    
+    @SerializedName("criteria_type")
+    val criteriaType: String,
+    
+    @SerializedName("is_earned")
+    val isEarned: Int? = null,
+    
+    @SerializedName("earned_at")
+    val earnedAt: String? = null,
+    
+    @SerializedName("is_viewed")
+    val isViewed: Int? = null
+)
+
+data class BadgeProgress(
+    @SerializedName("current")
+    val current: Int,
+    
+    @SerializedName("target")
+    val target: Int,
+    
+    @SerializedName("percentage")
+    val percentage: Float
+)
+
+// Response untuk GET /api/badges/user (User's badges)
+data class UserBadgesResponse(
+    @SerializedName("success")
+    val success: Boolean,
+    
+    @SerializedName("message")
+    val message: String? = null,
+    
+    @SerializedName("data")
+    val data: List<Badge>
+)
+
+// Response untuk GET /api/badges/unviewed
+data class UnviewedBadgesResponse(
+    @SerializedName("success")
+    val success: Boolean,
+    
+    @SerializedName("message")
+    val message: String? = null,
+    
+    @SerializedName("data")
+    val data: List<Badge>
+)
+
+// Response untuk POST /api/badges/:id/view
+data class BadgeViewResponse(
+    @SerializedName("success")
+    val success: Boolean,
+    
+    @SerializedName("message")
+    val message: String
+)

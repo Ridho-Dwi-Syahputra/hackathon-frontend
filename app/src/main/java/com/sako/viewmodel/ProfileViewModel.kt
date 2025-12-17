@@ -3,6 +3,7 @@ package com.sako.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sako.data.remote.response.BadgeItem
+import com.sako.data.remote.response.BadgeListData
 import com.sako.data.remote.response.ProfileUserData
 import com.sako.data.remote.response.UserStats
 import com.sako.data.repository.AuthRepository
@@ -37,6 +38,10 @@ class ProfileViewModel(
 
     private val _uiState = MutableStateFlow(ProfileUiState(isLoading = true))
     val uiState: StateFlow<ProfileUiState> = _uiState.asStateFlow()
+
+    // Badge state untuk BadgeListScreen
+    private val _badgeState = MutableStateFlow<Resource<BadgeListData>>(Resource.Loading)
+    val badgeState: StateFlow<Resource<BadgeListData>> = _badgeState.asStateFlow()
 
     init {
         loadUserProfile()
@@ -298,6 +303,52 @@ class ProfileViewModel(
                         _uiState.value = _uiState.value.copy(isLoading = true)
                     }
                 }
+            }
+        }
+    }
+
+    // ============================================================================
+    // BADGE FUNCTIONS
+    // ============================================================================
+    
+    /**
+     * Load all badges (owned dan locked) untuk BadgeListScreen
+     */
+    fun loadAllBadges() {
+        viewModelScope.launch {
+            _badgeState.value = Resource.Loading
+            try {
+                profileRepository.getAllBadges().collect { resource ->
+                    _badgeState.value = resource
+                }
+            } catch (e: Exception) {
+                _badgeState.value = Resource.Error(e.message ?: "Gagal memuat badge")
+            }
+        }
+    }
+
+    /**
+     * Mark badge as viewed (setelah ditampilkan popup)
+     */
+    fun markBadgeAsViewed(badgeId: String) {
+        viewModelScope.launch {
+            try {
+                profileRepository.markBadgeAsViewed(badgeId).collect { /* ignore result */ }
+            } catch (e: Exception) {
+                android.util.Log.e("ProfileViewModel", "Error marking badge as viewed", e)
+            }
+        }
+    }
+
+    /**
+     * Mark all badges as viewed
+     */
+    fun markAllBadgesAsViewed() {
+        viewModelScope.launch {
+            try {
+                profileRepository.markAllBadgesAsViewed().collect { /* ignore result */ }
+            } catch (e: Exception) {
+                android.util.Log.e("ProfileViewModel", "Error marking all badges as viewed", e)
             }
         }
     }

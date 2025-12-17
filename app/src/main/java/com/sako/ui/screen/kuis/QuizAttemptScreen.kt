@@ -17,6 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.sako.data.remote.response.QuizSubmitResponse
 import com.sako.ui.components.*
 import com.sako.ui.theme.SakoPrimary
 import com.sako.ui.theme.SakoAccent
@@ -58,12 +59,26 @@ fun QuizAttemptScreen(
 
     // Handle submit success -> navigate to result
     LaunchedEffect(submitState) {
-        if (submitState is Resource.Success) {
-            val attemptId = (submitState as Resource.Success).data.data.attemptId
-            println("🚀 QuizAttemptScreen - Navigating to result with attemptId: $attemptId")
-            println("🚀 QuizAttemptScreen - Result data: ${(submitState as Resource.Success).data.data}")
-            onNavigateToResult(attemptId)
-            // Jangan clear submitState di sini agar data masih available di ResultScreen
+        println("🔍 QuizAttemptScreen - submitState changed: ${submitState?.javaClass?.simpleName}")
+        when (val state = submitState) {
+            is Resource.Success -> {
+                val response = state.data
+                val attemptId = response.data.attemptId
+                println("✅ QuizAttemptScreen - Submit success, navigating to result")
+                println("🚀 attemptId: $attemptId")
+                println("🚀 isPassed: ${response.data.isPassed}")
+                println("🚀 scorePoints: ${response.data.scorePoints}")
+                onNavigateToResult(attemptId)
+            }
+            is Resource.Error -> {
+                println("❌ QuizAttemptScreen - Submit error: ${state.error}")
+            }
+            is Resource.Loading -> {
+                println("⏳ QuizAttemptScreen - Submit loading...")
+            }
+            null -> {
+                // Initial state
+            }
         }
     }
 

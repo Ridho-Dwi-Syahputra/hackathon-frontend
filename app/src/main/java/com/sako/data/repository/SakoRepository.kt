@@ -291,7 +291,7 @@ class SakoRepository private constructor(
 
     // ========== Badges ==========
 
-    fun getAllBadges(): Flow<Resource<CategoryListResponse>> = flow {
+    fun getAllBadges(): Flow<Resource<AllBadgesResponse>> = flow {
         emit(Resource.Loading)
         try {
             val response = apiService.getAllBadges()
@@ -304,7 +304,7 @@ class SakoRepository private constructor(
         }
     }
 
-    fun getUserBadges(): Flow<Resource<CategoryListResponse>> = flow {
+    fun getUserBadges(): Flow<Resource<UserBadgesResponse>> = flow {
         emit(Resource.Loading)
         try {
             val response = apiService.getUserBadges()

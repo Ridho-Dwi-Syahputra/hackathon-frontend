@@ -140,10 +140,19 @@ interface ApiService {
     // ========== Badge Endpoints ==========
 
     @GET("badges")
-    suspend fun getAllBadges(): CategoryListResponse
+    suspend fun getAllBadges(): AllBadgesResponse
 
-    @GET("users/badges")
-    suspend fun getUserBadges(): CategoryListResponse
+    @GET("badges/user")
+    suspend fun getUserBadges(): UserBadgesResponse
+
+    @GET("badges/unviewed")
+    suspend fun getUnviewedBadges(): UnviewedBadgesResponse
+
+    @POST("badges/{badgeId}/view")
+    suspend fun markBadgeAsViewed(@Path("badgeId") badgeId: String): BadgeViewResponse
+
+    @POST("badges/view-all")
+    suspend fun markAllBadgesAsViewed(): BadgeViewResponse
 
     // ========== Video Endpoints ==========
 
