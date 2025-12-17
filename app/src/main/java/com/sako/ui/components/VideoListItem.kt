@@ -113,8 +113,15 @@ fun VideoListItem(
 }
 
 private fun extractVideoId(url: String?): String {
-    if (url == null) return ""
-    return url.substringAfterLast("/").takeIf { it.isNotBlank() }
-        ?: url.substringAfterLast("v=").takeIf { it.isNotBlank() }
-        ?: ""
+    if (url.isNullOrBlank()) return ""
+    return try {
+        when {
+            url.contains("youtu.be/") -> url.substringAfter("youtu.be/").substringBefore("?")
+            url.contains("watch?v=") -> url.substringAfter("v=").substringBefore("&")
+            url.contains("/embed/") -> url.substringAfter("/embed/").substringBefore("?")
+            else -> url.substringAfterLast("/").substringBefore("?")
+        }
+    } catch (e: Exception) {
+        ""
+    }
 }

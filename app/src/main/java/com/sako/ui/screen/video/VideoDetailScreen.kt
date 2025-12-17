@@ -170,7 +170,7 @@ fun VideoDetailScreen(
                                                         ViewGroup.LayoutParams.MATCH_PARENT
                                                     )
                                                     
-                                                    // WebView settings seperti referensi + tambahan untuk video playback
+                                                    // WebView settings 
                                                     settings.apply {
                                                         javaScriptEnabled = true
                                                         domStorageEnabled = true
@@ -187,7 +187,7 @@ fun VideoDetailScreen(
                                                         }
                                                     }
                                                     
-                                                    // Iframe string seperti referensi
+                                                    // Iframe string untuk embed video di WebView
                                                     val video = "<iframe width=\"100%\" height=\"100%\" src=\"https://www.youtube.com/embed/$youtubeVideoId\" title=\"YouTube video player\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" allowfullscreen></iframe>"
                                                     
                                                     println("VideoDetailScreen - Loading video: $youtubeVideoId")
@@ -196,7 +196,7 @@ fun VideoDetailScreen(
                                                 }
                                             },
                                             update = { webView ->
-                                                // Optional: update if needed
+                                                // Optional
                                             }
                                         )
                                     } else {
@@ -306,11 +306,38 @@ fun VideoDetailScreen(
                                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                                 color = MaterialTheme.colorScheme.onSurface
                             )
+                            
+                            // Debug info
+                            androidx.compose.runtime.LaunchedEffect(videos.value) {
+                                println("VideoDetailScreen - 🎬 VIDEOS DEBUG:")
+                                println("  - Total videos: ${videos.value.size}")
+                                println("  - Current video ID: ${video.id}")
+                                println("  - All video IDs: ${videos.value.map { it.id }}")
+                                val filtered = videos.value.filter { it.id != video.id }
+                                println("  - Filtered (excluding current): ${filtered.size}")
+                                filtered.forEach {
+                                    println("    • ${it.judul} (${it.id})")
+                                }
+                            }
                         }
 
                         // Related Videos List
+                        val relatedVideos = videos.value.filter { it.id != video.id }
+                        
+                        // Show message if no related videos
+                        if (relatedVideos.isEmpty()) {
+                            item {
+                                Text(
+                                    text = "Belum ada video lainnya",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                                )
+                            }
+                        }
+                        
                         items(
-                            items = videos.value.filter { it.id != video.id },
+                            items = relatedVideos,
                             key = { it.id }
                         ) { relatedVideo ->
                             VideoListItem(

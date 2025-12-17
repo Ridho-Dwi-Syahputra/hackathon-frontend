@@ -323,9 +323,17 @@ class SakoFirebaseMessagingService : FirebaseMessagingService() {
             "quiz" -> NotificationCompat.PRIORITY_HIGH
             else -> NotificationCompat.PRIORITY_DEFAULT
         }
+        
+        // Determine icon based on module
+        val iconRes = when (data["module"]) {
+            "video" -> R.drawable.video  // Video player icon
+            "map" -> R.drawable.map      // Map/location icon
+            "quiz" -> R.drawable.ic_notification  // Quiz icon (default for now)
+            else -> R.drawable.ic_notification    // Default icon
+        }
 
         val notificationBuilder = NotificationCompat.Builder(this, channelId)
-            .setSmallIcon(R.drawable.ic_notification)
+            .setSmallIcon(iconRes)  // Dynamic icon based on module
             .setContentTitle(title)
             .setContentText(body)
             .setAutoCancel(true)
