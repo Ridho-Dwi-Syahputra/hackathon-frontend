@@ -7,6 +7,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -178,13 +179,10 @@ fun ProfileScreen(
 private fun ProfileTopBar(
     onSettingsClick: () -> Unit
 ) {
-    val primaryColor = MaterialTheme.colorScheme.primary
-    val onPrimaryColor = MaterialTheme.colorScheme.onPrimary
-    
     Surface(
         modifier = Modifier.fillMaxWidth(),
         tonalElevation = 0.dp,
-        shadowElevation = 0.dp,
+        shadowElevation = SakoDimensions.elevationMedium,
         color = Color.Transparent
     ) {
         Box(
@@ -194,8 +192,8 @@ private fun ProfileTopBar(
                 .background(
                     brush = Brush.verticalGradient(
                         colors = listOf(
-                            primaryColor,
-                            primaryColor.copy(alpha = 0.8f)
+                            SakoPrimary,
+                            SakoPrimary.copy(alpha = 0.9f)
                         )
                     )
                 )
@@ -203,22 +201,22 @@ private fun ProfileTopBar(
         Row(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 16.dp),
+                .padding(horizontal = SakoDimensions.paddingNormal),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                text = "Detail Profil",
-                color = onPrimaryColor,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.SemiBold
+                text = "Profil Saya",
+                color = Color.White,
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold
             )
             IconButton(onClick = onSettingsClick) {
                 Icon(
                     imageVector = Icons.Default.Settings,
                     contentDescription = "Settings",
-                    tint = onPrimaryColor,
-                    modifier = Modifier.size(24.dp)
+                    tint = Color.White,
+                    modifier = Modifier.size(SakoDimensions.iconMedium)
                 )
             }
         }
@@ -391,31 +389,30 @@ private fun ProfileImageSection(
                     )
                 }
             }
-            
-            // Edit icon overlay
-            if (!isUploading) {
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .size(48.dp)
-                        .background(MaterialTheme.colorScheme.surface, CircleShape)
-                        .padding(2.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(primaryColor, CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Edit,
-                            contentDescription = "Edit",
-                            tint = MaterialTheme.colorScheme.onPrimary,
-                            modifier = Modifier.size(22.dp)
-                        )
-                    }
-                }
+        }
+        
+        // Edit icon overlay - DIPINDAHKAN KE LUAR AGAR TIDAK TER-CLIP
+        if (!isUploading) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .offset(x = 56.dp, y = 56.dp)  // Posisi di pojok kanan bawah (160dp/2 - 48dp/2 = 56dp)
+                    .size(48.dp)
+                    .background(MaterialTheme.colorScheme.surface, CircleShape)
+                    .border(2.dp, primaryColor, CircleShape)
+                    .clickable { 
+                        if (!isUploading) {
+                            onImageClick()
+                        }
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Edit,
+                    contentDescription = "Edit",
+                    tint = primaryColor,
+                    modifier = Modifier.size(24.dp)
+                )
             }
         }
     }
@@ -434,86 +431,85 @@ private fun UserInfoCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = SakoSpacing.Medium),
-        shape = MaterialTheme.shapes.extraLarge,
+            .padding(horizontal = SakoDimensions.paddingLarge),
+        shape = SakoCustomShapes.userLevelCard,
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFFFFF8E1)
+            containerColor = SakoAccent
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = SakoDimensions.elevationMedium)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(SakoSpacing.ExtraLarge),
+                .padding(SakoDimensions.paddingLarge),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Full Name with larger, bolder text
             Text(
-                text = fullName.uppercase(),
-                style = MaterialTheme.typography.headlineLarge,
+                text = fullName,
+                style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.ExtraBold,
-                color = Color(0xFF1A1A1A),
+                color = PrimaryRedDark,
                 textAlign = TextAlign.Center
             )
 
-            VerticalSpacer(height = SakoSpacing.ExtraSmall)
+            VerticalSpacer(height = SakoDimensions.paddingExtraSmall)
 
             // Email below name
             Text(
                 text = email,
                 style = MaterialTheme.typography.bodyMedium,
-                color = Color(0xFF666666),
+                color = PrimaryRedDark.copy(alpha = 0.7f),
                 fontWeight = FontWeight.Medium
             )
 
-            VerticalSpacer(height = SakoSpacing.Medium)
+            VerticalSpacer(height = SakoDimensions.spacingNormal)
 
             // Divider
             HorizontalDivider(
-                modifier = Modifier.padding(horizontal = SakoSpacing.Large),
-                color = Color(0xFFE0E0E0),
-                thickness = 1.dp
+                modifier = Modifier.padding(horizontal = SakoDimensions.paddingLarge),
+                color = PrimaryRedDark.copy(alpha = 0.2f),
+                thickness = SakoDimensions.dividerThickness
             )
 
-            VerticalSpacer(height = SakoSpacing.Medium)
+            VerticalSpacer(height = SakoDimensions.spacingNormal)
 
-            // Total Points with gradient background
-            Card(
-                modifier = Modifier.fillMaxWidth(0.85f),
-                shape = MaterialTheme.shapes.medium,
-                colors = CardDefaults.cardColors(
-                    containerColor = PrimaryRed.copy(alpha = 0.1f)
-                )
+            // Total Points with semi-transparent background
+            Surface(
+                modifier = Modifier.fillMaxWidth(0.9f),
+                shape = SakoCustomShapes.statCard,
+                color = Color.White.copy(alpha = 0.3f)
             ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = SakoSpacing.Medium, horizontal = SakoSpacing.Large),
+                        .padding(vertical = SakoDimensions.paddingMedium, horizontal = SakoDimensions.paddingLarge),
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.star),
+                    Icon(
+                        imageVector = Icons.Default.Star,
                         contentDescription = "Points",
+                        tint = Color(0xFFFFD700),
                         modifier = Modifier.size(28.dp)
                     )
-                    Spacer(modifier = Modifier.width(SakoSpacing.Small))
+                    Spacer(modifier = Modifier.width(SakoDimensions.paddingSmall))
                     Text(
-                        text = "Total Point: ",
+                        text = "Total Poin: ",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Medium,
-                        color = Color(0xFF424242)
+                        color = PrimaryRedDark
                     )
                     Text(
                         text = totalPoints.toString(),
-                        style = MaterialTheme.typography.titleLarge,
+                        style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.ExtraBold,
-                        color = PrimaryRed
+                        color = PrimaryRedDark
                     )
                 }
             }
 
-            VerticalSpacer(height = SakoSpacing.Large)
+            VerticalSpacer(height = SakoDimensions.spacingLarge)
 
             // Level Info with enhanced styling
             levelInfo?.let { level ->
@@ -523,18 +519,18 @@ private fun UserInfoCard(
                 ) {
                     // Level badge
                     Surface(
-                        shape = MaterialTheme.shapes.small,
-                        color = PrimaryRed,
-                        modifier = Modifier.padding(bottom = SakoSpacing.Small)
+                        shape = SakoCustomShapes.filterChip,
+                        color = SakoPrimary,
+                        modifier = Modifier.padding(bottom = SakoDimensions.paddingSmall)
                     ) {
                         Text(
                             text = "Level ${level.currentLevel}",
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.Bold,
-                            color = White,
+                            color = Color.White,
                             modifier = Modifier.padding(
-                                horizontal = SakoSpacing.Medium,
-                                vertical = SakoSpacing.Small
+                                horizontal = SakoDimensions.paddingNormal,
+                                vertical = SakoDimensions.paddingSmall
                             )
                         )
                     }
@@ -543,10 +539,10 @@ private fun UserInfoCard(
                         text = level.levelName,
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
-                        color = PrimaryRed
+                        color = PrimaryRedDark
                     )
 
-                    VerticalSpacer(height = SakoSpacing.Large)
+                    VerticalSpacer(height = SakoDimensions.spacingNormal)
 
                     // Progress Bar with enhanced design
                     Column(modifier = Modifier.fillMaxWidth(0.9f)) {
@@ -556,7 +552,7 @@ private fun UserInfoCard(
                             progress = level.progressPercent
                         )
 
-                        VerticalSpacer(height = SakoSpacing.Small)
+                        VerticalSpacer(height = SakoDimensions.paddingSmall)
 
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -566,30 +562,30 @@ private fun UserInfoCard(
                                 text = "${level.currentLevelXp} XP",
                                 style = MaterialTheme.typography.bodySmall,
                                 fontWeight = FontWeight.SemiBold,
-                                color = Color(0xFF666666)
+                                color = PrimaryRedDark.copy(alpha = 0.7f)
                             )
                             Text(
                                 text = "${level.nextLevelXp} XP",
                                 style = MaterialTheme.typography.bodySmall,
                                 fontWeight = FontWeight.SemiBold,
-                                color = Color(0xFF666666)
+                                color = PrimaryRedDark.copy(alpha = 0.7f)
                             )
                         }
                     }
                 }
             } ?: run {
                 Surface(
-                    shape = MaterialTheme.shapes.small,
-                    color = PrimaryRed
+                    shape = SakoCustomShapes.filterChip,
+                    color = SakoPrimary
                 ) {
                     Text(
-                        text = "Level 1 - Newbie",
+                        text = "Level 1 - Pemula",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = White,
+                        color = Color.White,
                         modifier = Modifier.padding(
-                            horizontal = SakoSpacing.Large,
-                            vertical = SakoSpacing.Medium
+                            horizontal = SakoDimensions.paddingLarge,
+                            vertical = SakoDimensions.paddingMedium
                         )
                     )
                 }
@@ -608,20 +604,20 @@ private fun XPProgressBar(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(20.dp)
-                .clip(SakoCustomShapes.progressBar)
-                .background(Color(0xFFE8E8E8))
+                .height(24.dp)
+                .clip(RoundedCornerShape(SakoDimensions.paddingMedium))
+                .background(Color.White.copy(alpha = 0.4f))
         ) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth(progress.coerceIn(0f, 1f))
                     .fillMaxHeight()
-                    .clip(SakoCustomShapes.progressBar)
+                    .clip(RoundedCornerShape(SakoDimensions.paddingMedium))
                     .background(
                         brush = Brush.horizontalGradient(
                             colors = listOf(
-                                PrimaryRed,
-                                PrimaryRed.copy(alpha = 0.7f)
+                                SakoPrimary,
+                                PrimaryRedDark
                             )
                         )
                     )
@@ -633,9 +629,9 @@ private fun XPProgressBar(
             ) {
                 Text(
                     text = "${(progress * 100).toInt()}%",
-                    style = MaterialTheme.typography.labelSmall,
+                    style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Bold,
-                    color = if (progress > 0.5f) White else Color(0xFF424242)
+                    color = if (progress > 0.4f) Color.White else PrimaryRedDark
                 )
             }
         }
@@ -651,49 +647,49 @@ private fun StatsSection(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = SakoSpacing.Medium),
-        shape = MaterialTheme.shapes.large,
+            .padding(horizontal = SakoDimensions.paddingLarge),
+        shape = SakoCustomShapes.featureCard,
         colors = CardDefaults.cardColors(
-            containerColor = White
+            containerColor = MaterialTheme.colorScheme.surface
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = SakoDimensions.elevationMedium)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(SakoSpacing.Large),
+                .padding(SakoDimensions.paddingLarge),
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
             StatItem(
-                icon = Icons.Default.CheckCircle,
-                iconColor = Color(0xFF4CAF50),
+                icon = Icons.Default.Quiz,
+                iconColor = SakoAccent,
                 value = totalAttempts.toString(),
                 label = "Kuis",
-                backgroundColor = Color(0xFFE8F5E9)
+                backgroundColor = MaterialTheme.colorScheme.secondaryContainer
             )
             VerticalDivider(
                 modifier = Modifier.height(70.dp),
-                color = Color(0xFFE0E0E0),
-                thickness = 1.dp
+                color = MaterialTheme.colorScheme.outlineVariant,
+                thickness = SakoDimensions.dividerThickness
             )
             StatItem(
-                icon = Icons.Default.Done,
-                iconColor = Color(0xFF2196F3),
+                icon = Icons.Default.EmojiEvents,
+                iconColor = Color(0xFFFFD700),
                 value = completedLevels.toString(),
                 label = "Level",
-                backgroundColor = Color(0xFFE3F2FD)
+                backgroundColor = MaterialTheme.colorScheme.tertiaryContainer
             )
             VerticalDivider(
                 modifier = Modifier.height(70.dp),
-                color = Color(0xFFE0E0E0),
-                thickness = 1.dp
+                color = MaterialTheme.colorScheme.outlineVariant,
+                thickness = SakoDimensions.dividerThickness
             )
             StatItem(
                 icon = Icons.Default.Place,
-                iconColor = PrimaryRed,
+                iconColor = SakoPrimary,
                 value = visitedPlaces.toString(),
                 label = "Tempat",
-                backgroundColor = Color(0xFFFFEBEE)
+                backgroundColor = MaterialTheme.colorScheme.primaryContainer
             )
         }
     }
@@ -753,48 +749,48 @@ private fun ActionButtonsSection(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = SakoSpacing.Medium),
-        shape = MaterialTheme.shapes.large,
+            .padding(horizontal = SakoDimensions.paddingLarge),
+        shape = SakoCustomShapes.featureCard,
         colors = CardDefaults.cardColors(
-            containerColor = White
+            containerColor = MaterialTheme.colorScheme.surface
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = SakoDimensions.elevationMedium)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(SakoSpacing.Medium)
+                .padding(SakoDimensions.paddingNormal)
         ) {
             ActionButton(
                 icon = Icons.Default.Edit,
-                label = "Edit Profile",
+                label = "Edit Profil",
                 onClick = onEditProfileClick,
-                iconColor = Color(0xFF2196F3),
-                backgroundColor = Color(0xFFE3F2FD)
+                iconColor = SakoPrimary,
+                backgroundColor = MaterialTheme.colorScheme.primaryContainer
             )
             HorizontalDivider(
-                modifier = Modifier.padding(vertical = SakoSpacing.Small),
-                color = Color(0xFFE0E0E0),
-                thickness = 1.dp
+                modifier = Modifier.padding(vertical = SakoDimensions.paddingSmall),
+                color = MaterialTheme.colorScheme.outlineVariant,
+                thickness = SakoDimensions.dividerThickness
             )
-            ActionButton(
-                icon = Icons.Default.Star,
-                label = "Lihat Badge",
-                onClick = onBadgesClick,
-                iconColor = Color(0xFFFFC107),
-                backgroundColor = Color(0xFFFFF8E1)
-            )
-            HorizontalDivider(
-                modifier = Modifier.padding(vertical = SakoSpacing.Small),
-                color = Color(0xFFE0E0E0),
-                thickness = 1.dp
-            )
+            // ActionButton(
+            //     icon = Icons.Default.Star,
+            //     label = "Lihat Badge",
+            //     onClick = onBadgesClick,
+            //     iconColor = Color(0xFFFFC107),
+            //     backgroundColor = Color(0xFFFFF8E1)
+            // )
+            // HorizontalDivider(
+            //     modifier = Modifier.padding(vertical = SakoDimensions.paddingSmall),
+            //     color = MaterialTheme.colorScheme.outlineVariant,
+            //     thickness = SakoDimensions.dividerThickness
+            // )
             ActionButton(
                 icon = Icons.Default.Lock,
-                label = "Ubah Password",
+                label = "Ubah Kata Sandi",
                 onClick = onChangePasswordClick,
-                iconColor = PrimaryRed,
-                backgroundColor = Color(0xFFFFEBEE)
+                iconColor = SakoPrimary,
+                backgroundColor = MaterialTheme.colorScheme.primaryContainer
             )
         }
     }
@@ -812,13 +808,13 @@ private fun ActionButton(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() }
-            .padding(vertical = SakoSpacing.Medium, horizontal = SakoSpacing.Small),
+            .padding(vertical = SakoDimensions.paddingMedium, horizontal = SakoDimensions.paddingSmall),
         verticalAlignment = Alignment.CenterVertically
     ) {
         // Icon with background
         Box(
             modifier = Modifier
-                .size(44.dp)
+                .size(SakoDimensions.iconExtraLarge)
                 .background(backgroundColor, CircleShape),
             contentAlignment = Alignment.Center
         ) {
@@ -826,25 +822,22 @@ private fun ActionButton(
                 imageVector = icon,
                 contentDescription = label,
                 tint = iconColor,
-                modifier = Modifier.size(24.dp)
+                modifier = Modifier.size(SakoDimensions.iconMedium)
             )
         }
-        
-        Spacer(modifier = Modifier.width(SakoSpacing.Medium))
-        
+        Spacer(modifier = Modifier.width(SakoDimensions.spacingNormal))
         Text(
             text = label,
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold,
-            color = Color(0xFF1A1A1A),
+            color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.weight(1f)
         )
-        
         Icon(
-            imageVector = Icons.Default.KeyboardArrowRight,
+            imageVector = Icons.Default.ChevronRight,
             contentDescription = "Navigate",
-            tint = Color(0xFF9E9E9E),
-            modifier = Modifier.size(24.dp)
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(SakoDimensions.iconMedium)
         )
     }
 }

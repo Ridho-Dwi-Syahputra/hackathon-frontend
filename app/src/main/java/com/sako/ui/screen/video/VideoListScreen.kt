@@ -59,6 +59,11 @@ import com.sako.ui.theme.SakoCustomTypography
 import com.sako.ui.components.SakoTextInputField
 import com.sako.ui.components.BackgroundImage
 import com.sako.ui.theme.SakoTheme
+import com.sako.ui.theme.SakoPrimary
+import com.sako.ui.theme.SakoAccent
+import com.sako.ui.theme.PrimaryRedDark
+import com.sako.ui.theme.SakoDimensions
+import com.sako.ui.theme.SakoCustomShapes
 import java.util.Locale
 
 /**
@@ -79,9 +84,7 @@ fun VideoListScreen(
     SakoTheme {
         BackgroundImage {
             Box(modifier = modifier.fillMaxSize()) {
-			Column(modifier = Modifier
-				.fillMaxSize()
-				.padding(16.dp)) {
+			Column(modifier = Modifier.fillMaxSize()) {
 
 				// Search bar with voice search
 				var query by remember { mutableStateOf("") }
@@ -101,8 +104,10 @@ fun VideoListScreen(
 				}
 				
 				Row(
-					modifier = Modifier.fillMaxWidth(),
-					horizontalArrangement = Arrangement.spacedBy(8.dp),
+					modifier = Modifier
+						.fillMaxWidth()
+						.padding(horizontal = SakoDimensions.paddingLarge, vertical = SakoDimensions.paddingSmall),
+					horizontalArrangement = Arrangement.spacedBy(SakoDimensions.spacingMedium),
 					verticalAlignment = Alignment.CenterVertically
 				) {
 					SakoTextInputField(
@@ -142,9 +147,10 @@ fun VideoListScreen(
 
 				androidx.compose.foundation.lazy.LazyRow(
 					modifier = Modifier
-						.padding(top = 12.dp, bottom = 12.dp)
+						.padding(vertical = SakoDimensions.paddingExtraSmall)
 						.fillMaxWidth(),
-					horizontalArrangement = Arrangement.spacedBy(6.dp)
+					contentPadding = PaddingValues(horizontal = SakoDimensions.paddingLarge),
+					horizontalArrangement = Arrangement.spacedBy(SakoDimensions.paddingSmall)
 				) {
 					items(categories) { cat ->
 						val isSelected = cat == selectedCategory
@@ -154,25 +160,24 @@ fun VideoListScreen(
 							label = {
 								Text(
 									text = cat,
-									fontWeight = if (isSelected) androidx.compose.ui.text.font.FontWeight.SemiBold else androidx.compose.ui.text.font.FontWeight.Normal
+									fontWeight = if (isSelected) androidx.compose.ui.text.font.FontWeight.Bold else androidx.compose.ui.text.font.FontWeight.Normal
 								)
 							},
 							colors = FilterChipDefaults.filterChipColors(
-								selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-								selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
+								selectedContainerColor = SakoAccent,
+								selectedLabelColor = PrimaryRedDark,
 								containerColor = MaterialTheme.colorScheme.surface,
 								labelColor = MaterialTheme.colorScheme.onSurface
 							),
 							border = FilterChipDefaults.filterChipBorder(
 								enabled = true,
 								selected = isSelected,
-							borderColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-								selectedBorderColor = MaterialTheme.colorScheme.primary,
-								borderWidth = 1.dp,
-								selectedBorderWidth = 1.dp
+						borderColor = if (isSelected) SakoPrimary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+							selectedBorderColor = SakoPrimary,
+								borderWidth = SakoDimensions.dividerThickness,
+								selectedBorderWidth = SakoDimensions.dividerThicknessThick
 							),
-							shape = RoundedCornerShape(20.dp),
-							modifier = Modifier.padding(end = 2.dp)
+							shape = SakoCustomShapes.filterChip
 						)
 					}
 				}
@@ -198,8 +203,8 @@ fun VideoListScreen(
 				LazyColumn(
 					state = listState, 
 					modifier = Modifier.fillMaxWidth(),
-					contentPadding = PaddingValues(bottom = 80.dp), // Space untuk FAB
-					verticalArrangement = Arrangement.spacedBy(12.dp)
+					contentPadding = PaddingValues(start = SakoDimensions.paddingLarge, top = SakoDimensions.paddingExtraSmall, end = SakoDimensions.paddingLarge, bottom = 0.dp),
+					verticalArrangement = Arrangement.spacedBy(SakoDimensions.paddingNormal)
 				) {
 					if (filtered.isEmpty()) {
 						// Empty state
@@ -239,8 +244,8 @@ fun VideoListScreen(
 								colors = CardDefaults.cardColors(
 									containerColor = MaterialTheme.colorScheme.surface
 								),
-								elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-								shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
+								elevation = CardDefaults.cardElevation(defaultElevation = SakoDimensions.elevationMedium),
+								shape = SakoCustomShapes.videoCard
 							) {
 								Column(modifier = Modifier.fillMaxWidth()) {
 									// Thumbnail dengan play icon (16:9 ratio)
@@ -254,7 +259,7 @@ fun VideoListScreen(
 											contentDescription = video.judul,
 											modifier = Modifier
 												.fillMaxSize()
-											.clip(androidx.compose.foundation.shape.RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)),
+											.clip(SakoCustomShapes.videoThumbnail),
 											contentScale = androidx.compose.ui.layout.ContentScale.Crop
 										)
 										
@@ -262,17 +267,17 @@ fun VideoListScreen(
 										Surface(
 											modifier = Modifier
 												.align(Alignment.Center)
-												.size(56.dp),
+												.size(SakoDimensions.fabSize),
 											color = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
-											shape = androidx.compose.foundation.shape.RoundedCornerShape(28.dp)
+											shape = SakoCustomShapes.playButtonOverlay
 										) {
 											Icon(
 												imageVector = androidx.compose.material.icons.Icons.Default.PlayCircleOutline,
 												contentDescription = "Play",
 												modifier = Modifier
 													.fillMaxSize()
-													.padding(12.dp),
-												tint = MaterialTheme.colorScheme.primary
+													.padding(SakoDimensions.paddingMedium),
+												tint = SakoPrimary
 											)
 										}
 									}
@@ -281,7 +286,7 @@ fun VideoListScreen(
 									Column(
 										modifier = Modifier
 											.fillMaxWidth()
-											.padding(12.dp)
+											.padding(SakoDimensions.paddingMedium)
 									) {
 										// Title
 										Text(
@@ -293,18 +298,18 @@ fun VideoListScreen(
 											color = MaterialTheme.colorScheme.onSurface
 										)
 										
-										Spacer(modifier = Modifier.height(8.dp))
+										Spacer(modifier = Modifier.height(SakoDimensions.paddingSmall))
 										
 										// Category badge
 										Surface(
 											color = MaterialTheme.colorScheme.primaryContainer,
-											shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
+											shape = androidx.compose.foundation.shape.RoundedCornerShape(SakoDimensions.paddingMedium)
 										) {
 											Text(
 												text = video.kategori,
 												style = MaterialTheme.typography.labelMedium,
 												color = MaterialTheme.colorScheme.onPrimaryContainer,
-												modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+												modifier = Modifier.padding(horizontal = SakoDimensions.paddingSmall, vertical = SakoDimensions.paddingExtraSmall)
 											)
 										}
 									}

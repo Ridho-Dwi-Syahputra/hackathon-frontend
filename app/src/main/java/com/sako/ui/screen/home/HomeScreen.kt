@@ -31,6 +31,9 @@ import com.sako.data.remote.response.*
 import com.sako.ui.components.BackgroundImage
 import com.sako.ui.theme.SakoPrimary
 import com.sako.ui.theme.SakoAccent
+import com.sako.ui.theme.PrimaryRedDark
+import com.sako.ui.theme.SakoDimensions
+import com.sako.ui.theme.SakoCustomShapes
 import com.sako.utils.Resource
 import com.sako.viewmodel.HomeViewModel
 import com.sako.viewmodel.ViewModelFactory
@@ -46,42 +49,43 @@ fun HomeScreen(
     )
 ) {
     val dashboardState by viewModel.dashboardState.collectAsStateWithLifecycle()
-    Scaffold(
-            containerColor = MaterialTheme.colorScheme.background,
-            topBar = {
-                TopAppBar(
-                    title = {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Image(
-                                painter = painterResource(id = R.drawable.sako),
-                                contentDescription = "Logo SAKO",
-                                modifier = Modifier.size(20.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "SAKO",
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 20.sp
-                            )
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color.Transparent,
-                        titleContentColor = MaterialTheme.colorScheme.onSurface
-                    ),
-                    modifier = Modifier.height(56.dp)
-                )
-            }
-        ) { paddingValues ->
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-            ) {
+    BackgroundImage {
+        Scaffold(
+                containerColor = Color.Transparent,
+                topBar = {
+                    TopAppBar(
+                        title = {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Image(
+                                    painter = painterResource(id = R.drawable.sako),
+                                    contentDescription = "Logo SAKO",
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "SAKO",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 20.sp
+                                )
+                            }
+                        },
+                        colors = TopAppBarDefaults.topAppBarColors(
+                            containerColor = Color.Transparent,
+                            titleContentColor = MaterialTheme.colorScheme.onSurface
+                        ),
+                        modifier = Modifier.height(56.dp)
+                    )
+                }
+            ) { paddingValues ->
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues)
+                ) {
                 when (dashboardState) {
                     is Resource.Loading -> {
                         Box(
@@ -137,8 +141,7 @@ fun HomeScreen(
                     }
                 }
             }
-        }
-}
+        }    }}
 
 @Composable
 fun HomeContent(
@@ -151,8 +154,8 @@ fun HomeContent(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+            .padding(SakoDimensions.paddingLarge),
+        verticalArrangement = Arrangement.spacedBy(SakoDimensions.spacingLarge)
     ) {
         // User Level & XP Card
         UserLevelCard(levelInfo = dashboardData.userStats.level)
@@ -165,7 +168,7 @@ fun HomeContent(
             totalXp = dashboardData.userStats.totalXp
         )
         
-        // Feature Cards
+        // Feature Cards dengan spacing lebih jelas
         Text(
             text = "Fitur Utama",
             style = MaterialTheme.typography.titleLarge,
@@ -175,7 +178,7 @@ fun HomeContent(
 
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(SakoDimensions.spacingNormal)
         ) {
             FeatureCard(
                 title = "Kuis",
@@ -224,80 +227,82 @@ fun HomeContent(
 fun UserLevelCard(levelInfo: LevelInfo) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
+        shape = SakoCustomShapes.userLevelCard,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer
-        )
+            containerColor = SakoPrimary
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = SakoDimensions.elevationMedium)
     ) {
-        Column(
-            modifier = Modifier.padding(20.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(SakoDimensions.paddingLarge),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            // Level Badge
-            Surface(
-                shape = MaterialTheme.shapes.small,
-                color = SakoPrimary,
-                modifier = Modifier.padding(bottom = 8.dp)
-            ) {
-                Text(
-                    text = "Level ${levelInfo.currentLevel}",
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onPrimary,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                )
-            }
-            
-            Text(
-                text = levelInfo.title,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            // Progress Bar
-            Column(modifier = Modifier.fillMaxWidth()) {
-                LinearProgressIndicator(
-                    progress = { (levelInfo.progressPercentage / 100f) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(8.dp)
-                        .clip(RoundedCornerShape(4.dp)),
-                    color = Color(0xFFE8D5B5),
-                    trackColor = Color(0xFF8B4545)
-                )
-                
-                Spacer(modifier = Modifier.height(8.dp))
-                
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
+            Column(modifier = Modifier.weight(1f)) {
+                // Level Badge
+                Surface(
+                    shape = RoundedCornerShape(SakoDimensions.cornerRadiusLarge),
+                    color = SakoAccent,
+                    modifier = Modifier.padding(bottom = SakoDimensions.paddingSmall)
                 ) {
                     Text(
-                        text = "${levelInfo.xpCurrent} XP",
-                        style = MaterialTheme.typography.bodySmall,
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color.White
-                    )
-                    Text(
-                        text = "${levelInfo.xpForNextLevel} XP",
-                        style = MaterialTheme.typography.bodySmall,
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color.White
+                        text = "Level ${levelInfo.currentLevel}",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = PrimaryRedDark,
+                        modifier = Modifier.padding(horizontal = SakoDimensions.paddingMedium, vertical = SakoDimensions.paddingExtraSmall)
                     )
                 }
                 
                 Text(
-                    text = "${levelInfo.progressPercentage}% menuju level berikutnya",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.White.copy(alpha = 0.9f),
-                    modifier = Modifier
-                        .align(Alignment.CenterHorizontally)
-                        .padding(top = 4.dp)
+                    text = levelInfo.title,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
                 )
             }
+            
+            // XP Display
+            Column(
+                horizontalAlignment = Alignment.End
+            ) {
+                Text(
+                    text = "${levelInfo.xpCurrent}",
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = SakoAccent
+                )
+                Text(
+                    text = "/ ${levelInfo.xpForNextLevel} XP",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.White.copy(alpha = 0.8f)
+                )
+            }
+        }
+        
+        // Progress Bar
+        Column(modifier = Modifier.padding(horizontal = SakoDimensions.paddingLarge, vertical = 0.dp)) {
+            LinearProgressIndicator(
+                progress = { (levelInfo.progressPercentage / 100f) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(6.dp)
+                    .clip(RoundedCornerShape(SakoDimensions.paddingSmall)),
+                color = SakoAccent,
+                trackColor = Color.White.copy(alpha = 0.2f)
+            )
+            
+            Spacer(modifier = Modifier.height(SakoDimensions.paddingSmall))
+            
+            Text(
+                text = "${levelInfo.progressPercentage}% menuju level berikutnya",
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.White.copy(alpha = 0.7f)
+            )
+            
+            Spacer(modifier = Modifier.height(SakoDimensions.paddingMedium))
         }
     }
 }
@@ -309,90 +314,131 @@ fun StatsOverviewCard(
     mapStats: MapStats,
     totalXp: Int
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainer
-        )
-    ) {
-        Column(
-            modifier = Modifier.padding(20.dp)
+    Column {
+        // Header dengan icon
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(bottom = SakoDimensions.spacingNormal)
         ) {
+            Icon(
+                imageVector = Icons.Default.EmojiEvents,
+                contentDescription = "Trophy",
+                tint = SakoAccent,
+                modifier = Modifier.size(SakoDimensions.iconMedium)
+            )
+            Spacer(modifier = Modifier.width(SakoDimensions.paddingSmall))
             Text(
                 text = "Statistik Saya",
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface
             )
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                StatItemWithIcon(
-                    icon = Icons.Default.Quiz,
-                    label = "Kuis Selesai",
-                    value = "${quizStats.completed}"
-                )
-                StatItemWithIcon(
-                    icon = Icons.Default.VideoLibrary,
-                    label = "Video Favorit",
-                    value = "${videoStats.favorites}"
-                )
-                StatItemWithIcon(
-                    icon = Icons.Default.Map,
-                    label = "Tempat Dikunjungi",
-                    value = "${mapStats.placesVisited}"
-                )
-            }
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                StatItem(label = "Total Poin", value = quizStats.totalPoints)
-                StatItem(label = "Total XP", value = "$totalXp")
-                StatItem(label = "Koleksi Video", value = "${videoStats.collections}")
-            }
+        }
+        
+        // Grid 3 kolom - baris pertama
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(SakoDimensions.spacingMedium)
+        ) {
+            CompactStatCard(
+                icon = Icons.Default.Quiz,
+                iconColor = SakoAccent,
+                value = "${quizStats.completed}",
+                label = "Kuis Selesai",
+                modifier = Modifier.weight(1f)
+            )
+            CompactStatCard(
+                icon = Icons.Default.Favorite,
+                iconColor = SakoPrimary,
+                value = "${videoStats.favorites}",
+                label = "Video Favorit",
+                modifier = Modifier.weight(1f)
+            )
+            CompactStatCard(
+                icon = Icons.Default.Place,
+                iconColor = SakoAccent,
+                value = "${mapStats.placesVisited}",
+                label = "Tempat Dikunjungi",
+                modifier = Modifier.weight(1f)
+            )
+        }
+        
+        Spacer(modifier = Modifier.height(SakoDimensions.spacingMedium))
+        
+        // Grid 3 kolom - baris kedua
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(SakoDimensions.spacingMedium)
+        ) {
+            CompactStatCard(
+                icon = Icons.Default.Star,
+                iconColor = Color(0xFFFFD700), // Gold
+                value = "${quizStats.totalPoints}",
+                label = "Total Poin",
+                modifier = Modifier.weight(1f)
+            )
+            CompactStatCard(
+                icon = Icons.Default.EmojiEvents,
+                iconColor = Color(0xFF4CAF50), // Green
+                value = "$totalXp",
+                label = "Total XP",
+                modifier = Modifier.weight(1f)
+            )
+            CompactStatCard(
+                icon = Icons.Default.VideoLibrary,
+                iconColor = SakoAccent,
+                value = "${videoStats.collections}",
+                label = "Koleksi Video",
+                modifier = Modifier.weight(1f)
+            )
         }
     }
 }
 
 @Composable
-fun StatItemWithIcon(
+fun CompactStatCard(
     icon: ImageVector,
+    iconColor: Color,
+    value: String,
     label: String,
-    value: String
+    modifier: Modifier = Modifier
 ) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally
+    Card(
+        modifier = modifier,
+        shape = SakoCustomShapes.statCard,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = SakoDimensions.elevationSmall)
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = label,
-            tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(32.dp)
-        )
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = value,
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center
-        )
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(SakoDimensions.paddingNormal),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = label,
+                tint = iconColor,
+                modifier = Modifier.size(28.dp)
+            )
+            Spacer(modifier = Modifier.height(SakoDimensions.paddingSmall))
+            Text(
+                text = value,
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
     }
 }
 
@@ -430,7 +476,7 @@ fun RecentActivitiesSection(activities: List<RecentQuizAttempt>) {
 fun ActivityItem(activity: RecentQuizAttempt) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
@@ -485,10 +531,10 @@ fun PopularVideosSection(videos: List<PopularVideo>) {
             color = MaterialTheme.colorScheme.onSurface
         )
         
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(SakoDimensions.spacingMedium))
         
         LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(SakoDimensions.spacingMedium),
             modifier = Modifier.fillMaxWidth()
         ) {
             val videoList = videos.take(5)
@@ -503,21 +549,21 @@ fun PopularVideosSection(videos: List<PopularVideo>) {
 fun PopularVideoCard(video: PopularVideo) {
     Card(
         modifier = Modifier.width(200.dp),
-        shape = RoundedCornerShape(12.dp),
+        shape = SakoCustomShapes.popularVideoCard,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = SakoDimensions.elevationSmall)
     ) {
         Column(
-            modifier = Modifier.padding(12.dp)
+            modifier = Modifier.padding(SakoDimensions.paddingMedium)
         ) {
             // Thumbnail placeholder
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(100.dp)
-                    .clip(RoundedCornerShape(8.dp))
+                    .clip(SakoCustomShapes.statCard)
                     .background(MaterialTheme.colorScheme.primaryContainer),
                 contentAlignment = Alignment.Center
             ) {
@@ -529,7 +575,7 @@ fun PopularVideoCard(video: PopularVideo) {
                 )
             }
             
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(SakoDimensions.paddingSmall))
             
             Text(
                 text = video.judul,
@@ -540,7 +586,7 @@ fun PopularVideoCard(video: PopularVideo) {
                 overflow = TextOverflow.Ellipsis
             )
             
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(SakoDimensions.paddingExtraSmall))
             
             Row(
                 verticalAlignment = Alignment.CenterVertically
@@ -548,10 +594,10 @@ fun PopularVideoCard(video: PopularVideo) {
                 Icon(
                     imageVector = Icons.Default.Favorite,
                     contentDescription = "Likes",
-                    tint = SakoPrimary,
-                    modifier = Modifier.size(16.dp)
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(SakoDimensions.iconExtraSmall)
                 )
-                Spacer(modifier = Modifier.width(4.dp))
+                Spacer(modifier = Modifier.width(SakoDimensions.paddingExtraSmall))
                 Text(
                     text = "${video.favoriteCount}",
                     style = MaterialTheme.typography.bodySmall,
@@ -572,11 +618,11 @@ fun PopularPlacesSection(places: List<PopularPlace>) {
             color = MaterialTheme.colorScheme.onSurface
         )
         
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(SakoDimensions.spacingMedium))
         
         places.take(3).forEach { place ->
             PopularPlaceCard(place = place)
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(SakoDimensions.paddingSmall))
         }
     }
 }
@@ -585,16 +631,16 @@ fun PopularPlacesSection(places: List<PopularPlace>) {
 fun PopularPlaceCard(place: PopularPlace) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
+        shape = SakoCustomShapes.featureCard,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = SakoDimensions.elevationSmall)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(SakoDimensions.paddingNormal),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -619,7 +665,7 @@ fun PopularPlaceCard(place: PopularPlace) {
                     Icon(
                         imageVector = Icons.Default.Star,
                         contentDescription = "Rating",
-                        tint = SakoAccent,
+                        tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
@@ -634,7 +680,7 @@ fun PopularPlaceCard(place: PopularPlace) {
             Icon(
                 imageVector = Icons.Default.Place,
                 contentDescription = "Place",
-                tint = SakoPrimary,
+                tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(32.dp)
             )
         }
@@ -651,10 +697,10 @@ fun AchievementsSection(achievements: List<Achievement>) {
             color = MaterialTheme.colorScheme.onSurface
         )
         
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(SakoDimensions.spacingMedium))
         
         LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(SakoDimensions.spacingMedium),
             modifier = Modifier.fillMaxWidth()
         ) {
             val achievementList = achievements.take(5)
@@ -669,16 +715,16 @@ fun AchievementsSection(achievements: List<Achievement>) {
 fun AchievementCard(achievement: Achievement) {
     Card(
         modifier = Modifier.width(120.dp),
-        shape = RoundedCornerShape(12.dp),
+        shape = SakoCustomShapes.featureCard,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = SakoDimensions.elevationSmall)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(SakoDimensions.paddingNormal),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Box(
@@ -718,33 +764,59 @@ fun FeatureCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val subtitle = when (title) {
+        "Kuis" -> "Uji pengetahuanmu"
+        "Video" -> "Belajar sambil nonton"
+        "Lokasi Budaya" -> "Jelajahi tempat bersejarah"
+        else -> "Mulai eksplorasi"
+    }
+    
     Card(
         onClick = onClick,
         modifier = modifier,
-        shape = RoundedCornerShape(12.dp),
+        shape = SakoCustomShapes.featureCard,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+            containerColor = SakoAccent
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = SakoDimensions.elevationMedium)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(20.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .padding(SakoDimensions.paddingLarge)
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = title,
-                tint = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.size(48.dp)
-            )
-            Spacer(modifier = Modifier.height(8.dp))
+            // Icon container dengan background semi-transparent
+            Surface(
+                shape = RoundedCornerShape(SakoDimensions.paddingMedium),
+                color = Color.White.copy(alpha = 0.2f),
+                modifier = Modifier.size(SakoDimensions.iconExtraLarge)
+            ) {
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = title,
+                        tint = PrimaryRedDark,
+                        modifier = Modifier.size(SakoDimensions.iconMedium)
+                    )
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(SakoDimensions.spacingMedium))
+            
             Text(
                 text = title,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onSurface
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = PrimaryRedDark
+            )
+            
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodyMedium,
+                color = PrimaryRedDark.copy(alpha = 0.7f)
             )
         }
     }
@@ -767,5 +839,20 @@ fun StatItem(label: String, value: String) {
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = androidx.compose.ui.text.style.TextAlign.Center
         )
+    }
+}
+
+// Helper function untuk extract YouTube video ID dari URL
+private fun extractVideoId(url: String?): String {
+    if (url.isNullOrBlank()) return ""
+    return try {
+        when {
+            url.contains("youtu.be/") -> url.substringAfter("youtu.be/").substringBefore("?")
+            url.contains("watch?v=") -> url.substringAfter("v=").substringBefore("&")
+            url.contains("/embed/") -> url.substringAfter("/embed/").substringBefore("?")
+            else -> url.substringAfterLast("/").substringBefore("?")
+        }
+    } catch (e: Exception) {
+        ""
     }
 }

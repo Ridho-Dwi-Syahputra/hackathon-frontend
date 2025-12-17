@@ -37,12 +37,12 @@ val SuccessGreenLight = Color(0xFF81C784)
 // Light Theme Colors
 val md_theme_light_primary = PrimaryRed
 val md_theme_light_onPrimary = White
-val md_theme_light_primaryContainer = Color(0xFFFFDAD6)
-val md_theme_light_onPrimaryContainer = Color(0xFF410002)
+val md_theme_light_primaryContainer = Color(0xFFE8D5B5) // Warna krem untuk container
+val md_theme_light_onPrimaryContainer = Color(0xFF3D1410) // Coklat tua untuk teks
 val md_theme_light_secondary = AccentYellow
-val md_theme_light_onSecondary = Black
-val md_theme_light_secondaryContainer = Color(0xFFFFEDC8)
-val md_theme_light_onSecondaryContainer = Color(0xFF2B1700)
+val md_theme_light_onSecondary = Color(0xFF3D2800) // Lebih gelap untuk kontras
+val md_theme_light_secondaryContainer = Color(0xFFFFF3E0) // Kuning sangat terang untuk container
+val md_theme_light_onSecondaryContainer = Color(0xFF3D2800) // Coklat untuk teks
 val md_theme_light_tertiary = Color(0xFF775652)
 val md_theme_light_onTertiary = White
 val md_theme_light_tertiaryContainer = Color(0xFFFFDAD6)

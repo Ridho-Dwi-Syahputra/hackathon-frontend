@@ -23,16 +23,23 @@ val SakoShapes = Shapes(
 
 // Custom shapes untuk komponen spesifik SAKO
 object SakoCustomShapes {
-    // Untuk quiz card
+    // Home Screen Components
+    val userLevelCard = RoundedCornerShape(24.dp)
+    val featureCard = RoundedCornerShape(20.dp)
+    val statCard = RoundedCornerShape(16.dp)
+    val popularVideoCard = RoundedCornerShape(16.dp)
+    
+    // Video Screen Components
+    val videoCard = RoundedCornerShape(20.dp)
+    val videoThumbnail = RoundedCornerShape(20.dp)
+    val filterChip = RoundedCornerShape(24.dp)
+    val playButtonOverlay = RoundedCornerShape(28.dp)
+    
+    // Quiz Components
     val quizCard = RoundedCornerShape(12.dp)
 
-    // Untuk video thumbnail
-    val videoThumbnail = RoundedCornerShape(8.dp)
-
-    // Untuk badge/achievement
+    // Badge & Profile
     val badge = RoundedCornerShape(50) // Circular
-
-    // Untuk profile image
     val profileImage = RoundedCornerShape(50) // Circular
 
     // Untuk map location card

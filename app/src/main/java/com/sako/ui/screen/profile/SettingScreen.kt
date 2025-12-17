@@ -120,8 +120,8 @@ fun SettingScreen(
                     .background(
                         brush = Brush.verticalGradient(
                             colors = listOf(
-                                MaterialTheme.colorScheme.primary,
-                                MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+                                SakoPrimary,
+                                SakoPrimary.copy(alpha = 0.9f)
                             )
                         )
                     )
@@ -130,13 +130,14 @@ fun SettingScreen(
                 IconButton(
                     onClick = onNavigateBack,
                     modifier = Modifier
-                        .padding(top = 8.dp, start = 4.dp)
+                        .padding(top = SakoDimensions.paddingSmall, start = SakoDimensions.paddingExtraSmall)
                         .align(Alignment.TopStart)
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Back",
-                        tint = MaterialTheme.colorScheme.onPrimary
+                        tint = Color.White,
+                        modifier = Modifier.size(SakoDimensions.iconMedium)
                     )
                 }
                 
@@ -148,7 +149,7 @@ fun SettingScreen(
                             .fillMaxWidth()
                             .align(Alignment.Center)
                             .alpha(animatedAlpha)
-                            .padding(horizontal = 16.dp)
+                            .padding(horizontal = SakoDimensions.paddingNormal)
                     ) {
                         // Profile Image - scales with scroll
                         val imageSize by animateFloatAsState(
@@ -180,22 +181,22 @@ fun SettingScreen(
                         }
                         
                         if (scrollProgress < 0.7f) {
-                            Spacer(modifier = Modifier.height(12.dp))
+                            Spacer(modifier = Modifier.height(SakoDimensions.paddingMedium))
                             
                             Text(
-                                text = profile.fullName.uppercase(),
+                                text = profile.fullName,
                                 fontSize = animatedTitleSize.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onPrimary,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = Color.White,
                                 textAlign = TextAlign.Center
                             )
                             
-                            Spacer(modifier = Modifier.height(4.dp))
+                            Spacer(modifier = Modifier.height(SakoDimensions.paddingExtraSmall))
                             
                             Text(
                                 text = profile.email,
                                 fontSize = 14.sp,
-                                color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f),
+                                color = Color.White.copy(alpha = 0.9f),
                                 textAlign = TextAlign.Center
                             )
                         }
@@ -205,10 +206,10 @@ fun SettingScreen(
                 // Title when collapsed
                 if (scrollProgress > 0.5f) {
                     Text(
-                        text = "Setting",
-                        fontSize = 20.sp,
+                        text = "Pengaturan",
+                        style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onPrimary,
+                        color = Color.White,
                         modifier = Modifier
                             .align(Alignment.CenterStart)
                             .padding(start = 56.dp)
@@ -222,10 +223,10 @@ fun SettingScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .verticalScroll(scrollState)
-                    .padding(16.dp)
+                    .padding(SakoDimensions.paddingLarge)
             ) {
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(SakoDimensions.paddingSmall))
 
                 // Notification Preferences Section
                 SettingSection(
@@ -283,7 +284,7 @@ fun SettingScreen(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(SakoDimensions.spacingNormal))
 
                 // Keamanan Section
                 SettingSection(
@@ -296,7 +297,7 @@ fun SettingScreen(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(SakoDimensions.spacingNormal))
 
                 // Tentang Aplikasi Section
                 SettingSection(
@@ -309,7 +310,7 @@ fun SettingScreen(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(SakoDimensions.spacingLarge))
 
                 // Logout Button
                 Button(
@@ -318,33 +319,33 @@ fun SettingScreen(
                         .fillMaxWidth()
                         .height(56.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.error
+                        containerColor = SakoPrimary
                     ),
-                    shape = RoundedCornerShape(12.dp),
+                    shape = SakoCustomShapes.featureCard,
                     enabled = !uiState.isLoading
                 ) {
                     if (uiState.isLoading) {
                         CircularProgressIndicator(
-                            modifier = Modifier.size(24.dp),
-                            color = White,
-                            strokeWidth = 2.dp
+                            modifier = Modifier.size(SakoDimensions.iconMedium),
+                            color = Color.White,
+                            strokeWidth = SakoDimensions.dividerThicknessThick
                         )
                     } else {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.Logout,
                             contentDescription = null,
-                            modifier = Modifier.size(24.dp)
+                            modifier = Modifier.size(SakoDimensions.iconMedium)
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(SakoDimensions.paddingSmall))
                         Text(
                             text = "Keluar",
-                            fontSize = 16.sp,
+                            style = MaterialTheme.typography.bodyLarge,
                             fontWeight = FontWeight.Bold
                         )
                     }
                 }
 
-                Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(SakoDimensions.spacingLarge))
             }
         }
 
@@ -356,13 +357,14 @@ fun SettingScreen(
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.Logout,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(48.dp)
+                        tint = SakoPrimary,
+                        modifier = Modifier.size(SakoDimensions.iconExtraLarge)
                     )
                 },
                 title = {
                     Text(
                         text = "Konfirmasi Keluar",
+                        style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center
                     )
@@ -384,10 +386,11 @@ fun SettingScreen(
                         },
                         enabled = !uiState.isLoading,
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary
-                        )
+                            containerColor = SakoPrimary
+                        ),
+                        shape = SakoCustomShapes.featureCard
                     ) {
-                        Text("Keluar")
+                        Text("Keluar", fontWeight = FontWeight.Bold)
                     }
                 },
                 dismissButton = {
@@ -414,24 +417,24 @@ fun SettingSection(
     ) {
         Text(
             text = title,
-            fontSize = 14.sp,
+            style = MaterialTheme.typography.labelLarge,
             fontWeight = FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(bottom = 8.dp, start = 4.dp)
+            modifier = Modifier.padding(bottom = SakoDimensions.paddingSmall, start = SakoDimensions.paddingExtraSmall)
         )
         
         Card(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
+            shape = SakoCustomShapes.featureCard,
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surface
             ),
             elevation = CardDefaults.cardElevation(
-                defaultElevation = 2.dp
+                defaultElevation = SakoDimensions.elevationMedium
             )
         ) {
             Column(
-                modifier = Modifier.padding(vertical = 4.dp)
+                modifier = Modifier.padding(vertical = SakoDimensions.paddingExtraSmall)
             ) {
                 content()
             }
@@ -447,21 +450,20 @@ fun NotificationToggleItem(
     isEnabled: Boolean,
     onToggle: (Boolean) -> Unit
 ) {
-    val primaryColor = MaterialTheme.colorScheme.primary
-    val secondaryColor = MaterialTheme.colorScheme.secondary
+    val primaryColor = SakoPrimary
     val onSurface = MaterialTheme.colorScheme.onSurface
     
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(horizontal = SakoDimensions.paddingNormal, vertical = SakoDimensions.paddingMedium),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
             modifier = Modifier
                 .size(40.dp)
                 .clip(CircleShape)
-                .background(primaryColor.copy(alpha = 0.1f)),
+                .background(primaryColor.copy(alpha = 0.15f)),
             contentAlignment = Alignment.Center
         ) {
             when {
@@ -470,24 +472,24 @@ fun NotificationToggleItem(
                         imageVector = icon,
                         contentDescription = null,
                         tint = primaryColor,
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(SakoDimensions.iconMedium)
                     )
                 }
                 iconRes != null -> {
                     Image(
                         painter = painterResource(id = iconRes),
                         contentDescription = null,
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(SakoDimensions.iconMedium)
                     )
                 }
             }
         }
         
-        Spacer(modifier = Modifier.width(16.dp))
+        Spacer(modifier = Modifier.width(SakoDimensions.paddingNormal))
         
         Text(
             text = title,
-            fontSize = 16.sp,
+            style = MaterialTheme.typography.bodyLarge,
             color = onSurface,
             modifier = Modifier.weight(1f)
         )
@@ -516,14 +518,14 @@ fun SettingMenuItem(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 16.dp),
+            .padding(horizontal = SakoDimensions.paddingNormal, vertical = SakoDimensions.paddingNormal),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
             modifier = Modifier
                 .size(40.dp)
                 .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.secondary.copy(alpha = 0.3f)),
+                .background(SakoAccent.copy(alpha = 0.2f)),
             contentAlignment = Alignment.Center
         ) {
             when {
@@ -531,25 +533,25 @@ fun SettingMenuItem(
                     Icon(
                         imageVector = icon,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSecondaryContainer,
-                        modifier = Modifier.size(24.dp)
+                        tint = PrimaryRedDark,
+                        modifier = Modifier.size(SakoDimensions.iconMedium)
                     )
                 }
                 iconRes != null -> {
                     Image(
                         painter = painterResource(id = iconRes),
                         contentDescription = null,
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(SakoDimensions.iconMedium)
                     )
                 }
             }
         }
         
-        Spacer(modifier = Modifier.width(16.dp))
+        Spacer(modifier = Modifier.width(SakoDimensions.paddingNormal))
         
         Text(
             text = title,
-            fontSize = 16.sp,
+            style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.weight(1f)
         )
@@ -557,7 +559,8 @@ fun SettingMenuItem(
         Icon(
             imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(SakoDimensions.iconMedium)
         )
     }
 }
