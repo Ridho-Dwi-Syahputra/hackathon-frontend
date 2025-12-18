@@ -244,7 +244,7 @@ fun AboutSystemScreen(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "Dikembangkan dengan ❤️",
+                                text = "Dikembangkan oleh Kelompok 2 PTB A",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
