@@ -9,8 +9,15 @@ import com.sako.firebase.FirebaseHelper
 import com.sako.firebase.notifications.map.MapNotificationManager
 import com.sako.firebase.notifications.quiz.QuizNotificationManager
 import com.sako.firebase.notifications.video.VideoNotificationManager
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 
 class SakoApplication : Application() {
+
+    // Application scope for background initialization
+    private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     override fun onCreate() {
         super.onCreate()
@@ -18,28 +25,34 @@ class SakoApplication : Application() {
         // Initialize application-wide configurations
         Log.d("SakoApplication", "Application started")
 
-        // Initialize Firebase
+        // Initialize Firebase (lightweight, can be done on main thread)
         FirebaseHelper.initialize(this)
         
-        // Create notification channel for FCM
+        // Create notification channel for FCM (must be on main thread)
         createNotificationChannel()
         
-        // Initialize Module Notification Managers
-        Log.d("SakoApplication", "🔔 Initializing notification managers...")
-        
-        // Initialize Map Notifications
-        val mapNotificationManager = MapNotificationManager.getInstance(this)
-        mapNotificationManager.initializeMapNotifications()
-        
-        // Initialize Quiz Notifications
-        val quizNotificationManager = QuizNotificationManager.getInstance(this)
-        quizNotificationManager.initializeQuizNotifications()
-        
-        // Initialize Video Notifications
-        val videoNotificationManager = VideoNotificationManager.getInstance(this)
-        videoNotificationManager.initializeVideoNotifications()
-        
-        Log.d("SakoApplication", "✅ Firebase, notifications (Map, Quiz, Video) initialized")
+        // Move heavy initialization to background thread
+        applicationScope.launch {
+            Log.d("SakoApplication", "🔔 Initializing notification managers in background...")
+            
+            try {
+                // Initialize Map Notifications
+                val mapNotificationManager = MapNotificationManager.getInstance(this@SakoApplication)
+                mapNotificationManager.initializeMapNotifications()
+                
+                // Initialize Quiz Notifications
+                val quizNotificationManager = QuizNotificationManager.getInstance(this@SakoApplication)
+                quizNotificationManager.initializeQuizNotifications()
+                
+                // Initialize Video Notifications
+                val videoNotificationManager = VideoNotificationManager.getInstance(this@SakoApplication)
+                videoNotificationManager.initializeVideoNotifications()
+                
+                Log.d("SakoApplication", "✅ Notifications (Map, Quiz, Video) initialized in background")
+            } catch (e: Exception) {
+                Log.e("SakoApplication", "❌ Error initializing notifications", e)
+            }
+        }
 
         // TODO: Initialize Timber for logging (optional)
         // if (BuildConfig.DEBUG) {
