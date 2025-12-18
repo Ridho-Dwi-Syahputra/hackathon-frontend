@@ -50,98 +50,94 @@ fun HomeScreen(
 ) {
     val dashboardState by viewModel.dashboardState.collectAsStateWithLifecycle()
     BackgroundImage {
-        Scaffold(
-                containerColor = Color.Transparent,
-                topBar = {
-                    TopAppBar(
-                        title = {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.Center,
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Image(
-                                    painter = painterResource(id = R.drawable.sako),
-                                    contentDescription = "Logo SAKO",
-                                    modifier = Modifier.size(20.dp)
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = "SAKO",
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 20.sp
-                                )
-                            }
-                        },
-                        colors = TopAppBarDefaults.topAppBarColors(
-                            containerColor = Color.Transparent,
-                            titleContentColor = MaterialTheme.colorScheme.onSurface
-                        ),
-                        modifier = Modifier.height(56.dp)
+        Column(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            // Custom Header
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(SakoPrimary)
+                    .padding(top = 16.dp, bottom = 16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.sako),
+                        contentDescription = "Logo SAKO",
+                        modifier = Modifier.size(28.dp)
+                    )
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Text(
+                        text = "SAKO",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 24.sp,
+                        color = Color.White
                     )
                 }
-            ) { paddingValues ->
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues)
-                ) {
-                when (dashboardState) {
-                    is Resource.Loading -> {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            CircularProgressIndicator(color = SakoPrimary)
-                        }
+            }
+            
+            // Content
+            when (dashboardState) {
+                is Resource.Loading -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(color = SakoPrimary)
                     }
-                    
-                    is Resource.Success -> {
-                        val data = (dashboardState as Resource.Success<DashboardData>).data
-                        HomeContent(
-                            dashboardData = data,
-                            onNavigateToQuiz = onNavigateToQuiz,
-                            onNavigateToVideo = onNavigateToVideo,
-                            onNavigateToMap = onNavigateToMap
+                }
+                
+                is Resource.Success -> {
+                    val data = (dashboardState as Resource.Success<DashboardData>).data
+                    HomeContent(
+                        dashboardData = data,
+                        onNavigateToQuiz = onNavigateToQuiz,
+                        onNavigateToVideo = onNavigateToVideo,
+                        onNavigateToMap = onNavigateToMap
+                    )
+                }
+                
+                is Resource.Error -> {
+                    val errorMsg = (dashboardState as Resource.Error).error
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ErrorOutline,
+                            contentDescription = "Error",
+                            modifier = Modifier.size(64.dp),
+                            tint = MaterialTheme.colorScheme.error
                         )
-                    }
-                    
-                    is Resource.Error -> {
-                        val errorMsg = (dashboardState as Resource.Error).error
-                        Column(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(16.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = errorMsg,
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Button(
+                            onClick = { viewModel.retry() },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = SakoPrimary
+                            )
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.ErrorOutline,
-                                contentDescription = "Error",
-                                modifier = Modifier.size(64.dp),
-                                tint = MaterialTheme.colorScheme.error
-                            )
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Text(
-                                text = errorMsg,
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                            )
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Button(
-                                onClick = { viewModel.retry() },
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = SakoPrimary
-                                )
-                            ) {
-                                Text("Coba Lagi")
-                            }
+                            Text("Coba Lagi")
                         }
                     }
                 }
             }
-        }    }}
+        }
+    }
+}
 
 @Composable
 fun HomeContent(
@@ -344,7 +340,7 @@ fun StatsOverviewCard(
                 icon = Icons.Default.Quiz,
                 iconColor = SakoAccent,
                 value = "${quizStats.completed}",
-                label = "Kuis Selesai",
+                label = "Kuis Dikerjakan",
                 modifier = Modifier.weight(1f)
             )
             CompactStatCard(
@@ -765,7 +761,7 @@ fun FeatureCard(
     modifier: Modifier = Modifier
 ) {
     val subtitle = when (title) {
-        "Kuis" -> "Uji pengetahuanmu"
+        "Kuis" -> "Uji pengetahuan kebudayaan"
         "Video" -> "Belajar sambil nonton"
         "Lokasi Budaya" -> "Jelajahi tempat bersejarah"
         else -> "Mulai eksplorasi"

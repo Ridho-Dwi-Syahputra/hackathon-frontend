@@ -32,6 +32,7 @@ import com.sako.R
 import com.sako.ui.theme.SakoTheme
 import com.sako.ui.theme.SakoPrimary
 import com.sako.ui.theme.SakoAccent
+import com.sako.ui.theme.White
 
 /**
  * Fungsi helper untuk mendapatkan daftar item navigasi (tanpa center item)
@@ -94,8 +95,8 @@ fun BottomNav(
         // Bottom Navigation Bar
         NavigationBar(
             modifier = Modifier.fillMaxWidth(),
-            containerColor = Color.White,
-            contentColor = SakoPrimary,
+            containerColor = SakoPrimary,
+            contentColor = White,
             tonalElevation = 8.dp
         ) {
             items.forEachIndexed { index, item ->
@@ -141,9 +142,9 @@ fun BottomNav(
                         },
                         colors = NavigationBarItemDefaults.colors(
                             selectedIconColor = SakoPrimary,
-                            selectedTextColor = SakoPrimary,
-                            unselectedIconColor = Color.Gray,
-                            unselectedTextColor = Color.Gray,
+                            selectedTextColor = White,
+                            unselectedIconColor = White,
+                            unselectedTextColor = White,
                             indicatorColor = SakoAccent
                         )
                     )
