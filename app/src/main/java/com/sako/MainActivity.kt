@@ -53,9 +53,6 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         
-        // Initialize Firebase Configuration
-        initializeFirebase()
-        
         // Request notification permission for Android 13+
         requestNotificationPermission()
         
@@ -75,15 +72,6 @@ class MainActivity : ComponentActivity() {
         super.onNewIntent(intent)
         // Handle notification intents when app is already running
         handleNotificationIntent(intent)
-    }
-
-    private fun initializeFirebase() {
-        try {
-            FirebaseHelper.initialize(this)
-            android.util.Log.d("MainActivity", "Firebase initialized successfully")
-        } catch (e: Exception) {
-            android.util.Log.e("MainActivity", "Failed to initialize Firebase", e)
-        }
     }
 
     private fun requestNotificationPermission() {
@@ -137,16 +125,16 @@ class MainActivity : ComponentActivity() {
  */
 @Composable
 fun SakoApp() {
-    android.util.Log.d("SakoApp", "🎯 SakoApp started")
-    
     val context = LocalContext.current
     val navController = rememberNavController()
 
-    // Setup UserPreference dan ViewModelFactory (using singleton pattern)
-    val userPreference = UserPreference.getInstance(context.dataStore)
-    val viewModelFactory = ViewModelFactory.getInstance(context)
-
-    android.util.Log.d("SakoApp", "📱 UserPreference dan ViewModelFactory created")
+    // Setup UserPreference dan ViewModelFactory with remember to prevent recomposition overhead
+    val userPreference = androidx.compose.runtime.remember {
+        UserPreference.getInstance(context.dataStore)
+    }
+    val viewModelFactory = androidx.compose.runtime.remember {
+        ViewModelFactory.getInstance(context)
+    }
 
     // Firebase setup with automatic token handling
     LaunchedEffect(Unit) {

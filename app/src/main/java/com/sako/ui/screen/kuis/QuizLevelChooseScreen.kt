@@ -48,42 +48,31 @@ fun QuizLevelChooseScreen(
     }
 
     BackgroundImage {
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                title = {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxHeight()
-                            .offset(y = (-2).dp),
-                        contentAlignment = Alignment.CenterStart
-                    ) {
-                        Text(
-                            text = selectedCategory?.name ?: "Level Quiz",
-                            fontWeight = FontWeight.Bold,
-                            color = SakoPrimary,
-                            fontSize = 20.sp,
-                            maxLines = 1
-                        )
-                    }
-                },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Kembali",
-                            tint = SakoPrimary
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.White
-                ),
-                modifier = Modifier.height(56.dp)
-            )
-        },
-        containerColor = Color.Transparent
-    ) { paddingValues ->
+        Column(modifier = Modifier.fillMaxSize()) {
+            // Custom Top Bar dengan back button transparan
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = onNavigateBack) {
+                    Icon(
+                        imageVector = Icons.Default.ArrowBack,
+                        contentDescription = "Kembali",
+                        tint = SakoPrimary
+                    )
+                }
+                Text(
+                    text = selectedCategory?.name ?: "Level Quiz",
+                    fontWeight = FontWeight.Bold,
+                    color = SakoPrimary,
+                    fontSize = 20.sp,
+                    maxLines = 1,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
         when (levelsState) {
             is Resource.Loading -> {
                 LoadingScreen()
@@ -96,11 +85,9 @@ fun QuizLevelChooseScreen(
                     EmptyLevelsScreen()
                 } else {
                     LazyColumn(
-                        modifier = modifier
-                            .fillMaxSize()
-                            .padding(paddingValues),
-                        contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                        modifier = modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         // Category Progress Header
                         item {
@@ -117,8 +104,7 @@ fun QuizLevelChooseScreen(
                                 text = "Pilih level untuk memulai quiz",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = Color.Gray,
-                                fontSize = 18.sp,
-                                modifier = Modifier.padding(vertical = 8.dp)
+                                fontSize = 18.sp
                             )
                         }
 
@@ -147,10 +133,6 @@ fun QuizLevelChooseScreen(
                                 }
                             )
                         }
-
-                        item {
-                            Spacer(modifier = Modifier.height(16.dp))
-                        }
                     }
                 }
             }
@@ -162,7 +144,7 @@ fun QuizLevelChooseScreen(
                 )
             }
         }
-    } // Scaffold
+    } // Column
     } // BackgroundImage
 }
 

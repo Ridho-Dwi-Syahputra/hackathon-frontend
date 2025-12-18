@@ -442,6 +442,7 @@ fun SakoNavGraph(
             VideoCollectionListScreen(
                 collections = collections,
                 isLoading = isLoading,
+                onNavigateBack = { navController.navigateUp() },
                 onNavigateToDetail = { collectionId ->
                     navController.navigate(Screen.VideoCollectionDetail.createRoute(collectionId))
                 },

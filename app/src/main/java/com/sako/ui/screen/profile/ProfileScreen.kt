@@ -728,14 +728,14 @@ private fun StatItem(
             text = value,
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.ExtraBold,
-            color = Color(0xFF1A1A1A)
+            color = PrimaryRedDark
         )
         
         Text(
             text = label,
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.Medium,
-            color = Color(0xFF666666)
+            color = SakoPrimary
         )
     }
 }
