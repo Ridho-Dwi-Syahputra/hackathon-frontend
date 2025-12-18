@@ -22,7 +22,7 @@ object ApiConfig {
     
     // ✅ Using ngrok for real device testing
     // IMPORTANT: Must end with /api/ (with trailing slash)
-    private const val BASE_URL = "https://lowery-marcus-nonreputably.ngrok-free.dev/api/"
+    private const val BASE_URL = "https://beryl-irradiant-leone.ngrok-free.dev/api/"
 
 
     fun getApiService(userPreference: UserPreference): ApiService {

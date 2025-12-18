@@ -49,8 +49,11 @@ fun MapScreen(
     var showVisited by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
 
+    // Load only if data not already present (smart loading)
     LaunchedEffect(Unit) {
-        viewModel.loadTouristPlaces()
+        if (touristPlaces is Resource.Loading || touristPlaces is Resource.Error) {
+            viewModel.loadTouristPlaces(forceRefresh = false)
+        }
     }
 
     // Speech-to-Text launcher

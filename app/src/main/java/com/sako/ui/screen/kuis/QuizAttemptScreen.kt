@@ -46,6 +46,11 @@ fun QuizAttemptScreen(
 
     var showSubmitDialog by remember { mutableStateOf(false) }
     var showExitDialog by remember { mutableStateOf(false) }
+    
+    // State untuk instant feedback
+    var showAnswer by remember { mutableStateOf(false) }
+    var correctCount by remember { mutableStateOf(0) }
+    var wrongCount by remember { mutableStateOf(0) }
 
     // Handle back press -> show exit dialog
     BackHandler(enabled = true) {
@@ -122,8 +127,8 @@ fun QuizAttemptScreen(
                     Column(
                         modifier = modifier.fillMaxSize()
                     ) {
-                        // Enhanced Timer Card
-                        EnhancedTimerCard(
+                        // Modern Score & Timer Header
+                        ModernQuizHeader(
                             totalSeconds = attemptData.durationSeconds,
                             onTimeUp = {
                                 viewModel.onTimeUp()
@@ -131,8 +136,9 @@ fun QuizAttemptScreen(
                             isPaused = isTimerPaused,
                             currentQuestion = currentQuestionIndex + 1,
                             totalQuestions = totalQuestions,
-                            answeredCount = viewModel.getAnsweredCount(),
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+                            correctCount = correctCount,
+                            wrongCount = wrongCount,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                         )
 
                         // Quiz Content
@@ -146,41 +152,93 @@ fun QuizAttemptScreen(
                         {
 
                             // Question Card
-                            currentQuestion?.let { question ->
-                                QuizQuestionCard(
+                            currModernQuestionCard(
                                     questionNumber = currentQuestionIndex + 1,
                                     totalQuestions = totalQuestions,
                                     questionText = question.text,
                                     points = question.pointsCorrect
                                 )
 
-                                // Options
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                // Options dengan instant feedback
                                 question.options.sortedBy { it.displayOrder }.forEach { option ->
-                                    QuizOptionCard(
+                                    ModernQuizOptionCard(
                                         label = option.label,
                                         optionText = option.text,
                                         isSelected = selectedAnswers[question.id] == option.id,
-                                        isCorrect = null,
-                                        isRevealed = false,
+                                        isCorrect = if (showAnswer) option.isCorrect else null,
+                                        isRevealed = showAnswer,
                                         onClick = {
-                                            viewModel.selectAnswer(question.id, option.id)
+                                            if (!showAnswer) {
+                                                viewModel.selectAnswer(question.id, option.id)
+                                                showAnswer = true
+                                                
+                                                // Update counter
+                                                if (option.isCorrect) {
+                                                    correctCount++
+                                                } else {
+                                                    wrongCount++
+                                                }
+                                                
+                                                // Auto next setelah 1.5 detik
+                                                kotlinx.coroutines.GlobalScope.launch {
+                                                    kotlinx.coroutines.delay(1500)
+                                                    showAnswer = false
+                                                    if (currentQuestionIndex < totalQuestions - 1) {
+                                                        viewModel.nextQuestion()
+                                                    } else {
+                                                        // Soal terakhir, submit otomatis
+                                                        showSubmitDialog = true
+                                                    }
+                                                }
+                                            }
                                         }
                                     )
+                                    Spacer(modifier = Modifier.height(12.dp))
                                 }
+                                
+                                Spacer(modifier = Modifier.height(80.dp))
                             }
                         }
 
-                        // Bottom Navigation
-                        QuizBottomNav(
-                            currentIndex = currentQuestionIndex,
-                            totalQuestions = totalQuestions,
-                            canGoBack = currentQuestionIndex > 0,
-                            canGoNext = currentQuestionIndex < totalQuestions - 1,
-                            onPrevious = { viewModel.previousQuestion() },
-                            onNext = { viewModel.nextQuestion() },
-                            onSubmit = { showSubmitDialog = true },
-                            isSubmitting = submitState is Resource.Loading
-                        )
+                        // Submit Button (hanya muncul di soal terakhir)
+                        if (currentQuestionIndex == totalQuestions - 1 && showAnswer) {
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                shape = RoundedCornerShape(20.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = Color.White
+                                ),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                            ) {
+                                Button(
+                                    onClick = { showSubmitDialog = true },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp),
+                                    shape = RoundedCornerShape(16.dp),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = SakoAccent
+                                    )
+                                ) {
+                                    Row(
+                                        horizontalArrangement = Arrangement.Center,
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier.padding(vertical = 8.dp)
+                                    ) {
+                                        Text(
+                                            text = "🏁 Selesaikan Quiz",
+                                            fontSize = 16.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = SakoPrimary
+                                        )
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -561,6 +619,358 @@ fun QuizBottomNav(
                             )
                         }
                     }
+                }
+            }
+        }
+    }
+}
+// ============================================================================
+// MODERN COMPONENTS
+// ============================================================================
+
+@Composable
+fun ModernQuizHeader(
+    totalSeconds: Int,
+    onTimeUp: () -> Unit,
+    isPaused: Boolean,
+    currentQuestion: Int,
+    totalQuestions: Int,
+    correctCount: Int,
+    wrongCount: Int,
+    modifier: Modifier = Modifier
+) {
+    var remainingSeconds by remember { mutableStateOf(totalSeconds) }
+    val progress = remainingSeconds.toFloat() / totalSeconds.toFloat()
+    val minutes = remainingSeconds / 60
+    val seconds = remainingSeconds % 60
+    
+    val timerColor = when {
+        progress > 0.5f -> Color(0xFF4CAF50)
+        progress > 0.25f -> Color(0xFFFFA726)
+        else -> Color(0xFFEF5350)
+    }
+
+    LaunchedEffect(key1 = isPaused) {
+        if (!isPaused && remainingSeconds > 0) {
+            while (remainingSeconds > 0) {
+                kotlinx.coroutines.delay(1000)
+                if (!isPaused) {
+                    remainingSeconds--
+                }
+            }
+            if (remainingSeconds == 0) {
+                onTimeUp()
+            }
+        }
+    }
+
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.White
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            // Top Row: Timer, Progress, Score
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Timer Circle
+                Box(
+                    modifier = Modifier
+                        .size(70.dp)
+                        .background(
+                            color = timerColor.copy(alpha = 0.15f),
+                            shape = RoundedCornerShape(20.dp)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "⏱️",
+                            fontSize = 24.sp
+                        )
+                        Text(
+                            text = String.format("%02d:%02d", minutes, seconds),
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = timerColor
+                        )
+                    }
+                }
+                
+                // Progress
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "$currentQuestion/$totalQuestions",
+                        fontSize = 28.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = SakoPrimary
+                    )
+                    Text(
+                        text = "Soal",
+                        fontSize = 12.sp,
+                        color = Color.Gray
+                    )
+                }
+                
+                // Score Counter
+                Column(
+                    horizontalAlignment = Alignment.End,
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(32.dp)
+                                .background(
+                                    Color(0xFF4CAF50).copy(alpha = 0.2f),
+                                    RoundedCornerShape(8.dp)
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "✓",
+                                fontSize = 18.sp,
+                                color = Color(0xFF4CAF50),
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                        Text(
+                            text = "$correctCount",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF4CAF50)
+                        )
+                    }
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(32.dp)
+                                .background(
+                                    Color(0xFFEF5350).copy(alpha = 0.2f),
+                                    RoundedCornerShape(8.dp)
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "✗",
+                                fontSize = 18.sp,
+                                color = Color(0xFFEF5350),
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                        Text(
+                            text = "$wrongCount",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFFEF5350)
+                        )
+                    }
+                }
+            }
+            
+            // Progress Bar
+            LinearProgressIndicator(
+                progress = currentQuestion.toFloat() / totalQuestions.toFloat(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(10.dp),
+                color = SakoPrimary,
+                trackColor = SakoPrimary.copy(alpha = 0.2f),
+            )
+        }
+    }
+}
+
+@Composable
+fun ModernQuestionCard(
+    questionNumber: Int,
+    totalQuestions: Int,
+    questionText: String,
+    points: Int,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.White
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // Question Text
+            Text(
+                text = questionText,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF2C3E50),
+                lineHeight = MaterialTheme.typography.titleLarge.lineHeight.times(1.3f)
+            )
+            
+            // Points Badge
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = SakoAccent.copy(alpha = 0.3f)
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "⭐",
+                        fontSize = 16.sp
+                    )
+                    Text(
+                        text = "$points Poin",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = SakoPrimary
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ModernQuizOptionCard(
+    label: String,
+    optionText: String,
+    isSelected: Boolean,
+    isCorrect: Boolean?,
+    isRevealed: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val scale by animateFloatAsState(
+        targetValue = if (isSelected) 0.97f else 1f,
+        animationSpec = tween(durationMillis = 150),
+        label = "scale"
+    )
+
+    val containerColor by animateColorAsState(
+        targetValue = when {
+            isRevealed && isCorrect == true -> Color(0xFF4CAF50)
+            isRevealed && isCorrect == false && isSelected -> Color(0xFFEF5350)
+            isSelected && !isRevealed -> SakoPrimary.copy(alpha = 0.1f)
+            else -> Color.White
+        },
+        animationSpec = tween(durationMillis = 300),
+        label = "containerColor"
+    )
+
+    val borderColor by animateColorAsState(
+        targetValue = when {
+            isRevealed && isCorrect == true -> Color(0xFF4CAF50)
+            isRevealed && isCorrect == false && isSelected -> Color(0xFFEF5350)
+            isSelected && !isRevealed -> SakoPrimary
+            else -> Color(0xFFE0E0E0)
+        },
+        animationSpec = tween(durationMillis = 300),
+        label = "borderColor"
+    )
+    
+    val textColor = when {
+        isRevealed && (isCorrect == true || (isCorrect == false && isSelected)) -> Color.White
+        else -> Color(0xFF2C3E50)
+    }
+
+    Card(
+        onClick = onClick,
+        modifier = modifier
+            .fillMaxWidth()
+            .scale(scale),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = containerColor
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = if (isSelected) 6.dp else 2.dp
+        ),
+        enabled = !isRevealed
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .border(
+                    width = if (isRevealed || isSelected) 3.dp else 1.5.dp,
+                    color = borderColor,
+                    shape = RoundedCornerShape(20.dp)
+                )
+                .padding(20.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Label Circle
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .background(
+                            color = when {
+                                isRevealed && isCorrect == true -> Color.White.copy(alpha = 0.3f)
+                                isRevealed && isCorrect == false && isSelected -> Color.White.copy(alpha = 0.3f)
+                                isSelected && !isRevealed -> SakoPrimary
+                                else -> SakoAccent.copy(alpha = 0.3f)
+                            },
+                            shape = RoundedCornerShape(14.dp)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = label,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = when {
+                            isRevealed && (isCorrect == true || (isCorrect == false && isSelected)) -> Color.White
+                            isSelected && !isRevealed -> Color.White
+                            else -> SakoPrimary
+                        }
+                    )
+                }
+
+                // Option Text
+                Text(
+                    text = optionText,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = if (isSelected || isRevealed) FontWeight.SemiBold else FontWeight.Normal,
+                    color = textColor,
+                    modifier = Modifier.weight(1f)
+                )
+                
+                // Icon Feedback
+                if (isRevealed) {
+                    Text(
+                        text = if (isCorrect == true) "✓" else if (isSelected) "✗" else "",
+                        fontSize = 28.sp,
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
             }
         }

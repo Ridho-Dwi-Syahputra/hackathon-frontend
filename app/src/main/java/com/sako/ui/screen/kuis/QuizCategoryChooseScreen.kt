@@ -38,9 +38,9 @@ fun QuizCategoryChooseScreen(
 ) {
     val categoriesState by viewModel.categoriesState.collectAsState()
 
-    // Load categories saat pertama kali
+    // Load categories only if not already loaded (smart caching)
     LaunchedEffect(Unit) {
-        viewModel.getCategories()
+        viewModel.getCategories(forceRefresh = false)
     }
     BackgroundImage {
         Column(modifier = Modifier.fillMaxSize()) {

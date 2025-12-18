@@ -53,6 +53,19 @@ fun ProfileScreen(
     var showPhotoOptionsDialog by remember { mutableStateOf(false) }  // Dialog pilihan upload/view
     val snackbarHostState = remember { SnackbarHostState() }
 
+    // Load profile only if not already loaded (smart caching)
+    LaunchedEffect(Unit) {
+        viewModel.loadUserProfile(forceRefresh = false)
+    }
+
+    // Clear messages when entering screen (to prevent old messages from reappearing)
+    DisposableEffect(Unit) {
+        onDispose {
+            // Clear update message when leaving the screen
+            viewModel.clearUpdateMessage()
+        }
+    }
+
     // Auto-dismiss snackbar setelah 4 detik
     LaunchedEffect(uiState.updateSuccess, uiState.updateMessage) {
         if (uiState.updateSuccess && !uiState.updateMessage.isNullOrEmpty()) {

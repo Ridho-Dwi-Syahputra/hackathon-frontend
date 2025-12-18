@@ -46,6 +46,13 @@ fun ChangePasswordScreen(
     var newPasswordVisible by remember { mutableStateOf(false) }
     var confirmPasswordVisible by remember { mutableStateOf(false) }
     
+    // Clear messages when leaving screen
+    DisposableEffect(Unit) {
+        onDispose {
+            viewModel.clearUpdateStatus()
+        }
+    }
+    
     // Validation states
     var oldPasswordError by remember { mutableStateOf("") }
     var newPasswordError by remember { mutableStateOf("") }

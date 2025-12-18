@@ -45,6 +45,13 @@ fun EditProfileScreen(
         }
     }
     
+    // Clear messages when leaving screen
+    DisposableEffect(Unit) {
+        onDispose {
+            viewModel.clearUpdateStatus()
+        }
+    }
+    
     // Validation states
     var fullNameError by remember { mutableStateOf("") }
     var emailError by remember { mutableStateOf("") }

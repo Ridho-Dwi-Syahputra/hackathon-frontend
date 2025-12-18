@@ -42,16 +42,26 @@ class MapViewModel(
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
 
+    private var hasLoadedPlaces = false  // Cache flag
+
     init {
-        loadTouristPlaces()
+        // Don't auto-load, let screen decide when to load
     }
 
-    fun loadTouristPlaces(search: String? = null, page: Int = 1) {
+    fun loadTouristPlaces(search: String? = null, page: Int = 1, forceRefresh: Boolean = false) {
+        // Skip if already loaded and not forcing refresh (only for initial load)
+        if (hasLoadedPlaces && !forceRefresh && search == null && _touristPlaces.value is Resource.Success) {
+            return
+        }
+        
         viewModelScope.launch {
             mapRepository.getTouristPlaces(search, page).collect { resource ->
                 when (resource) {
                     is Resource.Success -> {
                         _touristPlaces.value = Resource.Success(resource.data.data)
+                        if (search == null) {
+                            hasLoadedPlaces = true
+                        }
                     }
                     is Resource.Error -> {
                         _touristPlaces.value = Resource.Error(resource.error)
