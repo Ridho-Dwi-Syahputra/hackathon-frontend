@@ -19,6 +19,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -53,6 +56,33 @@ fun MapScreen(
     LaunchedEffect(Unit) {
         if (touristPlaces is Resource.Loading || touristPlaces is Resource.Error) {
             viewModel.loadTouristPlaces(forceRefresh = false)
+        }
+    }
+    
+    // ✅ Monitor scan result untuk refresh data setelah scan berhasil
+    val scanResult by viewModel.scanResult.collectAsState()
+    LaunchedEffect(scanResult) {
+        if (scanResult is Resource.Success) {
+            // Scan QR berhasil, refresh data untuk update status isVisited
+            viewModel.refreshPlaces()
+        }
+    }
+    
+    // ✅ Refresh data setiap kali screen menjadi visible/active (ON_RESUME)
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                // Screen kembali active, refresh untuk sinkronisasi dengan database
+                viewModel.loadTouristPlaces(forceRefresh = true)
+                if (showVisited) {
+                    viewModel.loadVisitedPlaces()
+                }
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
         }
     }
 

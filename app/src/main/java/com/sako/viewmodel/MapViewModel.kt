@@ -358,6 +358,10 @@ class MapViewModel(
                             locationValidation = null,
                             rewardInfo = null
                         ))
+                        
+                        // ✅ REFRESH tourist places untuk update status isVisited
+                        loadTouristPlaces(forceRefresh = true)
+                        loadVisitedPlaces()
                     }
                     is Resource.Error -> {
                         _scanResult.value = Resource.Error(resource.error)
@@ -368,5 +372,11 @@ class MapViewModel(
                 }
             }
         }
+    }
+    
+    // ✅ Function untuk refresh places (dipanggil setelah scan QR)
+    fun refreshPlaces() {
+        loadTouristPlaces(forceRefresh = true)
+        loadVisitedPlaces()
     }
 }
