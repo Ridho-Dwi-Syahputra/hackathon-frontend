@@ -27,6 +27,11 @@ class VideoViewModel(private val repository: SakoRepository) : ViewModel() {
         loadVideos()
     }
 
+    fun reloadVideos() {
+        println("VideoViewModel - RELOAD VIDEOS CALLED")
+        loadVideos()
+    }
+
     private fun loadVideos() {
         viewModelScope.launch {
             _isLoading.value = true

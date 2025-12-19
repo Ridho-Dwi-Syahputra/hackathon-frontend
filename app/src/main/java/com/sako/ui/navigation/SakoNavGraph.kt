@@ -518,8 +518,13 @@ fun SakoNavGraph(
         ) { backStackEntry ->
             val videoId = backStackEntry.arguments?.getString(NavArgs.VIDEO_ID) ?: ""
 
-            // Set selected video when entering detail screen
+            // Ensure videos are loaded and set selected video when entering detail screen
             LaunchedEffect(videoId) {
+                // If videos list is empty, trigger reload to populate "Video Lainnya" section
+                if (sharedVideoViewModel.videos.value.isEmpty()) {
+                    println("VideoDetailScreen Navigation - Videos list is empty, triggering reload")
+                    sharedVideoViewModel.reloadVideos()
+                }
                 sharedVideoViewModel.setSelectedVideo(videoId)
             }
 
