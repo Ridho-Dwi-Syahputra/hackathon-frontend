@@ -30,31 +30,52 @@ class KuisViewModel(
     private val _selectedCategory = MutableStateFlow<CategoryItem?>(null)
     val selectedCategory: StateFlow<CategoryItem?> = _selectedCategory.asStateFlow()
 
+    private var hasCategoriesLoaded = false  // Cache flag
+    private val levelCache = mutableMapOf<String, LevelListResponse>()  // Cache levels by category
+
     // ========== Functions ==========
 
     /**
      * Fetch all quiz categories with progress
+     * @param forceRefresh Force reload even if already cached
      */
-    fun getCategories() {
+    fun getCategories(forceRefresh: Boolean = false) {
+        // Skip if already loaded and not forcing refresh
+        if (hasCategoriesLoaded && !forceRefresh && _categoriesState.value is Resource.Success) {
+            return
+        }
+        
         viewModelScope.launch {
             repository.getCategories().collect { resource ->
                 _categoriesState.value = resource
+                if (resource is Resource.Success) {
+                    hasCategoriesLoaded = true
+                }
             }
         }
     }
 
     /**
      * Fetch levels for a specific category
+     * @param forceRefresh Force reload even if already cached
      */
-    fun getLevelsByCategory(categoryId: String) {
+    fun getLevelsByCategory(categoryId: String, forceRefresh: Boolean = false) {
+        // Check cache first
+        if (!forceRefresh && levelCache.containsKey(categoryId)) {
+            _levelsState.value = Resource.Success(levelCache[categoryId]!!)
+            _selectedCategory.value = levelCache[categoryId]!!.data.category
+            return
+        }
+        
         viewModelScope.launch {
             _levelsState.value = Resource.Loading
             repository.getLevelsByCategory(categoryId).collect { resource ->
                 _levelsState.value = resource
                 
-                // Update selected category if success
+                // Update selected category and cache if success
                 if (resource is Resource.Success) {
                     _selectedCategory.value = resource.data.data.category
+                    levelCache[categoryId] = resource.data
                 }
             }
         }

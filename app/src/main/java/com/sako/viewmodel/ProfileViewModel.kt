@@ -43,11 +43,18 @@ class ProfileViewModel(
     private val _badgeState = MutableStateFlow<Resource<BadgeListData>>(Resource.Loading)
     val badgeState: StateFlow<Resource<BadgeListData>> = _badgeState.asStateFlow()
 
+    private var hasLoadedProfile = false  // Cache flag
+
     init {
-        loadUserProfile()
+        // Don't auto-load, let screen decide when to load
     }
 
-    fun loadUserProfile() {
+    fun loadUserProfile(forceRefresh: Boolean = false) {
+        // Skip if already loaded and not forcing refresh
+        if (hasLoadedProfile && !forceRefresh && _uiState.value.userData != null) {
+            return
+        }
+        
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(
                 isLoading = true,
@@ -69,6 +76,7 @@ class ProfileViewModel(
                                 levelInfo = levelInfo,
                                 error = null
                             )
+                            hasLoadedProfile = true
                         } ?: run {
                             _uiState.value = ProfileUiState(
                                 isLoading = false,

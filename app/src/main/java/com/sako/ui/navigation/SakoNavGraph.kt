@@ -59,6 +59,7 @@ fun SakoNavGraph(
     
     // Shared ViewModels for all modules using single factory
     val authViewModel: AuthViewModel = viewModel(factory = viewModelFactory)
+    val sharedHomeViewModel: com.sako.viewmodel.HomeViewModel = viewModel(factory = viewModelFactory)
     val sharedProfileViewModel: ProfileViewModel = viewModel(factory = viewModelFactory)
     val sharedVideoViewModel: VideoViewModel = viewModel(factory = viewModelFactory)
     val sharedKuisViewModel: KuisViewModel = viewModel(factory = viewModelFactory)
@@ -126,7 +127,11 @@ fun SakoNavGraph(
         // ============================================
         // Home Screen
         // ============================================
-        composable(route = Screen.Home.route) {
+        composable(
+            route = Screen.Home.route,
+            enterTransition = { NavigationAnimations.fadeEnter() },
+            exitTransition = { NavigationAnimations.fadeExit() }
+        ) {
             HomeScreen(
                 onNavigateToQuiz = {
                     navController.navigate(Screen.KuisList.route)
@@ -136,14 +141,21 @@ fun SakoNavGraph(
                 },
                 onNavigateToMap = {
                     navController.navigate(Screen.Map.route)
-                }
+                },
+                viewModel = sharedHomeViewModel
             )
         }
 
         // ============================================
         // Quiz Module - Category List
         // ============================================
-        composable(route = Screen.KuisList.route) {
+        composable(
+            route = Screen.KuisList.route,
+            enterTransition = { NavigationAnimations.slideInFade() },
+            exitTransition = { NavigationAnimations.slideOutFade() },
+            popEnterTransition = { NavigationAnimations.slideInPopFade() },
+            popExitTransition = { NavigationAnimations.slideOutPopFade() }
+        ) {
             QuizCategoryChooseScreen(
                 onNavigateBack = {
                     navController.popBackStack()

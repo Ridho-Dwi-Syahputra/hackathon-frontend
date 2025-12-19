@@ -115,7 +115,7 @@ data class AchievementStats(
 // Recent Activities
 data class RecentQuizAttempt(
     @SerializedName("attempt_id")
-    val attemptId: Int,
+    val attemptId: String,
 
     @SerializedName("level_name")
     val levelName: String,

@@ -110,93 +110,93 @@ fun QuizAttemptScreen(
                 }
             }
 
-        when (quizState) {
-            is Resource.Loading -> {
-                LoadingScreen()
-            }
-            is Resource.Success -> {
-                quizAttemptData?.let { attemptData ->
-                    val currentQuestion = viewModel.getCurrentQuestion()
-                    val totalQuestions = attemptData.questions.size
+            when (quizState) {
+                is Resource.Loading -> {
+                    LoadingScreen()
+                }
+                is Resource.Success -> {
+                    quizAttemptData?.let { attemptData ->
+                        val currentQuestion = viewModel.getCurrentQuestion()
+                        val totalQuestions = attemptData.questions.size
 
-                    Column(
-                        modifier = modifier.fillMaxSize()
-                    ) {
-                        // Enhanced Timer Card
-                        EnhancedTimerCard(
-                            totalSeconds = attemptData.durationSeconds,
-                            onTimeUp = {
-                                viewModel.onTimeUp()
-                            },
-                            isPaused = isTimerPaused,
-                            currentQuestion = currentQuestionIndex + 1,
-                            totalQuestions = totalQuestions,
-                            answeredCount = viewModel.getAnsweredCount(),
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
-                        )
-
-                        // Quiz Content
                         Column(
-                            modifier = Modifier
-                                .weight(1f)
-                                .verticalScroll(rememberScrollState())
-                                .padding(horizontal = 16.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
-                        )
-                        {
+                            modifier = modifier.fillMaxSize()
+                        ) {
+                            // Enhanced Timer Card
+                            EnhancedTimerCard(
+                                totalSeconds = attemptData.durationSeconds,
+                                onTimeUp = {
+                                    viewModel.onTimeUp()
+                                },
+                                isPaused = isTimerPaused,
+                                currentQuestion = currentQuestionIndex + 1,
+                                totalQuestions = totalQuestions,
+                                answeredCount = viewModel.getAnsweredCount(),
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+                            )
 
-                            // Question Card
-                            currentQuestion?.let { question ->
-                                QuizQuestionCard(
-                                    questionNumber = currentQuestionIndex + 1,
-                                    totalQuestions = totalQuestions,
-                                    questionText = question.text,
-                                    points = question.pointsCorrect
-                                )
+                            // Quiz Content
+                            Column(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .verticalScroll(rememberScrollState())
+                                    .padding(horizontal = 16.dp),
+                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                            )
+                            {
 
-                                // Options
-                                question.options.sortedBy { it.displayOrder }.forEach { option ->
-                                    QuizOptionCard(
-                                        label = option.label,
-                                        optionText = option.text,
-                                        isSelected = selectedAnswers[question.id] == option.id,
-                                        isCorrect = null,
-                                        isRevealed = false,
-                                        onClick = {
-                                            viewModel.selectAnswer(question.id, option.id)
-                                        }
+                                // Question Card
+                                currentQuestion?.let { question ->
+                                    QuizQuestionCard(
+                                        questionNumber = currentQuestionIndex + 1,
+                                        totalQuestions = totalQuestions,
+                                        questionText = question.text,
+                                        points = question.pointsCorrect
                                     )
+
+                                    // Options
+                                    question.options.sortedBy { it.displayOrder }.forEach { option ->
+                                        QuizOptionCard(
+                                            label = option.label,
+                                            optionText = option.text,
+                                            isSelected = selectedAnswers[question.id] == option.id,
+                                            isCorrect = null,
+                                            isRevealed = false,
+                                            onClick = {
+                                                viewModel.selectAnswer(question.id, option.id)
+                                            }
+                                        )
+                                    }
                                 }
                             }
-                        }
 
-                        // Bottom Navigation
-                        QuizBottomNav(
-                            currentIndex = currentQuestionIndex,
-                            totalQuestions = totalQuestions,
-                            canGoBack = currentQuestionIndex > 0,
-                            canGoNext = currentQuestionIndex < totalQuestions - 1,
-                            onPrevious = { viewModel.previousQuestion() },
-                            onNext = { viewModel.nextQuestion() },
-                            onSubmit = { showSubmitDialog = true },
-                            isSubmitting = submitState is Resource.Loading
-                        )
+                            // Bottom Navigation
+                            QuizBottomNav(
+                                currentIndex = currentQuestionIndex,
+                                totalQuestions = totalQuestions,
+                                canGoBack = currentQuestionIndex > 0,
+                                canGoNext = currentQuestionIndex < totalQuestions - 1,
+                                onPrevious = { viewModel.previousQuestion() },
+                                onNext = { viewModel.nextQuestion() },
+                                onSubmit = { showSubmitDialog = true },
+                                isSubmitting = submitState is Resource.Loading
+                            )
+                        }
                     }
                 }
+                is Resource.Error -> {
+                    val errorMessage = (quizState as Resource.Error).error
+                    ErrorScreen(
+                        message = errorMessage,
+                        onRetry = { viewModel.startQuiz(levelId) }
+                    )
+                }
             }
-            is Resource.Error -> {
-                val errorMessage = (quizState as Resource.Error).error
-                ErrorScreen(
-                    message = errorMessage,
-                    onRetry = { viewModel.startQuiz(levelId) }
-                )
-            }
-        }
-    } // Column
+        } // Column
     } // BackgroundImage
-    
-        // Submit Confirmation Dialog
-        if (showSubmitDialog) {
+
+    // Submit Confirmation Dialog
+    if (showSubmitDialog) {
         AlertDialog(
             onDismissRequest = { showSubmitDialog = false },
             icon = {
@@ -293,7 +293,7 @@ fun EnhancedTimerCard(
     val progress = remainingSeconds.toFloat() / totalSeconds.toFloat()
     val minutes = remainingSeconds / 60
     val seconds = remainingSeconds % 60
-    
+
     // Color based on time remaining
     val timerColor = when {
         progress > 0.5f -> Color(0xFF4CAF50) // Green
@@ -354,7 +354,7 @@ fun EnhancedTimerCard(
                             style = MaterialTheme.typography.titleLarge
                         )
                     }
-                    
+
                     Column {
                         Text(
                             text = String.format("%02d:%02d", minutes, seconds),
@@ -401,7 +401,7 @@ fun EnhancedTimerCard(
                     color = timerColor,
                     trackColor = timerColor.copy(alpha = 0.2f)
                 )
-                
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween

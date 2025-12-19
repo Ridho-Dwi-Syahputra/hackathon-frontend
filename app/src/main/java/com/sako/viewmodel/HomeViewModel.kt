@@ -32,10 +32,13 @@ class HomeViewModel(
     private val _isRefreshing = MutableStateFlow(false)
     val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
 
+    private var hasLoadedData = false  // Cache flag to prevent redundant loads
+
     // ========== Initialization ==========
     
     init {
-        loadDashboard()
+        // Don't auto-load in init, let screen decide when to load
+        // This prevents unnecessary API calls when ViewModel is recreated
     }
 
     // ========== Dashboard Operations ==========
@@ -43,11 +46,20 @@ class HomeViewModel(
     /**
      * Load complete dashboard data (recommended for initial load)
      * Fetches user stats, recent activities, popular content, and achievements in one call
+     * @param forceRefresh Force reload even if data is already cached
      */
-    fun loadDashboard() {
+    fun loadDashboard(forceRefresh: Boolean = false) {
+        // Skip if data already loaded and not forcing refresh
+        if (hasLoadedData && !forceRefresh && _dashboardState.value is Resource.Success) {
+            return
+        }
+        
         viewModelScope.launch {
             homeRepository.getDashboard().collect { result ->
                 _dashboardState.value = result
+                if (result is Resource.Success) {
+                    hasLoadedData = true
+                }
             }
         }
     }

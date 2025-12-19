@@ -12,6 +12,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -48,6 +49,11 @@ fun HomeScreen(
         factory = ViewModelFactory.getInstance(LocalContext.current)
     )
 ) {
+    // Load dashboard only if not already loaded (smart caching)
+    LaunchedEffect(Unit) {
+        viewModel.loadDashboard(forceRefresh = false)
+    }
+    
     val dashboardState by viewModel.dashboardState.collectAsStateWithLifecycle()
     BackgroundImage {
         Column(
